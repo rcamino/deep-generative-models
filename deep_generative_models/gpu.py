@@ -26,4 +26,4 @@ def to_cpu_if_was_in_gpu(*tensors: Tensor) -> Union[Tensor, List[Tensor]]:
 
 
 def load_without_gpu(path: str) -> Any:
-    torch.load(path, map_location=lambda storage, loc: storage)
+    return torch.load(path, map_location=lambda storage, loc: storage)
