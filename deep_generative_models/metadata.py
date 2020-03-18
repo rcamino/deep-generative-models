@@ -3,7 +3,7 @@ from typing import Dict, Generator
 
 class VariableMetadata:
 
-    def __init__(self, metadata: Dict, variable_index: int):
+    def __init__(self, metadata: Dict, variable_index: int) -> None:
         self.metadata = metadata
         self.variable_index = variable_index
 
@@ -28,7 +28,7 @@ class VariableMetadata:
 
 class Metadata:
 
-    def __init__(self, metadata: Dict):
+    def __init__(self, metadata: Dict) -> None:
         self.metadata = metadata
 
     def get_by_variable(self) -> Generator[VariableMetadata, None, None]:
@@ -42,11 +42,11 @@ class Metadata:
         variable_index = self.metadata["variables"].index(variable_name)
         return VariableMetadata(self.metadata, variable_index)
 
-    def get_num_variables(self):
+    def get_num_variables(self) -> int:
         return len(self.metadata["variables"])
 
-    def get_num_samples(self):
+    def get_num_samples(self) -> int:
         return self.metadata["num_samples"]
 
-    def get_num_features(self):
+    def get_num_features(self) -> int:
         return self.metadata["num_features"]

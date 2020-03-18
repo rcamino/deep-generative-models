@@ -15,7 +15,7 @@ class MultiInputLayer(Module):
     embeddings: ParameterList
     embedding_by_variable: Dict[str, Parameter]
 
-    def __init__(self, metadata: Metadata, min_embedding_size: int = 2, max_embedding_size: int = 50):
+    def __init__(self, metadata: Metadata, min_embedding_size: int = 2, max_embedding_size: int = 50) -> None:
         super(MultiInputLayer, self).__init__()
 
         self.metadata = metadata
@@ -56,7 +56,7 @@ class MultiInputLayer(Module):
                 raise Exception("Unexpected variable type '{}' for variable '{}'.".format(
                     variable_metadata.get_type(), variable_metadata.get_name()))
 
-    def forward(self, inputs: Tensor):
+    def forward(self, inputs: Tensor) -> Tensor:
         if self.has_categorical:
             outputs = []
             start = 0

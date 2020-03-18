@@ -14,27 +14,27 @@ from deep_generative_models.metadata import Metadata
 
 class OutputVariableActivation(Module):
 
-    def forward(self, inputs: Tensor, training: bool = None):
+    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
         raise NotImplementedError
 
 
 class OutputBinaryVariableActivation(OutputVariableActivation):
 
-    def __init__(self):
+    def __init__(self) -> None:
         super(OutputBinaryVariableActivation, self).__init__()
 
-    def forward(self, inputs: Tensor, training: bool = None):
+    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
         return torch.sigmoid(inputs)
 
 
 class OutputCategoricalVariableActivation(OutputVariableActivation):
     temperature: float
 
-    def __init__(self, temperature: float):
+    def __init__(self, temperature: float) -> None:
         super(OutputCategoricalVariableActivation, self).__init__()
         self.temperature = temperature
 
-    def forward(self, inputs: Tensor, training: bool = None):
+    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
         # gumbel-softmax (training and evaluation)
         if self.temperature is not None:
             return gumbel_softmax(inputs, hard=not training, tau=self.temperature)
@@ -48,10 +48,10 @@ class OutputCategoricalVariableActivation(OutputVariableActivation):
 
 class OutputNumericalVariableActivation(OutputVariableActivation):
 
-    def __init__(self):
+    def __init__(self) -> None:
         super(OutputNumericalVariableActivation, self).__init__()
 
-    def forward(self, inputs: Tensor, training: bool = None):
+    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
         return inputs
 
 
@@ -64,19 +64,19 @@ class OutputVariableLayer(Module):
     linear: Linear
     activation: OutputVariableActivation
 
-    def __init__(self, linear: Linear, activation: OutputVariableActivation):
+    def __init__(self, linear: Linear, activation: OutputVariableActivation) -> None:
         super(OutputVariableLayer, self).__init__()
         self.linear = linear
         self.activation = activation
 
-    def forward(self, inputs: Tensor, training: bool = None):
+    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
         return self.activation(self.linear(inputs), training=training)
 
 
 class MultiOutputLayer(OutputLayer):
     layers: List[OutputVariableLayer]
 
-    def __init__(self, input_size: int, metadata: Metadata, temperature: float = None):
+    def __init__(self, input_size: int, metadata: Metadata, temperature: float = None) -> None:
         super(MultiOutputLayer, self).__init__()
 
         self.layers = []
@@ -120,13 +120,13 @@ class MultiOutputLayer(OutputLayer):
             # create the last block
             self._add_block(current_block_type, current_block_size, current_block_index, input_size)
 
-    def _add_layer(self, name: str, input_size: int, output_size: int, activation: OutputVariableActivation):
+    def _add_layer(self, name: str, input_size: int, output_size: int, activation: OutputVariableActivation) -> None:
         linear = Linear(input_size, output_size)
         layer = OutputVariableLayer(linear, activation)
         self.layers.append(layer)
         self.add_module(name, layer)
 
-    def _add_block(self, block_type: str, block_size: int, block_index: int, input_size: int):
+    def _add_block(self, block_type: str, block_size: int, block_index: int, input_size: int) -> None:
         name = "block_{:d}_{}".format(block_index, block_type)
 
         if block_type == "binary":
@@ -138,6 +138,6 @@ class MultiOutputLayer(OutputLayer):
 
         self._add_layer(name, input_size, block_size, activation)
 
-    def forward(self, inputs: Tensor, training: bool = None):
+    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
         outputs = [layer(inputs, training=training) for layer in self.layers]
         return torch.cat(outputs, dim=1)

@@ -8,5 +8,5 @@ class OutputLayer(Module):
     Both need to have the same interface.
     """
 
-    def forward(self, inputs: Tensor, training: bool = None):
+    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
         raise NotImplementedError
