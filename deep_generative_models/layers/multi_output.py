@@ -1,9 +1,9 @@
 import torch
 
-from typing import List, Optional
+from typing import Optional
 
 from torch import Tensor
-from torch.nn import Module, Linear, Sequential
+from torch.nn import Module, Linear, Sequential, ModuleList
 from torch.nn.functional import gumbel_softmax, softmax
 
 from torch.distributions.one_hot_categorical import OneHotCategorical
@@ -40,28 +40,25 @@ class OutputCategoricalVariableActivation(Module):
 
 
 class MultiOutputLayer(Module):
-    layers: List[Module]
+    layers: ModuleList
 
     def __init__(self, input_size: int, metadata: Metadata, temperature: Optional[float] = None) -> None:
         super(MultiOutputLayer, self).__init__()
 
-        self.layers = []
+        self.layers = ModuleList()
 
         # accumulate binary or numerical variables into "blocks"
         current_block_type = None
         current_block_size = 0
-        current_block_index = 1
 
         for variable_metadata in metadata.get_by_variable():
             # first check if a block needs to be created
             if current_block_size > 0 and variable_metadata.get_type() != current_block_type:
                 # create the block
-                self._add_block(current_block_type, current_block_size, current_block_index, input_size)
+                self._add_block(current_block_type, current_block_size, input_size)
                 # empty the accumulated data
                 current_block_type = None
                 current_block_size = 0
-                # move the block index
-                current_block_index += 1
 
             # if it is a binary or numerical variable
             if variable_metadata.is_binary() or variable_metadata.is_numerical():
@@ -72,8 +69,7 @@ class MultiOutputLayer(Module):
             # if it is a categorical variable
             elif variable_metadata.is_categorical():
                 # create the categorical layer
-                self._add_layer(variable_metadata.get_name(),
-                                input_size, variable_metadata.get_size(),
+                self._add_layer(input_size, variable_metadata.get_size(),
                                 OutputCategoricalVariableActivation(temperature))
 
             # if it is another type
@@ -84,28 +80,22 @@ class MultiOutputLayer(Module):
         # if there is still accumulated data for a block
         if current_block_size > 0:
             # create the last block
-            self._add_block(current_block_type, current_block_size, current_block_index, input_size)
+            self._add_block(current_block_type, current_block_size, input_size)
 
-    def _add_layer(self, name: str, input_size: int, output_size: int, activation: Optional[Module] = None) -> None:
+    def _add_layer(self, input_size: int, output_size: int, activation: Optional[Module] = None) -> None:
         if activation is None:
             layer = Linear(input_size, output_size)
         else:
             layer = Sequential(Linear(input_size, output_size), activation)
         self.layers.append(layer)
-        self.add_module(name, layer)
 
-    def _add_block(self, block_type: str, block_size: int, block_index: int, input_size: int) -> None:
-        name = "block_{:d}_{}".format(block_index, block_type)
-
+    def _add_block(self, block_type: str, block_size: int, input_size: int) -> None:
         if block_type == "binary":
-            activation = OutputBinaryVariableActivation()
+            self._add_layer(input_size, block_size, OutputBinaryVariableActivation())
         elif block_type == "numerical":
-            activation = None
+            self._add_layer(input_size, block_size)
         else:
             raise Exception("Unexpected block type '{}'.".format(block_type))
 
-        self._add_layer(name, input_size, block_size, activation)
-
     def forward(self, inputs: Tensor) -> Tensor:
-        outputs = [layer(inputs) for layer in self.layers]
-        return torch.cat(outputs, dim=1)
+        return torch.cat([layer(inputs) for layer in self.layers], dim=1)
