@@ -4,7 +4,6 @@ from torch import Tensor
 from torch.nn import Module, Sequential, Linear, ReLU
 
 from deep_generative_models.layers.multi_output import MultiOutputLayer
-from deep_generative_models.layers.output_layer import OutputLayer
 from deep_generative_models.layers.single_output import SingleOutputLayer
 
 from deep_generative_models.metadata import Metadata
@@ -13,7 +12,7 @@ from deep_generative_models.metadata import Metadata
 class Decoder(Module):
 
     hidden_layers: Optional[Sequential]
-    output_layer: OutputLayer
+    output_layer: Module
 
     def __init__(self, code_size: int, output_size: int, hidden_sizes: List[int] = (),
                  metadata: Optional[Metadata] = None, temperature: Optional[float] = None) -> None:
@@ -39,10 +38,10 @@ class Decoder(Module):
         else:
             self.output_layer = MultiOutputLayer(previous_layer_size, metadata, temperature=temperature)
 
-    def forward(self, code: Tensor, training: bool = False) -> Tensor:
+    def forward(self, code: Tensor) -> Tensor:
         if self.hidden_layers is None:
             hidden = code
         else:
             hidden = self.hidden_layers(code)
 
-        return self.output_layer(hidden, training=training)
+        return self.output_layer(hidden)

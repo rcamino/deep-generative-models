@@ -24,13 +24,13 @@ class AutoEncoder(Module):
         self.decoder = Decoder(code_size, input_size, hidden_sizes=decoder_hidden_sizes, metadata=metadata,
                                temperature=temperature)
 
-    def forward(self, inputs: Tensor, training: bool = False) -> Tuple[Tensor, Tensor]:
+    def forward(self, inputs: Tensor) -> Tuple[Tensor, Tensor]:
         code = self.encode(inputs)
-        reconstructed = self.decode(code, training=training)
+        reconstructed = self.decode(code)
         return code, reconstructed
 
     def encode(self, inputs: Tensor) -> Tensor:
         return self.encoder(inputs)
 
-    def decode(self, code: Tensor, training: bool = False) -> Tensor:
-        return self.decoder(code, training=training)
+    def decode(self, code: Tensor) -> Tensor:
+        return self.decoder(code)

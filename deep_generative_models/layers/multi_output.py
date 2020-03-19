@@ -1,80 +1,46 @@
 import torch
 
-from typing import List
+from typing import List, Optional
 
 from torch import Tensor
-from torch.nn import Module, Linear
+from torch.nn import Module, Linear, Sequential
 from torch.nn.functional import gumbel_softmax, softmax
 
 from torch.distributions.one_hot_categorical import OneHotCategorical
 
-from deep_generative_models.layers.output_layer import OutputLayer
 from deep_generative_models.metadata import Metadata
 
 
-class OutputVariableActivation(Module):
-
-    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
-        raise NotImplementedError
-
-
-class OutputBinaryVariableActivation(OutputVariableActivation):
+class OutputBinaryVariableActivation(Module):
 
     def __init__(self) -> None:
         super(OutputBinaryVariableActivation, self).__init__()
 
-    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
+    def forward(self, inputs: Tensor) -> Tensor:
         return torch.sigmoid(inputs)
 
 
-class OutputCategoricalVariableActivation(OutputVariableActivation):
+class OutputCategoricalVariableActivation(Module):
     temperature: float
 
     def __init__(self, temperature: float) -> None:
         super(OutputCategoricalVariableActivation, self).__init__()
         self.temperature = temperature
 
-    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
+    def forward(self, inputs: Tensor) -> Tensor:
         # gumbel-softmax (training and evaluation)
         if self.temperature is not None:
-            return gumbel_softmax(inputs, hard=not training, tau=self.temperature)
+            return gumbel_softmax(inputs, hard=not self.training, tau=self.temperature)
         # softmax training
-        elif training:
+        elif self.training:
             return softmax(inputs, dim=1)
         # softmax evaluation
         else:
             return OneHotCategorical(logits=inputs).sample()
 
 
-class OutputNumericalVariableActivation(OutputVariableActivation):
-
-    def __init__(self) -> None:
-        super(OutputNumericalVariableActivation, self).__init__()
-
-    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
-        return inputs
-
-
-class OutputVariableLayer(Module):
-    """
-    I use this simple class instead of a Sequential module
-    just because I need to pass the training parameter only to the activation.
-    """
-
-    linear: Linear
-    activation: OutputVariableActivation
-
-    def __init__(self, linear: Linear, activation: OutputVariableActivation) -> None:
-        super(OutputVariableLayer, self).__init__()
-        self.linear = linear
-        self.activation = activation
-
-    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
-        return self.activation(self.linear(inputs), training=training)
-
-
-class MultiOutputLayer(OutputLayer):
-    layers: List[OutputVariableLayer]
+class MultiOutputLayer(Module):
+    layers: List[Module]
 
     def __init__(self, input_size: int, metadata: Metadata, temperature: float = None) -> None:
         super(MultiOutputLayer, self).__init__()
@@ -120,9 +86,11 @@ class MultiOutputLayer(OutputLayer):
             # create the last block
             self._add_block(current_block_type, current_block_size, current_block_index, input_size)
 
-    def _add_layer(self, name: str, input_size: int, output_size: int, activation: OutputVariableActivation) -> None:
-        linear = Linear(input_size, output_size)
-        layer = OutputVariableLayer(linear, activation)
+    def _add_layer(self, name: str, input_size: int, output_size: int, activation: Optional[Module] = None) -> None:
+        if activation is None:
+            layer = Linear(input_size, output_size)
+        else:
+            layer = Sequential(Linear(input_size, output_size), activation)
         self.layers.append(layer)
         self.add_module(name, layer)
 
@@ -132,12 +100,12 @@ class MultiOutputLayer(OutputLayer):
         if block_type == "binary":
             activation = OutputBinaryVariableActivation()
         elif block_type == "numerical":
-            activation = OutputNumericalVariableActivation()
+            activation = None
         else:
             raise Exception("Unexpected block type '{}'.".format(block_type))
 
         self._add_layer(name, input_size, block_size, activation)
 
-    def forward(self, inputs: Tensor, training: bool = None) -> Tensor:
-        outputs = [layer(inputs, training=training) for layer in self.layers]
+    def forward(self, inputs: Tensor) -> Tensor:
+        outputs = [layer(inputs) for layer in self.layers]
         return torch.cat(outputs, dim=1)
