@@ -11,7 +11,7 @@ from deep_generative_models.metadata import Metadata
 
 class Decoder(Module):
 
-    hidden_layers: Optional[Sequential]
+    hidden_layers: Sequential
     output_layer: Module
 
     def __init__(self, code_size: int, output_size: int, hidden_sizes: List[int] = (),
@@ -28,10 +28,8 @@ class Decoder(Module):
             hidden_layers.append(hidden_activation)
             previous_layer_size = layer_size
 
-        if len(hidden_layers) > 0:
-            self.hidden_layers = Sequential(*hidden_layers)
-        else:
-            self.hidden_layers = None
+        # an empty sequential module just works as the identity
+        self.hidden_layers = Sequential(*hidden_layers)
 
         if metadata is None:
             self.output_layer = SingleOutputLayer(previous_layer_size, output_size)
@@ -39,9 +37,4 @@ class Decoder(Module):
             self.output_layer = MultiOutputLayer(previous_layer_size, metadata, temperature=temperature)
 
     def forward(self, code: Tensor) -> Tensor:
-        if self.hidden_layers is None:
-            hidden = code
-        else:
-            hidden = self.hidden_layers(code)
-
-        return self.output_layer(hidden)
+        return self.output_layer(self.hidden_layers(code))
