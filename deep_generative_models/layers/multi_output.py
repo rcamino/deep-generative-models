@@ -42,7 +42,7 @@ class OutputCategoricalVariableActivation(Module):
 class MultiOutputLayer(Module):
     layers: List[Module]
 
-    def __init__(self, input_size: int, metadata: Metadata, temperature: float = None) -> None:
+    def __init__(self, input_size: int, metadata: Metadata, temperature: Optional[float] = None) -> None:
         super(MultiOutputLayer, self).__init__()
 
         self.layers = []
