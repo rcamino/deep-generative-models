@@ -2,7 +2,7 @@ from torch.nn import Module
 
 from typing import Optional
 
-from deep_generative_models.training.type_aliases import Checkpoint, ModuleDictionary
+from deep_generative_models.type_aliases import Checkpoint, ModuleDictionary
 
 
 def load_module(module: Module, checkpoint: Optional[Checkpoint], model_name: str) -> None:
