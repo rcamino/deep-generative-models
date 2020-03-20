@@ -3,15 +3,16 @@ import torch
 from typing import Dict
 
 from torch import Tensor
-from torch.nn import Module, ParameterList, Parameter
+from torch.nn import ParameterList, Parameter
 
+from deep_generative_models.layers.input_layer import InputLayer
 from deep_generative_models.metadata import Metadata
 
 
-class MultiInputLayer(Module):
+class MultiInputLayer(InputLayer):
     metadata: Metadata
     has_categorical: bool
-    size: int
+    output_size: int
     embeddings: ParameterList
     embedding_by_variable: Dict[str, Parameter]
 
@@ -21,7 +22,7 @@ class MultiInputLayer(Module):
         self.metadata = metadata
 
         self.has_categorical = False
-        self.size = 0
+        self.output_size = 0
 
         # our embeddings need to be referenced like this to be considered in the parameters of this model
         self.embeddings = ParameterList()
@@ -32,7 +33,7 @@ class MultiInputLayer(Module):
             # if it is a numerical variable
             if variable_metadata.is_numerical():
                 assert variable_metadata.get_size() == 1
-                self.size += 1
+                self.output_size += 1
 
             # if it is a categorical variable
             elif variable_metadata.is_categorical():
@@ -48,7 +49,7 @@ class MultiInputLayer(Module):
                 self.embeddings.append(embedding)
                 self.embedding_by_variable[variable_metadata.get_name()] = embedding
 
-                self.size += embedding_size
+                self.output_size += embedding_size
                 self.has_categorical = True
 
             # if it is another type
@@ -85,3 +86,6 @@ class MultiInputLayer(Module):
             return torch.cat(outputs, dim=1)
         else:
             return inputs
+
+    def get_output_size(self) -> int:
+        return self.output_size

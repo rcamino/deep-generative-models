@@ -3,40 +3,10 @@ import torch
 from typing import Optional
 
 from torch import Tensor
-from torch.nn import Module, Linear, Sequential, ModuleList
-from torch.nn.functional import gumbel_softmax, softmax
+from torch.nn import Module, Linear, Sequential, ModuleList, Sigmoid
 
-from torch.distributions.one_hot_categorical import OneHotCategorical
-
+from deep_generative_models.layers.output_layer import OutputLayerFactory
 from deep_generative_models.metadata import Metadata, VariableMetadata
-
-
-class OutputBinaryVariableActivation(Module):
-
-    def __init__(self) -> None:
-        super(OutputBinaryVariableActivation, self).__init__()
-
-    def forward(self, inputs: Tensor) -> Tensor:
-        return torch.sigmoid(inputs)
-
-
-class OutputCategoricalVariableActivation(Module):
-    temperature: float
-
-    def __init__(self, temperature: float) -> None:
-        super(OutputCategoricalVariableActivation, self).__init__()
-        self.temperature = temperature
-
-    def forward(self, inputs: Tensor) -> Tensor:
-        # gumbel-softmax (training and evaluation)
-        if self.temperature is not None:
-            return gumbel_softmax(inputs, hard=not self.training, tau=self.temperature)
-        # softmax training
-        elif self.training:
-            return softmax(inputs, dim=1)
-        # softmax evaluation
-        else:
-            return OneHotCategorical(logits=inputs).sample()
 
 
 class BlockBuilder:
@@ -61,7 +31,7 @@ class BlockBuilder:
 
     def build(self, input_size: int) -> Module:
         if self.variable_metadata.is_binary():
-            return Sequential(Linear(input_size, self.variable_metadata.get_size()), OutputBinaryVariableActivation())
+            return Sequential(Linear(input_size, self.variable_metadata.get_size()), Sigmoid())
         elif self.variable_metadata.is_numerical():
             return Linear(input_size, self.variable_metadata.get_size())
 
@@ -69,7 +39,7 @@ class BlockBuilder:
 class MultiOutputLayer(Module):
     layers: ModuleList
 
-    def __init__(self, input_size: int, metadata: Metadata, temperature: Optional[float] = None) -> None:
+    def __init__(self, input_size: int, metadata: Metadata, categorical_activation: Module) -> None:
         super(MultiOutputLayer, self).__init__()
 
         self.layers = ModuleList()
@@ -97,9 +67,7 @@ class MultiOutputLayer(Module):
             # if it is a categorical variable
             elif variable_metadata.is_categorical():
                 # create the categorical layer
-                self.layers.append(Sequential(
-                    Linear(input_size, variable_metadata.get_size()),
-                    OutputCategoricalVariableActivation(temperature)))
+                self.layers.append(Sequential(Linear(input_size, variable_metadata.get_size()), categorical_activation))
 
             # if it is another type
             else:
@@ -113,3 +81,15 @@ class MultiOutputLayer(Module):
 
     def forward(self, inputs: Tensor) -> Tensor:
         return torch.cat([layer(inputs) for layer in self.layers], dim=1)
+
+
+class MultiOutputLayerFactory(OutputLayerFactory):
+    metadata: Metadata
+    categorical_activation: Module
+
+    def __init__(self, metadata: Metadata, categorical_activation: Module) -> None:
+        self.metadata = metadata
+        self.categorical_activation = categorical_activation
+
+    def create(self, input_size: int) -> Module:
+        return MultiOutputLayer(input_size, self.metadata, self.categorical_activation)

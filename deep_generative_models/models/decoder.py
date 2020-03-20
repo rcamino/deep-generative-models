@@ -1,12 +1,9 @@
-from typing import Optional, List
+from typing import List
 
 from torch import Tensor
-from torch.nn import Module, Sequential, Linear, ReLU
+from torch.nn import Module, Sequential, Linear, Tanh
 
-from deep_generative_models.layers.multi_output import MultiOutputLayer
-from deep_generative_models.layers.single_output import SingleOutputLayer
-
-from deep_generative_models.metadata import Metadata
+from deep_generative_models.layers.output_layer import OutputLayerFactory
 
 
 class Decoder(Module):
@@ -14,11 +11,10 @@ class Decoder(Module):
     hidden_layers: Sequential
     output_layer: Module
 
-    def __init__(self, code_size: int, output_size: int, hidden_sizes: List[int] = (),
-                 metadata: Optional[Metadata] = None, temperature: Optional[float] = None) -> None:
+    def __init__(self, code_size: int, output_layer_factory: OutputLayerFactory, hidden_sizes: List[int] = ()) -> None:
         super(Decoder, self).__init__()
 
-        hidden_activation = ReLU()
+        hidden_activation = Tanh()  # TODO: check what other papers use as hidden activations
 
         previous_layer_size = code_size
         hidden_layers = []
@@ -30,11 +26,7 @@ class Decoder(Module):
 
         # an empty sequential module just works as the identity
         self.hidden_layers = Sequential(*hidden_layers)
-
-        if metadata is None:
-            self.output_layer = SingleOutputLayer(previous_layer_size, output_size)
-        else:
-            self.output_layer = MultiOutputLayer(previous_layer_size, metadata, temperature=temperature)
+        self.output_layer = output_layer_factory.create(previous_layer_size)
 
     def forward(self, code: Tensor) -> Tensor:
         return self.output_layer(self.hidden_layers(code))
