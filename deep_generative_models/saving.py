@@ -4,20 +4,20 @@ import torch
 
 from typing import Optional
 
-from deep_generative_models.type_aliases import Checkpoint, ModuleDictionary
+from deep_generative_models.type_aliases import Checkpoint, Architecture
 from deep_generative_models.logger import Logger
 from deep_generative_models.commandline import DelayedKeyboardInterrupt
 
 
 class Saver(object):
     path: str
-    modules: ModuleDictionary
+    modules: Architecture
     logger: Logger
     max_delay: int
     last_flush_time: Optional[float]
     kept_checkpoint: Optional[Checkpoint]
     
-    def __init__(self, path: str, modules: ModuleDictionary, logger: Logger, max_delay: int) -> None:
+    def __init__(self, path: str, modules: Architecture, logger: Logger, max_delay: int) -> None:
         self.path = path
         self.modules = modules
         self.logger = logger

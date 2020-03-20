@@ -4,4 +4,4 @@ from typing import Dict, Any
 
 
 Checkpoint = Dict[str, Any]
-ModuleDictionary = Dict[str, Module]
+Architecture = Dict[str, Module]
