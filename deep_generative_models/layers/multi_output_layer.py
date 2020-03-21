@@ -1,12 +1,14 @@
 import torch
 
-from typing import Optional
+from typing import Optional, Any
 
 from torch import Tensor
 from torch.nn import Module, Linear, Sequential, ModuleList, Sigmoid
 
+from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.output_layer import OutputLayerFactory
 from deep_generative_models.metadata import Metadata, VariableMetadata
+from deep_generative_models.factory import MultiFactory
 
 
 class BlockBuilder:
@@ -93,3 +95,12 @@ class MultiOutputLayerFactory(OutputLayerFactory):
 
     def create(self, input_size: int) -> Module:
         return MultiOutputLayer(input_size, self.metadata, self.categorical_activation)
+
+
+class PartialMultiOutputLayerFactory(MultiFactory):
+
+    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+        activation_configuration = configuration.activation
+        categorical_activation = self.create_other(activation_configuration.factory, metadata, global_configuration,
+                                                   activation_configuration.get("arguments", {}))
+        return MultiOutputLayerFactory(metadata, categorical_activation)

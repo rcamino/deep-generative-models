@@ -1,12 +1,14 @@
 import torch
 
-from typing import Dict
+from typing import Dict, Any
 
 from torch import Tensor
 from torch.nn import ParameterList, Parameter
 
+from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.input_layer import InputLayer
 from deep_generative_models.metadata import Metadata
+from deep_generative_models.factory import MultiFactory
 
 
 class MultiInputLayer(InputLayer):
@@ -89,3 +91,10 @@ class MultiInputLayer(InputLayer):
 
     def get_output_size(self) -> int:
         return self.output_size
+
+
+class MultiInputLayerFactory(MultiFactory):
+
+    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+        optional = configuration.get_all_defined(["min_embedding_size", "max_embedding_size"])
+        return MultiInputLayer(metadata, **optional)

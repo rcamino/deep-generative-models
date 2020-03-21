@@ -1,3 +1,5 @@
+import json
+
 from typing import Dict, Generator
 
 
@@ -50,3 +52,8 @@ class Metadata:
 
     def get_num_features(self) -> int:
         return self.metadata["num_features"]
+
+
+def load_metadata(path: str) -> Metadata:
+    with open(path, "r") as configuration_file:
+        return Metadata(json.load(configuration_file))

@@ -1,9 +1,12 @@
 from torch import Tensor
 from torch.nn import Module, Linear, Sequential
 
-from typing import Optional
+from typing import Optional, Any
 
+from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.output_layer import OutputLayerFactory
+from deep_generative_models.metadata import Metadata
+from deep_generative_models.factory import MultiFactory
 
 
 class SingleOutputLayer(Module):
@@ -30,4 +33,15 @@ class SingleOutputLayerFactory(OutputLayerFactory):
         self.activation = activation
 
     def create(self, input_size: int) -> Module:
-        return SingleOutputLayer(input_size, self.output_size, self.activation)
+        return SingleOutputLayer(input_size, self.output_size, activation=self.activation)
+
+
+class PartialSingleOutputLayerFactory(MultiFactory):
+
+    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+        optional = {}
+        if "activation" in configuration:
+            activation_configuration = configuration.activation
+            optional["activation"] = self.create_other(activation_configuration.factory, metadata, global_configuration,
+                                                       activation_configuration.get("arguments", {}))
+        return SingleOutputLayerFactory(configuration.output_size, **optional)

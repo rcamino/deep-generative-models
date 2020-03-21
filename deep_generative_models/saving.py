@@ -4,7 +4,8 @@ import torch
 
 from typing import Optional
 
-from deep_generative_models.type_aliases import Checkpoint, Architecture
+from deep_generative_models.checkpoint import Checkpoint
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.logger import Logger
 from deep_generative_models.commandline import DelayedKeyboardInterrupt
 
