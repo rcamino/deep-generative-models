@@ -1,7 +1,11 @@
-from typing import List
+from typing import List, Any
 
 from torch import Tensor
 from torch.nn import Module, Sequential, Linear, LeakyReLU, Sigmoid, BatchNorm1d
+
+from deep_generative_models.configuration import Configuration
+from deep_generative_models.factory import MultiFactory
+from deep_generative_models.metadata import Metadata
 
 
 class Discriminator(Module):
@@ -34,3 +38,10 @@ class Discriminator(Module):
 
     def forward(self, inputs: Tensor) -> Tensor:
         return self.layers(inputs).view(-1)
+
+
+class DiscriminatorFactory(MultiFactory):
+
+    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+        optional = configuration.get_all_defined(["hidden_sizes", "bn_decay", "critic"])
+        return Discriminator(metadata.get_num_features(), **optional)

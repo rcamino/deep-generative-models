@@ -18,8 +18,9 @@ from deep_generative_models.models.autoencoder import SingleVariableAutoEncoderF
 from deep_generative_models.models.autoencoder import MultiVariableAutoEncoderFactory
 from deep_generative_models.models.decoder import SingleOutputDecoderFactory
 from deep_generative_models.models.decoder import MultiOutputDecoderFactory
+from deep_generative_models.models.discriminator import DiscriminatorFactory
 from deep_generative_models.models.encoder import SingleInputEncoderFactory, MultiInputEncoderFactory
-
+from deep_generative_models.models.generator import SingleVariableGeneratorFactory, MultiVariableGeneratorFactory
 
 Architecture = Dict[str, Module]
 
@@ -46,6 +47,9 @@ factory_by_name["single-input layer"] = SingleInputLayerFactory(factory_by_name)
 factory_by_name["multi-input layer"] = MultiInputLayerFactory(factory_by_name)
 factory_by_name["single-output layer"] = PartialSingleOutputLayerFactory(factory_by_name)
 factory_by_name["multi-output layer"] = PartialMultiOutputLayerFactory(factory_by_name)
+factory_by_name["single-output generator"] = SingleVariableGeneratorFactory(factory_by_name)
+factory_by_name["multi-output generator"] = MultiVariableGeneratorFactory(factory_by_name)
+factory_by_name["discriminator"] = DiscriminatorFactory(factory_by_name)
 
 
 def create_architecture(metadata: Metadata, configuration: Configuration) -> Architecture:
