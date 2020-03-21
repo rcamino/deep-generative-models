@@ -31,7 +31,10 @@ class Configuration:
         return self.values.items()
 
     def get(self, item: str, default: Optional[Any] = None):
-        return self.values.get(item, default)
+        if item in self:
+            return getattr(self, item)
+        else:
+            return self._transform_value(default)
 
     def get_all_defined(self, items: List[str]) -> Dict[str, Any]:
         defined = {}

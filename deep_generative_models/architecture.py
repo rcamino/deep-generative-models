@@ -52,5 +52,5 @@ def create_architecture(metadata: Metadata, configuration: Configuration) -> Arc
     architecture = {}
     for name, child_configuration in configuration.architecture.items():
         factory = factory_by_name[child_configuration.factory]
-        architecture[name] = factory.create(metadata, configuration, child_configuration.arguments)
+        architecture[name] = factory.create(metadata, configuration, child_configuration.get("arguments", {}))
     return architecture
