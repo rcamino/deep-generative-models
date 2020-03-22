@@ -31,6 +31,13 @@ class Checkpoints(object):
         self.last_flush_time = None
         self.kept_checkpoint = None
 
+    def exists(self) -> bool:
+        return os.path.exists(self.path)
+
+    def load(self) -> Checkpoint:
+        # ignore the location
+        return torch.load(self.path, map_location=lambda storage, loc: storage)
+
     def load_architecture(self, architecture: Architecture, checkpoint: Checkpoint) -> None:
         for module_name, module in architecture.items():
             self.load_module(module, checkpoint, module_name)

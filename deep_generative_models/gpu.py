@@ -23,7 +23,3 @@ def to_cpu_if_was_in_gpu(*tensors: Tensor) -> Union[Tensor, List[Tensor]]:
     if len(tensors) == 1:
         return tensors[0]
     return tensors
-
-
-def load_without_gpu(path: str) -> Any:
-    return torch.load(path, map_location=lambda storage, loc: storage)
