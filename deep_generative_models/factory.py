@@ -33,5 +33,6 @@ class ClassFactoryWrapper(Factory):
         self.wrapped_class = wrapped_class
 
     def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
-        arguments = configuration.get("arguments", [])
-        return self.wrapped_class(*arguments)
+        arguments = configuration.get("arguments", default=[], transform_default=False)
+        keyword_arguments = configuration.get("keyword_arguments", default={}, transform_default=False)
+        return self.wrapped_class(*arguments, **keyword_arguments)

@@ -31,11 +31,13 @@ class Configuration:
     def items(self):
         return self.values.items()
 
-    def get(self, item: str, default: Optional[Any] = None):
+    def get(self, item: str, default: Optional[Any] = None, transform_default: bool = True) -> Any:
         if item in self:
             return getattr(self, item)
-        else:
+        elif transform_default:
             return self._transform_value(default)
+        else:
+            return default
 
     def get_all_defined(self, items: List[str]) -> Dict[str, Any]:
         defined = {}
