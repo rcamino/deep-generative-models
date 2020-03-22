@@ -3,15 +3,15 @@ import time
 
 import torch
 
-from torch.nn import Module
-
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.commandline import DelayedKeyboardInterrupt
+from deep_generative_models.models.optimization import Optimizers
 
 
 Checkpoint = Dict[str, Any]
+StateContainers = Union[Architecture, Optimizers]
 
 
 class Checkpoints(object):
@@ -34,24 +34,17 @@ class Checkpoints(object):
         # ignore the location
         return torch.load(self.path, map_location=lambda storage, loc: storage)
 
-    def load_architecture(self, architecture: Architecture, checkpoint: Checkpoint) -> None:
-        for module_name, module in architecture.items():
-            self.load_module(module, checkpoint, module_name)
+    @staticmethod
+    def load_states(sources: Checkpoint, targets: StateContainers) -> None:
+        for name, target in targets.items():
+            target.load_state_dict(sources[name])
 
     @staticmethod
-    def load_module(module: Module, checkpoint: Checkpoint, model_name: str) -> None:
-        assert model_name in checkpoint, "'{}' not found in checkpoint.".format(model_name)
-        module.load_state_dict(checkpoint[model_name])
-
-    def extract_from_architecture(self, modules: Architecture) -> Checkpoint:
-        checkpoint = {}
-        for module_name, module in modules.items():
-            self.extract_from_module(module_name, module, checkpoint)
-        return checkpoint
-
-    @staticmethod
-    def extract_from_module(module_name: str, module: Module, kept_checkpoint: Checkpoint) -> None:
-        kept_checkpoint[module_name] = module.state_dict()
+    def extract_states(sources: StateContainers) -> Checkpoint:
+        targets = {}
+        for name, source in sources.items():
+            targets[name] = source.state_dict()
+        return targets
 
     def delayed_save(self, checkpoint: Checkpoint, keep: bool = False) -> None:
         now = time.time()
