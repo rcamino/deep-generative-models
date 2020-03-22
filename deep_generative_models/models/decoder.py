@@ -17,18 +17,22 @@ class Decoder(Module):
     def __init__(self, code_size: int, output_layer_factory: OutputLayerFactory, hidden_sizes: List[int] = ()) -> None:
         super(Decoder, self).__init__()
 
-        hidden_activation = Tanh()  # TODO: check what other papers use as hidden activations
-
+        # input layer
         previous_layer_size = code_size
         hidden_layers = []
 
+        # hidden layers
+        hidden_activation = Tanh()  # TODO: parametrize?
         for layer_size in hidden_sizes:
             hidden_layers.append(Linear(previous_layer_size, layer_size))
             hidden_layers.append(hidden_activation)
             previous_layer_size = layer_size
 
+        # transform the list of hidden layers into a sequential model
         # an empty sequential module just works as the identity
         self.hidden_layers = Sequential(*hidden_layers)
+
+        # output layer
         self.output_layer = output_layer_factory.create(previous_layer_size)
 
     def forward(self, code: Tensor) -> Tensor:
