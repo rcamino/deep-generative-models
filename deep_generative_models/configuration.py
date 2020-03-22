@@ -14,6 +14,16 @@ class Configuration:
         return item in self.values
 
     def __getattr__(self, item: str) -> Any:
+        # if a method in the dictionary is being called
+        # WARNING: no config entries can be called like dictionary methods
+        if hasattr(self.values, item):
+            return getattr(self.values, item)
+        # if not check for dictionary elements
+        else:
+            assert item in self, "Configuration entry '{}' not found.".format(item)
+            return self.values[item]
+
+    def __getitem__(self, item: str) -> Any:
         assert item in self, "Configuration entry '{}' not found.".format(item)
         return self.values[item]
 
@@ -27,9 +37,6 @@ class Configuration:
             return value
         else:
             raise Exception("Unexpected configuration value type '{}'.".format(str(type(value))))
-
-    def items(self):
-        return self.values.items()
 
     def get(self, item: str, default: Optional[Any] = None, transform_default: bool = True) -> Any:
         if item in self:
