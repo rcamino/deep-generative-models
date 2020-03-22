@@ -33,9 +33,9 @@ class BlockBuilder:
 
     def build(self, input_size: int) -> Module:
         if self.variable_metadata.is_binary():
-            return Sequential(Linear(input_size, self.variable_metadata.get_size()), Sigmoid())
+            return Sequential(Linear(input_size, self.size), Sigmoid())
         elif self.variable_metadata.is_numerical():
-            return Linear(input_size, self.variable_metadata.get_size())
+            return Linear(input_size, self.size)
 
 
 class MultiOutputLayer(Module):
