@@ -22,7 +22,8 @@ class Configuration:
             return Configuration(value)
         if type(value) == list:
             return [self._transform_value(child_value) for child_value in value]
-        elif type(value) in [str, int, float]:
+        # I added the Configuration type here because it is easier for some border case uses
+        elif type(value) in [str, int, float, Configuration]:
             return value
         else:
             raise Exception("Unexpected configuration value type '{}'.".format(str(type(value))))
