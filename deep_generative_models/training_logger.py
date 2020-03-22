@@ -6,7 +6,7 @@ from csv import DictWriter
 from typing import Optional, IO
 
 
-class Logger(object):
+class TrainingLogger(object):
 
     PRINT_FORMAT = "epoch {:d}/{:d} {}-{}: {:.05f} Time: {:.2f} s"
     CSV_COLUMNS = ["epoch", "model", "metric_name", "metric_value", "time"]
@@ -29,11 +29,11 @@ class Logger(object):
     def start_timer(self) -> None:
         self.start_time = time.time()
 
-    def log(self, epoch_index: int, num_epochs: int, model_name: str, metric_name: str, metric_value: float) -> None:
+    def log(self, epoch: int, num_epochs: int, model_name: str, metric_name: str, metric_value: float) -> None:
         elapsed_time = time.time() - self.start_time
 
         self.output_writer.writerow({
-            "epoch": epoch_index + 1,
+            "epoch": epoch,
             "model": model_name,
             "metric_name": metric_name,
             "metric_value": metric_value,
@@ -41,7 +41,7 @@ class Logger(object):
         })
 
         print(self.PRINT_FORMAT
-              .format(epoch_index + 1,
+              .format(epoch,
                       num_epochs,
                       model_name,
                       metric_name,
