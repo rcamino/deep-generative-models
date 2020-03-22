@@ -11,6 +11,9 @@ from deep_generative_models.metadata import Metadata
 
 class Generator(Module):
 
+    hidden_layers: Sequential
+    output_layer: Module
+
     def __init__(self, noise_size: int, output_layer_factory: OutputLayerFactory, hidden_sizes: List[int] = (),
                  bn_decay: float = 0):
         super(Generator, self).__init__()
