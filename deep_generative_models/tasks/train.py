@@ -12,7 +12,7 @@ from deep_generative_models.checkpoints import Checkpoints
 from deep_generative_models.commandline import create_parent_directories_if_needed
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.training_logger import TrainingLogger
-from deep_generative_models.metadata import load_metadata
+from deep_generative_models.metadata import load_metadata, Metadata
 from deep_generative_models.models.optimization import create_optimizers, Optimizers
 from deep_generative_models.tasks.task import Task
 
@@ -51,7 +51,7 @@ class Train(Task):
             # train discriminator and generator
             logger.start_timer()
 
-            metrics = self.train_epoch(configuration, architecture, optimizers, data)
+            metrics = self.train_epoch(configuration, metadata, architecture, optimizers, data)
 
             for metric_name, metric_value in metrics.items():
                 logger.log(epoch, configuration.epochs, metric_name, metric_value)
@@ -71,6 +71,6 @@ class Train(Task):
         logger.close()
         print("Total time: {:02f}s".format(time.time() - start_time))
 
-    def train_epoch(self, configuration: Configuration, architecture: Architecture, optimizers: Optimizers,
-                    data: Dataset) -> Dict[str, float]:
+    def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                    optimizers: Optimizers, data: Dataset) -> Dict[str, float]:
         raise NotImplementedError

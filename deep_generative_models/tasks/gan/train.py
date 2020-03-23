@@ -14,14 +14,15 @@ from typing import Dict
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
+from deep_generative_models.metadata import Metadata
 from deep_generative_models.tasks.train import Train
 from deep_generative_models.models.optimization import Optimizers
 
 
 class TrainGAN(Train):
 
-    def train_epoch(self, configuration: Configuration, architecture: Architecture, optimizers: Optimizers,
-                    data: Dataset) -> Dict[str, float]:
+    def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                    optimizers: Optimizers, data: Dataset) -> Dict[str, float]:
         architecture.generator.train()
         architecture.discriminator.train()
 
