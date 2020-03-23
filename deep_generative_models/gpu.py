@@ -1,25 +1,29 @@
 import torch
 
 from torch import Tensor
+from torch.nn import Module
 
-from typing import Union, List, Any
+from typing import Union, List
 
 
-def to_gpu_if_available(*tensors: Tensor) -> Union[Tensor, List[Tensor]]:
-    if len(tensors) == 0:
+CanBeMovedToGPU = Union[Tensor, Module]
+
+
+def to_gpu_if_available(*targets: CanBeMovedToGPU) -> Union[CanBeMovedToGPU, List[CanBeMovedToGPU]]:
+    if len(targets) == 0:
         return []
     if torch.cuda.is_available():
-        tensors = [tensor.cuda() if tensor is not None else None for tensor in tensors]
-    if len(tensors) == 1:
-        return tensors[0]
-    return tensors
+        targets = [target.cuda() if target is not None else None for target in targets]
+    if len(targets) == 1:
+        return targets[0]
+    return targets
 
 
-def to_cpu_if_was_in_gpu(*tensors: Tensor) -> Union[Tensor, List[Tensor]]:
-    if len(tensors) == 0:
+def to_cpu_if_was_in_gpu(*targets: CanBeMovedToGPU) -> Union[CanBeMovedToGPU, List[CanBeMovedToGPU]]:
+    if len(targets) == 0:
         return []
     if torch.cuda.is_available():
-        tensors = [tensor.cpu() if tensor is not None else None for tensor in tensors]
-    if len(tensors) == 1:
-        return tensors[0]
-    return tensors
+        targets = [target.cpu() if target is not None else None for target in targets]
+    if len(targets) == 1:
+        return targets[0]
+    return targets

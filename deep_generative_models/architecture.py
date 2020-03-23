@@ -5,6 +5,7 @@ from deep_generative_models.activations.softmax_sampling import SoftmaxSampling
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.factory import ClassFactoryWrapper
+from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
 from deep_generative_models.layers.multi_output_layer import PartialMultiOutputLayerFactory
@@ -23,7 +24,14 @@ from deep_generative_models.models.generator import SingleVariableGeneratorFacto
 
 
 class Architecture(Dictionary[Module]):
-    pass
+
+    def to_gpu_if_available(self) -> None:
+        for name, module in self.items():
+            self[name] = to_gpu_if_available(module)
+
+    def to_cpu_if_was_in_gpu(self) -> None:
+        for name, module in self.items():
+            self[name] = to_cpu_if_was_in_gpu(module)
 
 
 factory_by_name = {
