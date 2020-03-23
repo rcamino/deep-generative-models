@@ -1,10 +1,9 @@
-from typing import Dict
-
 from torch.nn import Module, ReLU, Sigmoid, Tanh, LeakyReLU
 
 from deep_generative_models.activations.gumbel_softmax_sampling import GumbelSoftmaxSamplingFactory
 from deep_generative_models.activations.softmax_sampling import SoftmaxSampling
 from deep_generative_models.configuration import Configuration
+from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.factory import ClassFactoryWrapper
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
@@ -22,7 +21,9 @@ from deep_generative_models.models.discriminator import DiscriminatorFactory
 from deep_generative_models.models.encoder import SingleInputEncoderFactory, MultiInputEncoderFactory
 from deep_generative_models.models.generator import SingleVariableGeneratorFactory, MultiVariableGeneratorFactory
 
-Architecture = Dict[str, Module]
+
+class Architecture(Dictionary[Module]):
+    pass
 
 
 factory_by_name = {
@@ -53,7 +54,7 @@ factory_by_name["discriminator"] = DiscriminatorFactory(factory_by_name)
 
 
 def create_architecture(metadata: Metadata, configuration: Configuration) -> Architecture:
-    architecture = {}
+    architecture = Architecture()
     for name, child_configuration in configuration.architecture.items():
         factory = factory_by_name[child_configuration.factory]
         architecture[name] = factory.create(metadata, configuration, child_configuration.get("arguments", {}))

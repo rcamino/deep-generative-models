@@ -2,55 +2,43 @@ import json
 
 from typing import Dict, Any, List, Optional
 
+from deep_generative_models.dictionary import Dictionary
 
-class Configuration:
 
-    def __init__(self, values: Dict) -> None:
-        self.values = {}
-        for key, value in values.items():
-            self.values[key] = self._transform_value(value)
+class Configuration(Dictionary[Any]):
 
-    def __contains__(self, item: str) -> bool:
-        return item in self.values
-
-    def __getattr__(self, item: str) -> Any:
-        # if a method in the dictionary is being called
-        # WARNING: no config entries can be called like dictionary methods
-        if hasattr(self.values, item):
-            return getattr(self.values, item)
-        # if not check for dictionary elements
-        else:
-            assert item in self, "Configuration entry '{}' not found.".format(item)
-            return self.values[item]
-
-    def __getitem__(self, item: str) -> Any:
-        assert item in self, "Configuration entry '{}' not found.".format(item)
-        return self.values[item]
-
-    def _transform_value(self, value: Any) -> Any:
+    @classmethod
+    def _wrap_recursively(cls, value: Any) -> Any:
         if type(value) == dict:
             return Configuration(value)
         if type(value) == list:
-            return [self._transform_value(child_value) for child_value in value]
+            return [cls._wrap_recursively(child_value) for child_value in value]
         # I added the Configuration type here because it is easier for some border case uses
         elif type(value) in [str, int, float, Configuration]:
             return value
         else:
             raise Exception("Unexpected configuration value type '{}'.".format(str(type(value))))
 
-    def get(self, item: str, default: Optional[Any] = None, transform_default: bool = True) -> Any:
-        if item in self:
-            return getattr(self, item)
+    def __init__(self, wrapped: Optional[Dict[str, Any]] = None) -> None:
+        # don't send the wrapped values yet
+        super(Configuration, self).__init__()
+        # wrap and add recursively now that the dictionary is initialized
+        for name, value in wrapped.items():
+            self[name] = self._wrap_recursively(value)
+
+    def get(self, name: str, default: Optional[Any] = None, transform_default: bool = True) -> Any:
+        if name in self:
+            return self[name]
         elif transform_default:
-            return self._transform_value(default)
+            return self._wrap_recursively(default)
         else:
             return default
 
-    def get_all_defined(self, items: List[str]) -> Dict[str, Any]:
+    def get_all_defined(self, names: List[str]) -> Dict[str, Any]:
         defined = {}
-        for item in items:
-            if item in self:
-                defined[item] = getattr(self, item)
+        for name in names:
+            if name in self:
+                defined[name] = self[name]
         return defined
 
 

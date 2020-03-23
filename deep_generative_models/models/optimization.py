@@ -1,13 +1,13 @@
 from torch.optim import Adam, SGD
 from torch.optim.optimizer import Optimizer
 
-from typing import Dict
-
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
+from deep_generative_models.dictionary import Dictionary
 
 
-Optimizers = Dict[str, Optimizer]
+class Optimizers(Dictionary[Optimizer]):
+    pass
 
 
 optimizer_classes_by_name = {
@@ -18,7 +18,7 @@ optimizer_classes_by_name = {
 
 
 def create_optimizers(architecture: Architecture, optimizers_configuration: Configuration) -> Optimizers:
-    optimizers = {}
+    optimizers = Optimizers()
     for optimizer_name, optimizer_configuration in optimizers_configuration.items():
         # extract the module parameters
         parameters = []
