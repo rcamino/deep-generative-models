@@ -20,7 +20,7 @@ from deep_generative_models.models.decoder import SingleOutputDecoderFactory
 from deep_generative_models.models.decoder import MultiOutputDecoderFactory
 from deep_generative_models.models.discriminator import DiscriminatorFactory
 from deep_generative_models.models.encoder import SingleInputEncoderFactory, MultiInputEncoderFactory
-from deep_generative_models.models.generator import SingleVariableGeneratorFactory, MultiVariableGeneratorFactory
+from deep_generative_models.models.generator import SingleOutputGeneratorFactory, MultiOutputGeneratorFactory
 
 
 class Architecture(Dictionary[Module]):
@@ -36,8 +36,8 @@ class Architecture(Dictionary[Module]):
 
 factory_by_name = {
     # my activations
-    "gumbel-softmax sampling": GumbelSoftmaxSamplingFactory(),
-    "softmax sampling": ClassFactoryWrapper(SoftmaxSampling),
+    "GumbelSoftmaxSampling": GumbelSoftmaxSamplingFactory(),
+    "SoftmaxSampling": ClassFactoryWrapper(SoftmaxSampling),
 
     # PyTorch activations (could add more)
     "ReLU": ClassFactoryWrapper(ReLU),
@@ -46,19 +46,19 @@ factory_by_name = {
     "LeakyReLU": ClassFactoryWrapper(LeakyReLU)
 }
 
-factory_by_name["single-variable autoencoder"] = SingleVariableAutoEncoderFactory(factory_by_name)
-factory_by_name["multi-variable autoencoder"] = MultiVariableAutoEncoderFactory(factory_by_name)
-factory_by_name["single-input encoder"] = SingleInputEncoderFactory(factory_by_name)
-factory_by_name["multi-input encoder"] = MultiInputEncoderFactory(factory_by_name)
-factory_by_name["single-output decoder"] = SingleOutputDecoderFactory(factory_by_name)
-factory_by_name["multi-output decoder"] = MultiOutputDecoderFactory(factory_by_name)
-factory_by_name["single-input layer"] = SingleInputLayerFactory(factory_by_name)
-factory_by_name["multi-input layer"] = MultiInputLayerFactory(factory_by_name)
-factory_by_name["single-output layer"] = PartialSingleOutputLayerFactory(factory_by_name)
-factory_by_name["multi-output layer"] = PartialMultiOutputLayerFactory(factory_by_name)
-factory_by_name["single-output generator"] = SingleVariableGeneratorFactory(factory_by_name)
-factory_by_name["multi-output generator"] = MultiVariableGeneratorFactory(factory_by_name)
-factory_by_name["discriminator"] = DiscriminatorFactory(factory_by_name)
+factory_by_name["SingleVariableAutoEncoder"] = SingleVariableAutoEncoderFactory(factory_by_name)
+factory_by_name["MultiVariableAutoEncoder"] = MultiVariableAutoEncoderFactory(factory_by_name)
+factory_by_name["SingleInputEncoder"] = SingleInputEncoderFactory(factory_by_name)
+factory_by_name["MultiInputEncoder"] = MultiInputEncoderFactory(factory_by_name)
+factory_by_name["SingleOutputDecoder"] = SingleOutputDecoderFactory(factory_by_name)
+factory_by_name["MultiOutputDecoder"] = MultiOutputDecoderFactory(factory_by_name)
+factory_by_name["SingleInputLayer"] = SingleInputLayerFactory(factory_by_name)
+factory_by_name["MultiInputLayer"] = MultiInputLayerFactory(factory_by_name)
+factory_by_name["SingleOutputLayer"] = PartialSingleOutputLayerFactory(factory_by_name)
+factory_by_name["MultiOutputLayer"] = PartialMultiOutputLayerFactory(factory_by_name)
+factory_by_name["SingleOutputGenerator"] = SingleOutputGeneratorFactory(factory_by_name)
+factory_by_name["MultiOutputGenerator"] = MultiOutputGeneratorFactory(factory_by_name)
+factory_by_name["Discriminator"] = DiscriminatorFactory(factory_by_name)
 
 
 def create_architecture(metadata: Metadata, configuration: Configuration) -> Architecture:

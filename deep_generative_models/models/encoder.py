@@ -43,7 +43,7 @@ class SingleInputEncoderFactory(MultiFactory):
 
     def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
         # override the input layer size
-        input_layer = self.create_other("single-input layer", metadata, global_configuration,
+        input_layer = self.create_other("SingleInputLayer", metadata, global_configuration,
                                         Configuration({"input_size": metadata.get_num_features()}))
         optional = configuration.get_all_defined(["hidden_sizes"])
         return Encoder(input_layer, global_configuration.code_size, **optional)
@@ -52,7 +52,7 @@ class SingleInputEncoderFactory(MultiFactory):
 class MultiInputEncoderFactory(MultiFactory):
 
     def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
-        input_layer = self.create_other("multi-input layer", metadata, global_configuration,
+        input_layer = self.create_other("MultiInputLayer", metadata, global_configuration,
                                         configuration.input_layer)
         optional = configuration.get_all_defined(["hidden_sizes"])
         return Encoder(input_layer, global_configuration.code_size, **optional)

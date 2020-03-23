@@ -35,8 +35,8 @@ class SingleVariableAutoEncoderFactory(MultiFactory):
 
     def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
         return AutoEncoder(
-            self.create_other("single-input encoder", metadata, global_configuration, configuration.encoder),
-            self.create_other("single-output decoder", metadata, global_configuration, configuration.decoder)
+            self.create_other("SingleInputEncoder", metadata, global_configuration, configuration.encoder),
+            self.create_other("SingleOutputDecoder", metadata, global_configuration, configuration.decoder)
         )
 
 
@@ -44,6 +44,6 @@ class MultiVariableAutoEncoderFactory(MultiFactory):
 
     def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
         return AutoEncoder(
-            self.create_other("multi-input encoder", metadata, global_configuration, configuration.encoder),
-            self.create_other("multi-output decoder", metadata, global_configuration, configuration.decoder)
+            self.create_other("MultiInputEncoder", metadata, global_configuration, configuration.encoder),
+            self.create_other("MultiOutputDecoder", metadata, global_configuration, configuration.decoder)
         )

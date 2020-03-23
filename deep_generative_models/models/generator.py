@@ -42,7 +42,7 @@ class Generator(Module):
         return self.output_layer(self.hidden_layers(noise))
 
 
-class SingleVariableGeneratorFactory(MultiFactory):
+class SingleOutputGeneratorFactory(MultiFactory):
 
     def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
         # override the output layer size
@@ -51,18 +51,18 @@ class SingleVariableGeneratorFactory(MultiFactory):
         if "output_layer" in configuration and "activation" in configuration.output_layer:
             output_layer_configuration["activation"] = configuration.output_layer.activation
         # create the output layer factory
-        output_layer_factory = self.create_other("single-output layer", metadata, global_configuration,
+        output_layer_factory = self.create_other("SingleOutputLayer", metadata, global_configuration,
                                                  Configuration(output_layer_configuration))
         # create the generator
         optional = configuration.get_all_defined(["hidden_sizes", "bn_decay"])
         return Generator(global_configuration.noise_size, output_layer_factory, **optional)
 
 
-class MultiVariableGeneratorFactory(MultiFactory):
+class MultiOutputGeneratorFactory(MultiFactory):
 
     def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
         # create the output layer factory
-        output_layer_factory = self.create_other("multi-output layer", metadata, global_configuration,
+        output_layer_factory = self.create_other("MultiOutputLayer", metadata, global_configuration,
                                                  configuration.output_layer)
         # create the generator
         optional = configuration.get_all_defined(["hidden_sizes", "bn_decay"])
