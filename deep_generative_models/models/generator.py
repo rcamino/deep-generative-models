@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Optional
 
 from torch import Tensor
 from torch.nn import Module, Sequential, Linear, ReLU, BatchNorm1d
@@ -15,7 +15,7 @@ class Generator(Module):
     output_layer: Module
 
     def __init__(self, noise_size: int, output_layer_factory: OutputLayerFactory, hidden_sizes: List[int] = (),
-                 bn_decay: float = 0):
+                 hidden_activation: Optional[Module] = None, bn_decay: float = 0):
         super(Generator, self).__init__()
 
         # input layer
@@ -23,7 +23,8 @@ class Generator(Module):
         hidden_layers = []
 
         # hidden layers
-        hidden_activation = ReLU()  # TODO: parametrize?
+        if hidden_activation is None:  # default hidden activation
+            hidden_activation = ReLU()
         for layer_number, layer_size in enumerate(hidden_sizes):
             hidden_layers.append(Linear(previous_layer_size, layer_size))
             if layer_number > 0 and bn_decay > 0:
@@ -42,28 +43,45 @@ class Generator(Module):
         return self.output_layer(self.hidden_layers(noise))
 
 
-class SingleOutputGeneratorFactory(MultiFactory):
+class GeneratorFactory(MultiFactory):
 
     def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+        # create the output layer factory
+        output_layer_factory = self.create_output_layer_factory(metadata, global_configuration, configuration)
+
+        # create the generator
+        optional = configuration.get_all_defined(["hidden_sizes", "bn_decay"])
+
+        if "hidden_activation" in configuration:
+            optional["hidden_activation"] = self.create_other(configuration.hidden_activation.factory,
+                                                              metadata,
+                                                              global_configuration,
+                                                              configuration.hidden_activation.get("arguments", {}))
+
+        return Generator(global_configuration.noise_size, output_layer_factory, **optional)
+
+    def create_output_layer_factory(self, metadata: Metadata, global_configuration: Configuration,
+                                    configuration: Configuration) -> OutputLayerFactory:
+        raise NotImplementedError
+
+
+class SingleOutputGeneratorFactory(GeneratorFactory):
+
+    def create_output_layer_factory(self, metadata: Metadata, global_configuration: Configuration,
+                                    configuration: Configuration) -> OutputLayerFactory:
         # override the output layer size
         output_layer_configuration = {"output_size": metadata.get_num_features()}
         # copy activation arguments only if defined
         if "output_layer" in configuration and "activation" in configuration.output_layer:
             output_layer_configuration["activation"] = configuration.output_layer.activation
         # create the output layer factory
-        output_layer_factory = self.create_other("SingleOutputLayer", metadata, global_configuration,
-                                                 Configuration(output_layer_configuration))
-        # create the generator
-        optional = configuration.get_all_defined(["hidden_sizes", "bn_decay"])
-        return Generator(global_configuration.noise_size, output_layer_factory, **optional)
+        return self.create_other("SingleOutputLayer", metadata, global_configuration,
+                                 Configuration(output_layer_configuration))
 
 
-class MultiOutputGeneratorFactory(MultiFactory):
+class MultiOutputGeneratorFactory(GeneratorFactory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create_output_layer_factory(self, metadata: Metadata, global_configuration: Configuration,
+                                    configuration: Configuration) -> OutputLayerFactory:
         # create the output layer factory
-        output_layer_factory = self.create_other("MultiOutputLayer", metadata, global_configuration,
-                                                 configuration.output_layer)
-        # create the generator
-        optional = configuration.get_all_defined(["hidden_sizes", "bn_decay"])
-        return Generator(global_configuration.noise_size, output_layer_factory, **optional)
+        return self.create_other("MultiOutputLayer", metadata, global_configuration, configuration.output_layer)
