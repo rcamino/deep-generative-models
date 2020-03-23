@@ -1,4 +1,4 @@
-from torch.nn import Module, ReLU, Sigmoid, Tanh, LeakyReLU
+from torch.nn import Module, ReLU, Sigmoid, Tanh, LeakyReLU, BCELoss, CrossEntropyLoss, MSELoss
 
 from deep_generative_models.activations.gumbel_softmax_sampling import GumbelSoftmaxSamplingFactory
 from deep_generative_models.activations.softmax_sampling import SoftmaxSampling
@@ -43,7 +43,12 @@ factory_by_name = {
     "ReLU": ClassFactoryWrapper(ReLU),
     "Sigmoid": ClassFactoryWrapper(Sigmoid),
     "Tanh": ClassFactoryWrapper(Tanh),
-    "LeakyReLU": ClassFactoryWrapper(LeakyReLU)
+    "LeakyReLU": ClassFactoryWrapper(LeakyReLU),
+
+    # PyTorch losses (could add more)
+    "BCE": ClassFactoryWrapper(BCELoss),
+    "CrossEntropy": ClassFactoryWrapper(CrossEntropyLoss),
+    "MSE": ClassFactoryWrapper(MSELoss),
 }
 
 factory_by_name["SingleVariableAutoEncoder"] = SingleVariableAutoEncoderFactory(factory_by_name)
