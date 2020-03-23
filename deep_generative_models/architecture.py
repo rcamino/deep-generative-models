@@ -11,6 +11,7 @@ from deep_generative_models.layers.multi_input_layer import MultiInputLayerFacto
 from deep_generative_models.layers.multi_output_layer import PartialMultiOutputLayerFactory
 from deep_generative_models.layers.single_input_layer import SingleInputLayerFactory
 from deep_generative_models.layers.single_output_layer import PartialSingleOutputLayerFactory
+from deep_generative_models.losses.multi_reconstruction import MultiReconstructionLossFactory
 
 from deep_generative_models.metadata import Metadata
 
@@ -50,6 +51,9 @@ factory_by_name = {
     "Sigmoid": ClassFactoryWrapper(Sigmoid),
     "Softmax": ClassFactoryWrapper(Softmax),
     "Tanh": ClassFactoryWrapper(Tanh),
+
+    # my losses
+    "MultiReconstructionLoss": MultiReconstructionLossFactory(),
 
     # PyTorch losses (could add more)
     "BCE": ClassFactoryWrapper(BCELoss),
