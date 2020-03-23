@@ -7,7 +7,6 @@ from torch import Tensor
 from torch.nn.functional import binary_cross_entropy
 
 from torch.utils.data.dataloader import DataLoader
-from torch.utils.data.dataset import Dataset
 
 from typing import Dict
 
@@ -15,28 +14,28 @@ from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.tasks.train import Train
+from deep_generative_models.tasks.train import Train, Datasets
 from deep_generative_models.models.optimization import Optimizers
 
 
 class TrainGAN(Train):
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    optimizers: Optimizers, data: Dataset) -> Dict[str, float]:
+                    optimizers: Optimizers, datasets: Datasets) -> Dict[str, float]:
         architecture.generator.train()
         architecture.discriminator.train()
 
         loss_by_batch = {"generator": [], "discriminator": []}
 
         more_batches = True
-        data_iterator = iter(DataLoader(data, batch_size=configuration.batch_size, shuffle=True))
+        data_iterator = iter(DataLoader(datasets.train_features, batch_size=configuration.batch_size, shuffle=True))
 
         while more_batches:
             # train discriminator
             for _ in range(configuration.discriminator_steps):
                 # next batch
                 try:
-                    batch = next(data_iterator)[0]
+                    batch = next(data_iterator)
                     loss = self.train_discriminator(configuration, architecture, optimizers, batch)
                     loss_by_batch["discriminator"].append(loss)
                 except StopIteration:

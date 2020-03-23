@@ -3,7 +3,6 @@ import argparse
 import numpy as np
 
 from torch.utils.data.dataloader import DataLoader
-from torch.utils.data.dataset import Dataset
 
 from typing import Dict
 
@@ -12,18 +11,18 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.models.optimization import Optimizers
-from deep_generative_models.tasks.train import Train
+from deep_generative_models.tasks.train import Train, Datasets
 
 
 class TrainAutoEncoder(Train):
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    optimizers: Optimizers, data: Dataset) -> Dict[str, float]:
+                    optimizers: Optimizers, datasets: Datasets) -> Dict[str, float]:
         architecture.autoencoder.train()
 
         loss_by_batch = []
 
-        for batch, in DataLoader(data, batch_size=configuration.batch_size, shuffle=True):
+        for batch in DataLoader(datasets.train_features, batch_size=configuration.batch_size, shuffle=True):
             optimizers.autoencoder.zero_grad()
 
             _, reconstructed = architecture.autoencoder(batch)
