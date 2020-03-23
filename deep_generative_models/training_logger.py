@@ -8,8 +8,8 @@ from typing import Optional, IO
 
 class TrainingLogger(object):
 
-    PRINT_FORMAT = "epoch {:d}/{:d} {}-{}: {:.05f} Time: {:.2f} s"
-    CSV_COLUMNS = ["epoch", "model", "metric_name", "metric_value", "time"]
+    PRINT_FORMAT = "epoch {:d}/{:d} {}: {:.05f} Time: {:.2f} s"
+    CSV_COLUMNS = ["epoch", "metric_name", "metric_value", "time"]
 
     start_time: float
     output_file: Optional[IO]
@@ -29,12 +29,11 @@ class TrainingLogger(object):
     def start_timer(self) -> None:
         self.start_time = time.time()
 
-    def log(self, epoch: int, num_epochs: int, model_name: str, metric_name: str, metric_value: float) -> None:
+    def log(self, epoch: int, num_epochs: int, metric_name: str, metric_value: float) -> None:
         elapsed_time = time.time() - self.start_time
 
         self.output_writer.writerow({
             "epoch": epoch,
-            "model": model_name,
             "metric_name": metric_name,
             "metric_value": metric_value,
             "time": elapsed_time
@@ -43,7 +42,6 @@ class TrainingLogger(object):
         print(self.PRINT_FORMAT
               .format(epoch,
                       num_epochs,
-                      model_name,
                       metric_name,
                       metric_value,
                       elapsed_time

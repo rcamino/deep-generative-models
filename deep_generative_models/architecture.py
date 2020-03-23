@@ -21,6 +21,7 @@ from deep_generative_models.models.decoder import MultiOutputDecoderFactory
 from deep_generative_models.models.discriminator import DiscriminatorFactory
 from deep_generative_models.models.encoder import SingleInputEncoderFactory, MultiInputEncoderFactory
 from deep_generative_models.models.generator import SingleOutputGeneratorFactory, MultiOutputGeneratorFactory
+from deep_generative_models.models.initialization import initialize_module
 
 
 class Architecture(Dictionary[Module]):
@@ -32,6 +33,10 @@ class Architecture(Dictionary[Module]):
     def to_cpu_if_was_in_gpu(self) -> None:
         for name, module in self.items():
             self[name] = to_cpu_if_was_in_gpu(module)
+
+    def initialize(self):
+        for module in self.values():
+            initialize_module(module)
 
 
 factory_by_name = {

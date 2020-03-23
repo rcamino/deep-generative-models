@@ -1,5 +1,4 @@
 import argparse
-import time
 import torch
 
 import numpy as np
@@ -8,78 +7,25 @@ from torch import Tensor
 from torch.nn.functional import binary_cross_entropy
 
 from torch.utils.data.dataloader import DataLoader
-from torch.utils.data.dataset import TensorDataset, Dataset
+from torch.utils.data.dataset import Dataset
 
 from typing import Dict
 
-from deep_generative_models.architecture import create_architecture, Architecture
-from deep_generative_models.checkpoints import Checkpoints
-from deep_generative_models.commandline import create_parent_directories_if_needed
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
-from deep_generative_models.training_logger import TrainingLogger
-from deep_generative_models.metadata import load_metadata
-from deep_generative_models.models.optimization import create_optimizers, Optimizers
-from deep_generative_models.tasks.task import Task
+from deep_generative_models.tasks.train import Train
+from deep_generative_models.models.optimization import Optimizers
 
 
-class TrainGAN(Task):
-
-    def run(self, configuration: Configuration) -> None:
-        start_time = time.time()
-        
-        features = torch.from_numpy(np.load(configuration.features))
-        data = TensorDataset(features)
-        metadata = load_metadata(configuration.metadata)
-
-        architecture = create_architecture(metadata, configuration)
-        architecture.to_gpu_if_available()
-
-        optimizers = create_optimizers(architecture, configuration.optimizers)
-
-        checkpoints = Checkpoints(create_parent_directories_if_needed(configuration.checkpoint),
-                                  configuration.max_checkpoint_delay)
-
-        if checkpoints.exists():
-            checkpoint = checkpoints.load()
-        else:
-            checkpoint = {
-                "architecture": checkpoints.extract_states(architecture),
-                "optimizers": checkpoints.extract_states(optimizers),
-                "epoch": 0
-            }
-
-        logger = TrainingLogger(create_parent_directories_if_needed(configuration.logs), checkpoint["epoch"] > 0)
-
-        for epoch in range(checkpoint["epoch"] + 1, configuration.epochs + 1):
-            # train discriminator and generator
-            logger.start_timer()
-            
-            losses = self.train_epoch(configuration, architecture, optimizers, data)
-            logger.log(epoch, configuration.epochs, "discriminator", "mean_loss", np.mean(losses["discriminator"]))
-            logger.log(epoch, configuration.epochs, "generator", "mean_loss", np.mean(losses["generator"]))
-
-            # update checkpoint
-            checkpoint["architecture"] = checkpoints.extract_states(architecture)
-            checkpoint["optimizers"] = checkpoints.extract_states(optimizers)
-            checkpoint["epoch"] = epoch
-
-            # save checkpoint
-            checkpoints.delayed_save(checkpoint)
-
-        # force save of last checkpoint
-        checkpoints.save(checkpoint)
-        
-        # finish
-        logger.close()
-        print("Total time: {:02f}s".format(time.time() - start_time))
+class TrainGAN(Train):
 
     def train_epoch(self, configuration: Configuration, architecture: Architecture, optimizers: Optimizers,
-                    data: Dataset) -> Dict:
+                    data: Dataset) -> Dict[str, float]:
         architecture.generator.train()
         architecture.discriminator.train()
 
-        losses = {"generator": [], "discriminator": []}
+        loss_by_batch = {"generator": [], "discriminator": []}
 
         more_batches = True
         data_iterator = iter(DataLoader(data, batch_size=configuration.batch_size, shuffle=True))
@@ -91,7 +37,7 @@ class TrainGAN(Task):
                 try:
                     batch = next(data_iterator)[0]
                     loss = self.train_discriminator(configuration, architecture, optimizers, batch)
-                    losses["discriminator"].append(loss)
+                    loss_by_batch["discriminator"].append(loss)
                 except StopIteration:
                     more_batches = False
                     break
@@ -99,9 +45,10 @@ class TrainGAN(Task):
             # train generator
             for _ in range(configuration.generator_steps):
                 loss = self.train_generator(configuration, architecture, optimizers)
-                losses["generator"].append(loss)
+                loss_by_batch["generator"].append(loss)
 
-        return losses
+        return {"generator_mean_loss": np.mean(loss_by_batch["generator"]).item(),
+                "discriminator_mean_loss": np.mean(loss_by_batch["discriminator"]).item()}
 
     @staticmethod
     def train_discriminator(configuration: Configuration, architecture: Architecture, optimizers: Optimizers,
