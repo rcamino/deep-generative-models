@@ -36,6 +36,8 @@ class Train(Task):
 
         if checkpoints.exists():
             checkpoint = checkpoints.load()
+            checkpoints.load_states(checkpoint["architecture"], architecture)
+            checkpoints.load_states(checkpoint["optimizers"], optimizers)
         else:
             architecture.initialize()
 
