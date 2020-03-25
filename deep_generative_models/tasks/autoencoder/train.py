@@ -2,6 +2,7 @@ import argparse
 
 import numpy as np
 
+from torch import Tensor
 from torch.utils.data.dataloader import DataLoader
 
 from typing import Dict
@@ -23,19 +24,23 @@ class TrainAutoEncoder(Train):
         loss_by_batch = []
 
         for batch in DataLoader(datasets.train_features, batch_size=configuration.batch_size, shuffle=True):
-            optimizers.autoencoder.zero_grad()
-
-            _, reconstructed = architecture.autoencoder(batch)
-
-            loss = architecture.reconstruction_loss(reconstructed, batch)
-            loss.backward()
-
-            optimizers.autoencoder.step()
-
-            loss = to_cpu_if_was_in_gpu(loss)
-            loss_by_batch.append(loss.item())
+            loss_by_batch.append(self.train_batch(architecture, optimizers, batch))
 
         return {"reconstruction_mean_loss": np.mean(loss_by_batch).item()}
+
+    @staticmethod
+    def train_batch(architecture: Architecture, optimizers: Optimizers, batch: Tensor) -> float:
+        optimizers.autoencoder.zero_grad()
+
+        _, reconstructed = architecture.autoencoder(batch)
+
+        loss = architecture.reconstruction_loss(reconstructed, batch)
+        loss.backward()
+
+        optimizers.autoencoder.step()
+
+        loss = to_cpu_if_was_in_gpu(loss)
+        return loss.item()
 
 
 if __name__ == '__main__':
