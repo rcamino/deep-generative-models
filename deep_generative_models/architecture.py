@@ -11,7 +11,9 @@ from deep_generative_models.layers.multi_input_layer import MultiInputLayerFacto
 from deep_generative_models.layers.multi_output_layer import PartialMultiOutputLayerFactory
 from deep_generative_models.layers.single_input_layer import SingleInputLayerFactory
 from deep_generative_models.layers.single_output_layer import PartialSingleOutputLayerFactory
+from deep_generative_models.losses.gan import GANGeneratorLossFactory, GANDiscriminatorLossFactory
 from deep_generative_models.losses.multi_reconstruction import MultiReconstructionLossFactory
+from deep_generative_models.losses.wgan import WGANGeneratorLossFactory, WGANCriticLossFactory
 
 from deep_generative_models.metadata import Metadata
 
@@ -54,6 +56,10 @@ factory_by_name = {
 
     # my losses
     "MultiReconstructionLoss": MultiReconstructionLossFactory(),
+    "GANGeneratorLoss": GANGeneratorLossFactory(),
+    "GANDiscriminatorLoss": GANDiscriminatorLossFactory(),
+    "WGANGeneratorLoss": WGANGeneratorLossFactory(),
+    "WGANCriticLoss": WGANCriticLossFactory(),
 
     # PyTorch losses (could add more)
     "BCE": ClassFactoryWrapper(BCELoss),
@@ -73,7 +79,8 @@ factory_by_name["SingleOutputLayer"] = PartialSingleOutputLayerFactory(factory_b
 factory_by_name["MultiOutputLayer"] = PartialMultiOutputLayerFactory(factory_by_name)
 factory_by_name["SingleOutputGenerator"] = SingleOutputGeneratorFactory(factory_by_name)
 factory_by_name["MultiOutputGenerator"] = MultiOutputGeneratorFactory(factory_by_name)
-factory_by_name["Discriminator"] = DiscriminatorFactory(factory_by_name)
+factory_by_name["Discriminator"] = DiscriminatorFactory(factory_by_name, critic=False)
+factory_by_name["Critic"] = DiscriminatorFactory(factory_by_name, critic=True)
 
 
 def create_architecture(metadata: Metadata, configuration: Configuration) -> Architecture:

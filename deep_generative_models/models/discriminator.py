@@ -1,10 +1,10 @@
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Dict
 
 from torch import Tensor
 from torch.nn import Module, Sequential, Linear, LeakyReLU, Sigmoid, BatchNorm1d
 
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import MultiFactory
+from deep_generative_models.factory import MultiFactory, Factory
 from deep_generative_models.metadata import Metadata
 
 
@@ -45,9 +45,15 @@ class Discriminator(Module):
 
 
 class DiscriminatorFactory(MultiFactory):
+    critic: bool
+
+    def __init__(self, factory_by_name: Dict[str, Factory], critic: bool = False) -> None:
+        super(DiscriminatorFactory, self).__init__(factory_by_name)
+        self.critic = critic
 
     def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
-        optional = configuration.get_all_defined(["hidden_sizes", "bn_decay", "critic"])
+        optional = configuration.get_all_defined(["hidden_sizes", "bn_decay"])
+        optional["critic"] = self.critic
 
         if "hidden_activation" in configuration:
             optional["hidden_activation"] = self.create_other(configuration.hidden_activation.factory,

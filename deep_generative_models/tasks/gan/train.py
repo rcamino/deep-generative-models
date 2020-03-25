@@ -1,10 +1,8 @@
 import argparse
-import torch
 
 import numpy as np
 
-from torch import Tensor
-from torch.nn.functional import binary_cross_entropy
+from torch import Tensor, FloatTensor
 
 from torch.utils.data.dataloader import DataLoader
 
@@ -52,55 +50,52 @@ class TrainGAN(Train):
 
     @staticmethod
     def train_discriminator(configuration: Configuration, architecture: Architecture, optimizers: Optimizers,
-                            batch: Tensor) -> float:
-        # generate input and label vectors
-        label_zeros = torch.zeros(len(batch))
-        smooth_label_ones = torch.FloatTensor(len(batch)).uniform_(0.9, 1)
-        noise = torch.FloatTensor(len(batch), configuration.noise_size).normal_()  # match current batch size
-        label_zeros, smooth_label_ones, noise = to_gpu_if_available(label_zeros, smooth_label_ones, noise)
-
+                            real_features: Tensor) -> float:
+        # clean previous gradients
         optimizers.discriminator.zero_grad()
 
-        # first train the discriminator only with real data
-        real_predictions = architecture.discriminator(batch)
-        real_loss = binary_cross_entropy(real_predictions, smooth_label_ones)
-        real_loss.backward()
-
-        # then train the discriminator only with fake data
+        # generate a batch of fake features with the same size as the real feature batch
+        noise = to_gpu_if_available(FloatTensor(len(real_features), configuration.noise_size).normal_())
         fake_features = architecture.generator(noise)
         fake_features = fake_features.detach()  # do not propagate to the generator
-        fake_predictions = architecture.discriminator(fake_features)
-        fake_loss = binary_cross_entropy(fake_predictions, label_zeros)
-        fake_loss.backward()
 
-        # finally update the discriminator weights
-        # using two separated batches is another trick to improve GAN training
+        # calculate loss
+        loss = architecture.discriminator_loss(architecture.discriminator, real_features, fake_features)
+
+        # calculate gradients
+        loss.backward()
+
+        # update the discriminator weights
         optimizers.discriminator.step()
 
-        # calculate total loss
-        loss = real_loss + fake_loss
-        loss = to_cpu_if_was_in_gpu(loss)
-        return loss.item()
+        # clamp discriminator parameters (usually for WGAN)
+        if "discriminator_clamp" in configuration:
+            for parameter in architecture.discriminator.parameters():
+                parameter.data.clamp_(-configuration.discriminator_clamp, configuration.discriminator_clamp)
+
+        # return the loss
+        return to_cpu_if_was_in_gpu(loss).item()
 
     @staticmethod
     def train_generator(configuration: Configuration, architecture: Architecture, optimizers: Optimizers) -> float:
-        # generate input and label vectors
-        noise = torch.FloatTensor(configuration.batch_size, configuration.noise_size).normal_()  # full batch
-        smooth_label_ones = torch.FloatTensor(len(noise)).uniform_(0.9, 1)
-        noise, smooth_label_ones = to_gpu_if_available(noise, smooth_label_ones)
-
+        # clean previous gradients
         optimizers.generator.zero_grad()
 
-        features = architecture.generator(noise)
-        predictions = architecture.discriminator(features)
+        # generate a full batch of fake features
+        noise = to_gpu_if_available(FloatTensor(configuration.batch_size, configuration.noise_size).normal_())
+        fake_features = architecture.generator(noise)
 
-        loss = binary_cross_entropy(predictions, smooth_label_ones)
+        # calculate loss
+        loss = architecture.generator_loss(architecture.discriminator, fake_features)
+
+        # calculate gradients
         loss.backward()
 
+        # update the generator weights
         optimizers.generator.step()
 
-        loss = to_cpu_if_was_in_gpu(loss)
-        return loss.item()
+        # return the loss
+        return to_cpu_if_was_in_gpu(loss).item()
 
 
 if __name__ == '__main__':
