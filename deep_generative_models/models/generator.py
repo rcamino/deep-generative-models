@@ -1,46 +1,34 @@
-from typing import List, Any, Optional
+from typing import Any
 
 from torch import Tensor
-from torch.nn import Module, Sequential, Linear, ReLU, BatchNorm1d
+from torch.nn import Module, ReLU, Sequential
 
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.factory import MultiFactory
+from deep_generative_models.layers.hidden_layers import HiddenLayersFactory
 from deep_generative_models.layers.output_layer import OutputLayerFactory
 from deep_generative_models.metadata import Metadata
 
 
 class Generator(Module):
 
-    hidden_layers: Sequential
-    output_layer: Module
+    layers: Sequential
 
-    def __init__(self, noise_size: int, output_layer_factory: OutputLayerFactory, hidden_sizes: List[int] = (),
-                 hidden_activation: Optional[Module] = None, bn_decay: float = 0):
+    def __init__(self, noise_size: int, hidden_layers_factory: HiddenLayersFactory,
+                 output_layer_factory: OutputLayerFactory) -> None:
         super(Generator, self).__init__()
 
-        # input layer
-        previous_layer_size = noise_size
-        hidden_layers = []
-
         # hidden layers
-        if hidden_activation is None:  # default hidden activation
-            hidden_activation = ReLU()
-        for layer_number, layer_size in enumerate(hidden_sizes):
-            hidden_layers.append(Linear(previous_layer_size, layer_size))
-            if layer_number > 0 and bn_decay > 0:
-                hidden_layers.append(BatchNorm1d(layer_size, momentum=(1 - bn_decay)))
-            hidden_layers.append(hidden_activation)
-            previous_layer_size = layer_size
-
-        # transform the list of hidden layers into a sequential model
-        # an empty sequential module just works as the identity
-        self.hidden_layers = Sequential(*hidden_layers)
+        hidden_layers = hidden_layers_factory.create(noise_size, default_activation=ReLU())
 
         # output layer
-        self.output_layer = output_layer_factory.create(previous_layer_size)
+        output_layer = output_layer_factory.create(hidden_layers.get_output_size())
+
+        # connect layers in a sequence
+        self.layers = Sequential(hidden_layers, output_layer)
 
     def forward(self, noise: Tensor) -> Tensor:
-        return self.output_layer(self.hidden_layers(noise))
+        return self.layers(noise)
 
 
 class GeneratorFactory(MultiFactory):
@@ -49,16 +37,14 @@ class GeneratorFactory(MultiFactory):
         # create the output layer factory
         output_layer_factory = self.create_output_layer_factory(metadata, global_configuration, configuration)
 
+        # create the hidden layers factory
+        hidden_layers_factory = self.create_other("HiddenLayers",
+                                                  metadata,
+                                                  global_configuration,
+                                                  configuration.get("hidden_layers", {}))
+
         # create the generator
-        optional = configuration.get_all_defined(["hidden_sizes", "bn_decay"])
-
-        if "hidden_activation" in configuration:
-            optional["hidden_activation"] = self.create_other(configuration.hidden_activation.factory,
-                                                              metadata,
-                                                              global_configuration,
-                                                              configuration.hidden_activation.get("arguments", {}))
-
-        return Generator(global_configuration.noise_size, output_layer_factory, **optional)
+        return Generator(global_configuration.noise_size, hidden_layers_factory, output_layer_factory)
 
     def create_output_layer_factory(self, metadata: Metadata, global_configuration: Configuration,
                                     configuration: Configuration) -> OutputLayerFactory:

@@ -6,6 +6,7 @@ from deep_generative_models.configuration import Configuration
 from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.factory import ClassFactoryWrapper
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
+from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
 from deep_generative_models.layers.multi_output_layer import PartialMultiOutputLayerFactory
@@ -69,6 +70,7 @@ factory_by_name = {
     "MSE": ClassFactoryWrapper(MSELoss),
 }
 
+factory_by_name["HiddenLayers"] = PartialHiddenLayersFactory(factory_by_name)
 factory_by_name["SingleVariableAutoEncoder"] = SingleVariableAutoEncoderFactory(factory_by_name)
 factory_by_name["MultiVariableAutoEncoder"] = MultiVariableAutoEncoderFactory(factory_by_name)
 factory_by_name["SingleInputEncoder"] = SingleInputEncoderFactory(factory_by_name)

@@ -6,14 +6,16 @@ from torch.nn import Module
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.factory import MultiFactory
+from deep_generative_models.models.decoder import Decoder
+from deep_generative_models.models.encoder import Encoder
 
 
 class AutoEncoder(Module):
 
-    encoder: Module
-    decoder: Module
+    encoder: Encoder
+    decoder: Decoder
 
-    def __init__(self, encoder: Module, decoder: Module) -> None:
+    def __init__(self, encoder: Encoder, decoder: Decoder) -> None:
         super(AutoEncoder, self).__init__()
 
         self.encoder = encoder
