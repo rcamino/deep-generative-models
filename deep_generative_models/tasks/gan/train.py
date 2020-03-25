@@ -12,6 +12,8 @@ from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import Metadata
+from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
+from deep_generative_models.tasks.gan.strategy import create_gan_strategy, GANStrategy
 from deep_generative_models.tasks.train import Train, Datasets
 from deep_generative_models.models.optimization import Optimizers
 
@@ -20,43 +22,85 @@ class TrainGAN(Train):
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                     optimizers: Optimizers, datasets: Datasets) -> Dict[str, float]:
+        # put models in training mode (this should reach the autoencoder if present)
         architecture.generator.train()
         architecture.discriminator.train()
 
-        loss_by_batch = {"generator": [], "discriminator": []}
+        # prepare to accumulate losses per batch
+        losses_by_batch = {"generator": [], "discriminator": []}
 
+        # how the autoencoder interacts with the GAN
+        # be aware that sometimes even if the autoencoder is not trained it might be used (like in MedGAN)
+        strategy_name = configuration.get("gan_strategy", "VanillaGAN")
+        strategy = create_gan_strategy(architecture, strategy_name)
+
+        # prepare autoencoder training if needed
+        if "autoencoder_steps" in configuration:
+            assert strategy_name != "VanillaGAN"
+            autoencoder_steps = configuration.autoencoder_steps
+            autoencoder_train_task = TrainAutoEncoder()
+            losses_by_batch["autoencoder"] = []
+        # no autoencoder training
+        else:
+            autoencoder_steps = 0
+            autoencoder_train_task = None
+
+        # an epoch will stop at any point if there are no more batches
+        # it does not matter if there are models with remaining steps
         more_batches = True
         data_iterator = iter(DataLoader(datasets.train_features, batch_size=configuration.batch_size, shuffle=True))
 
         while more_batches:
+            # train autoencoder (optional)
+            for _ in range(autoencoder_steps):
+                # next batch
+                try:
+                    batch = next(data_iterator)
+                    loss = autoencoder_train_task.train_batch(architecture, optimizers, batch)
+                    losses_by_batch["autoencoder"].append(loss)
+                except StopIteration:
+                    more_batches = False
+                    break
+
             # train discriminator
             for _ in range(configuration.discriminator_steps):
                 # next batch
                 try:
                     batch = next(data_iterator)
-                    loss = self.train_discriminator(configuration, architecture, optimizers, batch)
-                    loss_by_batch["discriminator"].append(loss)
+                    loss = self.train_discriminator(configuration, architecture, optimizers, strategy, batch)
+                    losses_by_batch["discriminator"].append(loss)
                 except StopIteration:
                     more_batches = False
                     break
 
             # train generator
             for _ in range(configuration.generator_steps):
-                loss = self.train_generator(configuration, architecture, optimizers)
-                loss_by_batch["generator"].append(loss)
+                loss = self.train_generator(configuration, architecture, optimizers, strategy)
+                losses_by_batch["generator"].append(loss)
 
-        return {"generator_mean_loss": np.mean(loss_by_batch["generator"]).item(),
-                "discriminator_mean_loss": np.mean(loss_by_batch["discriminator"]).item()}
+        # loss aggregation
+        losses = {"generator_mean_loss": np.mean(losses_by_batch["generator"]).item(),
+                  "discriminator_mean_loss": np.mean(losses_by_batch["discriminator"]).item()}
+
+        # add autoencoder loss (optional)
+        if autoencoder_steps > 0:
+            losses["autoencoder_mean_loss"] = np.mean(losses_by_batch["autoencoder"]).item()
+
+        return losses
 
     @staticmethod
     def train_discriminator(configuration: Configuration, architecture: Architecture, optimizers: Optimizers,
-                            real_features: Tensor) -> float:
+                            strategy: GANStrategy, real_features: Tensor) -> float:
         # clean previous gradients
         optimizers.discriminator.zero_grad()
 
+        # wrap real features (in case an autoencoder is used)
+        real_features = strategy.wrap_real_features(real_features)
+
         # generate a batch of fake features with the same size as the real feature batch
         noise = to_gpu_if_available(FloatTensor(len(real_features), configuration.noise_size).normal_())
-        fake_features = architecture.generator(noise)
+        generator_outputs = architecture.generator(noise)
+        fake_features = strategy.wrap_generator_outputs(generator_outputs)
         fake_features = fake_features.detach()  # do not propagate to the generator
 
         # calculate loss
@@ -77,13 +121,15 @@ class TrainGAN(Train):
         return to_cpu_if_was_in_gpu(loss).item()
 
     @staticmethod
-    def train_generator(configuration: Configuration, architecture: Architecture, optimizers: Optimizers) -> float:
+    def train_generator(configuration: Configuration, architecture: Architecture, optimizers: Optimizers,
+                        strategy: GANStrategy) -> float:
         # clean previous gradients
         optimizers.generator.zero_grad()
 
         # generate a full batch of fake features
         noise = to_gpu_if_available(FloatTensor(configuration.batch_size, configuration.noise_size).normal_())
-        fake_features = architecture.generator(noise)
+        generator_outputs = architecture.generator(noise)
+        fake_features = strategy.wrap_generator_outputs(generator_outputs)
 
         # calculate loss
         loss = architecture.generator_loss(architecture.discriminator, fake_features)
