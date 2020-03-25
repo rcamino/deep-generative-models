@@ -14,7 +14,7 @@ class Configuration(Dictionary[Any]):
         if type(value) == list:
             return [cls._wrap_recursively(child_value) for child_value in value]
         # I added the Configuration type here because it is easier for some border case uses
-        elif type(value) in [str, int, float, Configuration]:
+        elif type(value) in [str, int, float, bool, Configuration]:
             return value
         else:
             raise Exception("Unexpected configuration value type '{}'.".format(str(type(value))))
