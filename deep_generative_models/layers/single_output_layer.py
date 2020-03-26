@@ -3,6 +3,7 @@ from torch.nn import Module, Linear, Sequential
 
 from typing import Optional, Any
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.output_layer import OutputLayerFactory
 from deep_generative_models.metadata import Metadata
@@ -38,10 +39,14 @@ class SingleOutputLayerFactory(OutputLayerFactory):
 
 class PartialSingleOutputLayerFactory(MultiFactory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         optional = {}
         if "activation" in configuration:
             activation_configuration = configuration.activation
-            optional["activation"] = self.create_other(activation_configuration.factory, metadata, global_configuration,
+            optional["activation"] = self.create_other(activation_configuration.factory,
+                                                       architecture,
+                                                       metadata,
+                                                       global_configuration,
                                                        activation_configuration.get("arguments", {}))
         return SingleOutputLayerFactory(configuration.output_size, **optional)

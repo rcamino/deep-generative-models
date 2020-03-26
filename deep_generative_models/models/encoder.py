@@ -3,6 +3,7 @@ from typing import Any, Optional
 from torch import Tensor
 from torch.nn import Module, Sequential, Linear, Tanh
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.hidden_layers import HiddenLayersFactory
 from deep_generative_models.layers.input_layer import InputLayer
@@ -39,12 +40,14 @@ class Encoder(Module):
 
 class EncoderFactory(MultiFactory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         # create the input layer
-        input_layer = self.create_input_layer(metadata, global_configuration, configuration)
+        input_layer = self.create_input_layer(architecture, metadata, global_configuration, configuration)
 
         # create the hidden layers factory
         hidden_layers_factory = self.create_other("HiddenLayers",
+                                                  architecture,
                                                   metadata,
                                                   global_configuration,
                                                   configuration.get("hidden_layers", {}))
@@ -53,6 +56,7 @@ class EncoderFactory(MultiFactory):
         optional = {}
         if "output_activation" in configuration:
             optional["output_activation"] = self.create_other(configuration.output_activation.factory,
+                                                              architecture,
                                                               metadata,
                                                               global_configuration,
                                                               configuration.output_activation.get("arguments", {}))
@@ -60,22 +64,23 @@ class EncoderFactory(MultiFactory):
         # create the encoder
         return Encoder(input_layer, global_configuration.code_size, hidden_layers_factory, **optional)
 
-    def create_input_layer(self, metadata: Metadata, global_configuration: Configuration,
+    def create_input_layer(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                            configuration: Configuration) -> InputLayer:
         raise NotImplementedError
 
 
 class SingleInputEncoderFactory(EncoderFactory):
 
-    def create_input_layer(self, metadata: Metadata, global_configuration: Configuration,
+    def create_input_layer(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                            configuration: Configuration) -> InputLayer:
         # override the input layer size
-        return self.create_other("SingleInputLayer", metadata, global_configuration,
+        return self.create_other("SingleInputLayer", architecture, metadata, global_configuration,
                                  Configuration({"input_size": metadata.get_num_features()}))
 
 
 class MultiInputEncoderFactory(EncoderFactory):
 
-    def create_input_layer(self, metadata: Metadata, global_configuration: Configuration,
+    def create_input_layer(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                            configuration: Configuration) -> InputLayer:
-        return self.create_other("MultiInputLayer", metadata, global_configuration, configuration.input_layer)
+        return self.create_other("MultiInputLayer", architecture, metadata, global_configuration,
+                                 configuration.input_layer)

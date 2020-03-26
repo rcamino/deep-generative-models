@@ -3,6 +3,7 @@ from typing import Any
 from torch import Tensor, FloatTensor, zeros, ones
 from torch.nn import Module, BCELoss
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.factory import Factory
 from deep_generative_models.gpu import to_gpu_if_available
@@ -43,7 +44,8 @@ class GANDiscriminatorLoss(Module):
 
 class GANDiscriminatorLossFactory(Factory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         return GANDiscriminatorLoss(configuration.smooth_positive_labels)
 
 
@@ -65,5 +67,6 @@ class GANGeneratorLoss(Module):
 
 class GANGeneratorLossFactory(Factory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         return GANGeneratorLoss(configuration.smooth_positive_labels)

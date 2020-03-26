@@ -1,11 +1,19 @@
+from typing import Union
+
 from torch.nn import Module
+from torch.optim.optimizer import Optimizer
 
 from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 from deep_generative_models.models.initialization import initialize_module
 
 
-class Architecture(Dictionary[Module]):
+# I don't know how to name this...
+# I used this name just because they all have state dictionaries (important for checkpoints)
+StateContainer = Union[Module, Optimizer]
+
+
+class Architecture(Dictionary[StateContainer]):
 
     def to_gpu_if_available(self) -> None:
         for name, module in self.items():

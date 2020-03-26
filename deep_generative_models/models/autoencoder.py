@@ -3,6 +3,7 @@ from typing import Any, Dict
 from torch import Tensor
 from torch.nn import Module
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.factory import MultiFactory
@@ -35,17 +36,19 @@ class AutoEncoder(Module):
 
 class SingleVariableAutoEncoderFactory(MultiFactory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         return AutoEncoder(
-            self.create_other("SingleInputEncoder", metadata, global_configuration, configuration.encoder),
-            self.create_other("SingleOutputDecoder", metadata, global_configuration, configuration.decoder)
+            self.create_other("SingleInputEncoder", architecture, metadata, global_configuration, configuration.encoder),
+            self.create_other("SingleOutputDecoder", architecture, metadata, global_configuration, configuration.decoder)
         )
 
 
 class MultiVariableAutoEncoderFactory(MultiFactory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         return AutoEncoder(
-            self.create_other("MultiInputEncoder", metadata, global_configuration, configuration.encoder),
-            self.create_other("MultiOutputDecoder", metadata, global_configuration, configuration.decoder)
+            self.create_other("MultiInputEncoder", architecture, metadata, global_configuration, configuration.encoder),
+            self.create_other("MultiOutputDecoder", architecture, metadata, global_configuration, configuration.decoder)
         )

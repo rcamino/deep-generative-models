@@ -5,6 +5,7 @@ from typing import Dict, Any
 from torch import Tensor
 from torch.nn import Module
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.factory import MultiFactory
 from deep_generative_models.metadata import Metadata
@@ -26,7 +27,8 @@ class VAELoss(Module):
 
 class VAELossFactory(MultiFactory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         # override the reduction argument
         reconstruction_loss_configuration = configuration.reconstruction_loss.get("arguments", {})
         if "reduction" in reconstruction_loss_configuration:
@@ -35,6 +37,7 @@ class VAELossFactory(MultiFactory):
             reconstruction_loss_configuration["reduction"] = "sum"
         # create the vae loss
         return VAELoss(self.create_other(configuration.reconstruction_loss.factory,
+                                         architecture,
                                          metadata,
                                          global_configuration,
                                          reconstruction_loss_configuration))

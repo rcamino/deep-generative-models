@@ -3,6 +3,7 @@ from typing import Any, Dict
 from torch import Tensor
 from torch.nn import Module, Sequential, Linear, LeakyReLU, Sigmoid
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.factory import MultiFactory, Factory
 from deep_generative_models.layers.hidden_layers import HiddenLayersFactory
@@ -44,9 +45,11 @@ class DiscriminatorFactory(MultiFactory):
         super(DiscriminatorFactory, self).__init__(factory_by_name)
         self.critic = critic
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         # create the hidden layers factory
         hidden_layers_factory = self.create_other("HiddenLayers",
+                                                  architecture,
                                                   metadata,
                                                   global_configuration,
                                                   configuration.get("hidden_layers", {}))

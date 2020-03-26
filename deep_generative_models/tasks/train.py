@@ -15,7 +15,6 @@ from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.factories import create_architecture
 from deep_generative_models.training_logger import TrainingLogger
 from deep_generative_models.metadata import load_metadata, Metadata
-from deep_generative_models.models.optimization import create_optimizers, Optimizers
 from deep_generative_models.tasks.task import Task
 
 
@@ -37,21 +36,17 @@ class Train(Task):
         architecture = create_architecture(metadata, configuration)
         architecture.to_gpu_if_available()
 
-        optimizers = create_optimizers(architecture, configuration.optimizers)
-
         checkpoints = Checkpoints(create_parent_directories_if_needed(configuration.checkpoint),
                                   configuration.max_checkpoint_delay)
 
         if checkpoints.exists():
             checkpoint = checkpoints.load()
             checkpoints.load_states(checkpoint["architecture"], architecture)
-            checkpoints.load_states(checkpoint["optimizers"], optimizers)
         else:
             architecture.initialize()
 
             checkpoint = {
                 "architecture": checkpoints.extract_states(architecture),
-                "optimizers": checkpoints.extract_states(optimizers),
                 "epoch": 0
             }
 
@@ -61,14 +56,13 @@ class Train(Task):
             # train discriminator and generator
             logger.start_timer()
 
-            metrics = self.train_epoch(configuration, metadata, architecture, optimizers, datasets)
+            metrics = self.train_epoch(configuration, metadata, architecture, datasets)
 
             for metric_name, metric_value in metrics.items():
                 logger.log(epoch, configuration.epochs, metric_name, metric_value)
 
             # update checkpoint
             checkpoint["architecture"] = checkpoints.extract_states(architecture)
-            checkpoint["optimizers"] = checkpoints.extract_states(optimizers)
             checkpoint["epoch"] = epoch
 
             # save checkpoint
@@ -82,5 +76,5 @@ class Train(Task):
         print("Total time: {:02f}s".format(time.time() - start_time))
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    optimizers: Optimizers, datasets: Datasets) -> Dict[str, float]:
+                    datasets: Datasets) -> Dict[str, float]:
         raise NotImplementedError

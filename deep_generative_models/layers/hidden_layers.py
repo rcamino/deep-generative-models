@@ -3,6 +3,7 @@ from typing import List, Optional, Any
 from torch import Tensor
 from torch.nn import Module, Linear, BatchNorm1d, Sequential
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.factory import MultiFactory
 from deep_generative_models.metadata import Metadata
@@ -60,12 +61,16 @@ class HiddenLayersFactory:
 
 class PartialHiddenLayersFactory(MultiFactory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         optional = configuration.get_all_defined(["sizes", "bn_decay"])
 
         if "activation" in configuration:
             activation_configuration = configuration.activation
-            optional["activation"] = self.create_other(activation_configuration.factory, metadata, global_configuration,
+            optional["activation"] = self.create_other(activation_configuration.factory,
+                                                       architecture,
+                                                       metadata,
+                                                       global_configuration,
                                                        activation_configuration.get("arguments", {}))
 
         return HiddenLayersFactory(**optional)

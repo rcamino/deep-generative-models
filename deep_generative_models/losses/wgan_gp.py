@@ -4,6 +4,7 @@ from torch import Tensor, rand, ones_like
 from torch.autograd import grad
 from torch.nn import Module
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.factory import Factory
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu
@@ -45,5 +46,6 @@ class WGANCriticLossWithGradientPenalty(WGANCriticLoss):
 
 class WGANCriticLossWithGradientPenaltyFactory(Factory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         return WGANCriticLossWithGradientPenalty(configuration.weight)

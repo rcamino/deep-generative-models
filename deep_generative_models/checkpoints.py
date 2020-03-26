@@ -3,15 +3,13 @@ import time
 
 import torch
 
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.commandline import DelayedKeyboardInterrupt
-from deep_generative_models.models.optimization import Optimizers
 
 
 Checkpoint = Dict[str, Any]
-StateContainers = Union[Architecture, Optimizers]
 
 
 class Checkpoints(object):
@@ -35,12 +33,12 @@ class Checkpoints(object):
         return torch.load(self.path, map_location=lambda storage, loc: storage)
 
     @staticmethod
-    def load_states(sources: Checkpoint, targets: StateContainers) -> None:
+    def load_states(sources: Checkpoint, targets: Architecture) -> None:
         for name, target in targets.items():
             target.load_state_dict(sources[name])
 
     @staticmethod
-    def extract_states(sources: StateContainers) -> Checkpoint:
+    def extract_states(sources: Architecture) -> Checkpoint:
         targets = {}
         for name, source in sources.items():
             targets[name] = source.state_dict()

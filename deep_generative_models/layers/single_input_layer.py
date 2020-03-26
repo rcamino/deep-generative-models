@@ -2,6 +2,7 @@ from typing import Any
 
 from torch import Tensor
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.input_layer import InputLayer
 from deep_generative_models.metadata import Metadata
@@ -24,5 +25,6 @@ class SingleInputLayer(InputLayer):
 
 class SingleInputLayerFactory(MultiFactory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         return SingleInputLayer(configuration.input_size)

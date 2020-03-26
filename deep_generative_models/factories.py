@@ -1,4 +1,5 @@
 from torch.nn import LeakyReLU, ReLU, Sigmoid, Softmax, Tanh, BCELoss, CrossEntropyLoss, MSELoss
+from torch.optim import Adam, SGD
 
 from deep_generative_models.activations.gumbel_softmax_sampling import GumbelSoftmaxSamplingFactory
 from deep_generative_models.activations.softmax_sampling import SoftmaxSampling
@@ -28,6 +29,7 @@ from deep_generative_models.models.denoising_autoencoder import DeNoisingAutoenc
 from deep_generative_models.models.discriminator import DiscriminatorFactory
 from deep_generative_models.models.encoder import SingleInputEncoderFactory, MultiInputEncoderFactory
 from deep_generative_models.models.generator import SingleOutputGeneratorFactory, MultiOutputGeneratorFactory
+from deep_generative_models.models.optimizer import OptimizerFactory
 from deep_generative_models.models.vae import VAEFactory
 
 
@@ -55,6 +57,10 @@ factory_by_name = {
     "BCE": ClassFactoryWrapper(BCELoss),
     "CrossEntropy": ClassFactoryWrapper(CrossEntropyLoss),
     "MSE": ClassFactoryWrapper(MSELoss),
+
+    # PyTorch optimizers (could add more)
+    "Adam": OptimizerFactory(Adam),
+    "SGD": OptimizerFactory(SGD),
 }
 
 # my layers that create other modules
@@ -87,7 +93,60 @@ factory_by_name["MultiVariableVAE"] = VAEFactory(factory_by_name, "MultiVariable
 
 def create_architecture(metadata: Metadata, configuration: Configuration) -> Architecture:
     architecture = Architecture()
-    for name, child_configuration in configuration.architecture.items():
+
+    # create the dependency nodes
+    nodes = set()
+    in_edges = dict()
+    out_edges = dict()
+    for node in configuration.architecture.keys():
+        nodes.add(node)
+        in_edges[node] = set()
+        out_edges[node] = set()
+
+    # create the dependency edges
+    nodes_without_out_edges = set()
+    for node, child_configuration in configuration.architecture.items():
         factory = factory_by_name[child_configuration.factory]
-        architecture[name] = factory.create(metadata, configuration, child_configuration.get("arguments", {}))
+        dependencies = factory.dependencies(child_configuration.get("arguments", {}))
+        if len(dependencies) == 0:
+            nodes_without_out_edges.add(node)
+        else:
+            for other_node in dependencies:
+                out_edges[node].add(other_node)  # the node needs the other node
+                in_edges[other_node].add(node)  # the other node is needed by the node
+
+    # create modules until the graph is empty (topological sort)
+    while len(nodes) > 0:
+        # if there are no nodes without out edges there must be a loop
+        if len(nodes_without_out_edges) == 0:
+            raise Exception("Dependencies cannot be met for modules: {}.".format(", ".join(nodes)))
+
+        # get any node without out edges
+        node = nodes_without_out_edges.pop()
+        assert len(out_edges[node]) == 0
+
+        # create the module
+        child_configuration = configuration.architecture[node]
+        factory = factory_by_name[child_configuration.factory]
+
+        architecture[node] = factory.create(architecture,
+                                            metadata,
+                                            configuration,
+                                            child_configuration.get("arguments", {}))
+
+        # while the node has other nodes pointing at him
+        while len(in_edges[node]) > 0:
+            # remove any incoming edge for the node
+            other_node = in_edges[node].pop()
+            # remove the outgoing edge for the other node
+            out_edges[other_node].remove(node)
+            # if the other node has no more dependencies
+            if len(out_edges[other_node]) == 0:
+                nodes_without_out_edges.add(other_node)
+
+        # remove the node
+        nodes.remove(node)
+        in_edges.pop(node)
+        out_edges.pop(node)
+
     return architecture

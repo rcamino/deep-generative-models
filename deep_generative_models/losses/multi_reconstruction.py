@@ -6,6 +6,7 @@ from torch import Tensor
 from torch.nn import Module
 from torch.nn.functional import cross_entropy, binary_cross_entropy, mse_loss
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.factory import Factory
 from deep_generative_models.metadata import Metadata, VariableMetadata
@@ -109,6 +110,7 @@ class MultiReconstructionLoss(Module):
 
 class MultiReconstructionLossFactory(Factory):
 
-    def create(self, metadata: Metadata, global_configuration: Configuration, configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
+               configuration: Configuration) -> Any:
         optional = configuration.get_all_defined(["reduction"])
         return MultiReconstructionLoss(metadata, **optional)

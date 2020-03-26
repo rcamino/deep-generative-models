@@ -15,13 +15,12 @@ from deep_generative_models.metadata import Metadata
 from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
 from deep_generative_models.tasks.gan.strategy import create_gan_strategy, GANStrategy
 from deep_generative_models.tasks.train import Train, Datasets
-from deep_generative_models.models.optimization import Optimizers
 
 
 class TrainGAN(Train):
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    optimizers: Optimizers, datasets: Datasets) -> Dict[str, float]:
+                    datasets: Datasets) -> Dict[str, float]:
         # put models in training mode (this should reach the autoencoder if present)
         architecture.generator.train()
         architecture.discriminator.train()
@@ -56,7 +55,7 @@ class TrainGAN(Train):
                 # next batch
                 try:
                     batch = next(data_iterator)
-                    loss = autoencoder_train_task.train_batch(architecture, optimizers, batch)
+                    loss = autoencoder_train_task.train_batch(architecture, batch)
                     losses_by_batch["autoencoder"].append(loss)
                 except StopIteration:
                     more_batches = False
@@ -67,7 +66,7 @@ class TrainGAN(Train):
                 # next batch
                 try:
                     batch = next(data_iterator)
-                    loss = self.train_discriminator(configuration, architecture, optimizers, strategy, batch)
+                    loss = self.train_discriminator(configuration, architecture, strategy, batch)
                     losses_by_batch["discriminator"].append(loss)
                 except StopIteration:
                     more_batches = False
@@ -75,7 +74,7 @@ class TrainGAN(Train):
 
             # train generator
             for _ in range(configuration.generator_steps):
-                loss = self.train_generator(configuration, architecture, optimizers, strategy)
+                loss = self.train_generator(configuration, architecture, strategy)
                 losses_by_batch["generator"].append(loss)
 
         # loss aggregation
@@ -89,10 +88,10 @@ class TrainGAN(Train):
         return losses
 
     @staticmethod
-    def train_discriminator(configuration: Configuration, architecture: Architecture, optimizers: Optimizers,
-                            strategy: GANStrategy, real_features: Tensor) -> float:
+    def train_discriminator(configuration: Configuration, architecture: Architecture, strategy: GANStrategy,
+                            real_features: Tensor) -> float:
         # clean previous gradients
-        optimizers.discriminator.zero_grad()
+        architecture.discriminator_optimizer.zero_grad()
 
         # wrap real features (in case an autoencoder is used)
         real_features = strategy.wrap_real_features(real_features)
@@ -110,7 +109,7 @@ class TrainGAN(Train):
         loss.backward()
 
         # update the discriminator weights
-        optimizers.discriminator.step()
+        architecture.discriminator_optimizer.step()
 
         # clamp discriminator parameters (usually for WGAN)
         if "discriminator_clamp" in configuration:
@@ -121,10 +120,9 @@ class TrainGAN(Train):
         return to_cpu_if_was_in_gpu(loss).item()
 
     @staticmethod
-    def train_generator(configuration: Configuration, architecture: Architecture, optimizers: Optimizers,
-                        strategy: GANStrategy) -> float:
+    def train_generator(configuration: Configuration, architecture: Architecture, strategy: GANStrategy) -> float:
         # clean previous gradients
-        optimizers.generator.zero_grad()
+        architecture.generator_optimizer.zero_grad()
 
         # generate a full batch of fake features
         noise = to_gpu_if_available(FloatTensor(configuration.batch_size, configuration.noise_size).normal_())
@@ -138,7 +136,7 @@ class TrainGAN(Train):
         loss.backward()
 
         # update the generator weights
-        optimizers.generator.step()
+        architecture.generator_optimizer.step()
 
         # return the loss
         return to_cpu_if_was_in_gpu(loss).item()
