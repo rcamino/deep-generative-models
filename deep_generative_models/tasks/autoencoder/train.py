@@ -32,9 +32,9 @@ class TrainAutoEncoder(Train):
     def train_batch(architecture: Architecture, optimizers: Optimizers, batch: Tensor) -> float:
         optimizers.autoencoder.zero_grad()
 
-        _, reconstructed = architecture.autoencoder(batch)
+        outputs = architecture.autoencoder(batch)
 
-        loss = architecture.reconstruction_loss(reconstructed, batch)
+        loss = architecture.reconstruction_loss(outputs, batch)
         loss.backward()
 
         optimizers.autoencoder.step()

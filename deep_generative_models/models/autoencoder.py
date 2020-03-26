@@ -1,4 +1,4 @@
-from typing import Tuple, Any
+from typing import Any, Dict
 
 from torch import Tensor
 from torch.nn import Module
@@ -21,10 +21,10 @@ class AutoEncoder(Module):
         self.encoder = encoder
         self.decoder = decoder
 
-    def forward(self, inputs: Tensor) -> Tuple[Tensor, Tensor]:
-        code = self.encode(inputs)
-        reconstructed = self.decode(code)
-        return code, reconstructed
+    def forward(self, inputs: Tensor) -> Dict[str, Tensor]:
+        outputs = {"code": self.encode(inputs)}
+        outputs["reconstructed"] = self.decode(outputs["code"])
+        return outputs
 
     def encode(self, inputs: Tensor) -> Tensor:
         return self.encoder(inputs)
