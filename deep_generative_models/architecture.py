@@ -1,36 +1,8 @@
-from torch.nn import Module, LeakyReLU, ReLU, Sigmoid, Softmax, Tanh, BCELoss, CrossEntropyLoss, MSELoss
+from torch.nn import Module
 
-from deep_generative_models.activations.gumbel_softmax_sampling import GumbelSoftmaxSamplingFactory
-from deep_generative_models.activations.softmax_sampling import SoftmaxSampling
-from deep_generative_models.configuration import Configuration
 from deep_generative_models.dictionary import Dictionary
-from deep_generative_models.factory import ClassFactoryWrapper
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
-from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
-
-from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
-from deep_generative_models.layers.multi_output_layer import PartialMultiOutputLayerFactory
-from deep_generative_models.layers.single_input_layer import SingleInputLayerFactory
-from deep_generative_models.layers.single_output_layer import PartialSingleOutputLayerFactory
-from deep_generative_models.losses.autoencoder import AutoEncoderLossFactory
-from deep_generative_models.losses.gan import GANGeneratorLossFactory, GANDiscriminatorLossFactory
-from deep_generative_models.losses.multi_reconstruction import MultiReconstructionLossFactory
-from deep_generative_models.losses.vae import VAELossFactory
-from deep_generative_models.losses.wgan import WGANGeneratorLoss, WGANCriticLoss
-from deep_generative_models.losses.wgan_gp import WGANCriticLossWithGradientPenaltyFactory
-
-from deep_generative_models.metadata import Metadata
-
-from deep_generative_models.models.autoencoder import SingleVariableAutoEncoderFactory
-from deep_generative_models.models.autoencoder import MultiVariableAutoEncoderFactory
-from deep_generative_models.models.decoder import SingleOutputDecoderFactory
-from deep_generative_models.models.decoder import MultiOutputDecoderFactory
-from deep_generative_models.models.denoising_autoencoder import DeNoisingAutoencoderFactory
-from deep_generative_models.models.discriminator import DiscriminatorFactory
-from deep_generative_models.models.encoder import SingleInputEncoderFactory, MultiInputEncoderFactory
-from deep_generative_models.models.generator import SingleOutputGeneratorFactory, MultiOutputGeneratorFactory
 from deep_generative_models.models.initialization import initialize_module
-from deep_generative_models.models.vae import VAEFactory
 
 
 class Architecture(Dictionary[Module]):
@@ -46,65 +18,3 @@ class Architecture(Dictionary[Module]):
     def initialize(self):
         for module in self.values():
             initialize_module(module)
-
-
-factory_by_name = {
-    # my activations
-    "GumbelSoftmaxSampling": GumbelSoftmaxSamplingFactory(),
-    "SoftmaxSampling": ClassFactoryWrapper(SoftmaxSampling),
-
-    # PyTorch activations (could add more)
-    "LeakyReLU": ClassFactoryWrapper(LeakyReLU),
-    "ReLU": ClassFactoryWrapper(ReLU),
-    "Sigmoid": ClassFactoryWrapper(Sigmoid),
-    "Softmax": ClassFactoryWrapper(Softmax),
-    "Tanh": ClassFactoryWrapper(Tanh),
-
-    # my losses
-    "MultiReconstructionLoss": MultiReconstructionLossFactory(),
-    "GANGeneratorLoss": GANGeneratorLossFactory(),
-    "GANDiscriminatorLoss": GANDiscriminatorLossFactory(),
-    "WGANGeneratorLoss": ClassFactoryWrapper(WGANGeneratorLoss),
-    "WGANCriticLoss": ClassFactoryWrapper(WGANCriticLoss),
-    "WGANCriticLossWithGradientPenalty": WGANCriticLossWithGradientPenaltyFactory(),
-
-    # PyTorch losses (could add more)
-    "BCE": ClassFactoryWrapper(BCELoss),
-    "CrossEntropy": ClassFactoryWrapper(CrossEntropyLoss),
-    "MSE": ClassFactoryWrapper(MSELoss),
-}
-
-# my layers that create other modules
-factory_by_name["HiddenLayers"] = PartialHiddenLayersFactory(factory_by_name)
-factory_by_name["SingleInputLayer"] = SingleInputLayerFactory(factory_by_name)
-factory_by_name["MultiInputLayer"] = MultiInputLayerFactory(factory_by_name)
-factory_by_name["SingleOutputLayer"] = PartialSingleOutputLayerFactory(factory_by_name)
-factory_by_name["MultiOutputLayer"] = PartialMultiOutputLayerFactory(factory_by_name)
-
-# my losses that create other modules
-factory_by_name["AutoEncoderLoss"] = AutoEncoderLossFactory(factory_by_name)
-factory_by_name["VAELoss"] = VAELossFactory(factory_by_name)
-
-# my modules that create other modules
-factory_by_name["SingleVariableAutoEncoder"] = SingleVariableAutoEncoderFactory(factory_by_name)
-factory_by_name["MultiVariableAutoEncoder"] = MultiVariableAutoEncoderFactory(factory_by_name)
-factory_by_name["SingleInputEncoder"] = SingleInputEncoderFactory(factory_by_name)
-factory_by_name["MultiInputEncoder"] = MultiInputEncoderFactory(factory_by_name)
-factory_by_name["SingleOutputDecoder"] = SingleOutputDecoderFactory(factory_by_name)
-factory_by_name["MultiOutputDecoder"] = MultiOutputDecoderFactory(factory_by_name)
-factory_by_name["SingleOutputGenerator"] = SingleOutputGeneratorFactory(factory_by_name)
-factory_by_name["MultiOutputGenerator"] = MultiOutputGeneratorFactory(factory_by_name)
-factory_by_name["Discriminator"] = DiscriminatorFactory(factory_by_name, critic=False)
-factory_by_name["Critic"] = DiscriminatorFactory(factory_by_name, critic=True)
-factory_by_name["SingleVariableDeNoisingAutoencoder"] = DeNoisingAutoencoderFactory(factory_by_name, "SingleVariableAutoEncoder")
-factory_by_name["MultiVariableDeNoisingAutoencoder"] = DeNoisingAutoencoderFactory(factory_by_name, "MultiVariableAutoEncoder")
-factory_by_name["SingleVariableVAE"] = VAEFactory(factory_by_name, "SingleVariableAutoEncoder")
-factory_by_name["MultiVariableVAE"] = VAEFactory(factory_by_name, "MultiVariableAutoEncoder")
-
-
-def create_architecture(metadata: Metadata, configuration: Configuration) -> Architecture:
-    architecture = Architecture()
-    for name, child_configuration in configuration.architecture.items():
-        factory = factory_by_name[child_configuration.factory]
-        architecture[name] = factory.create(metadata, configuration, child_configuration.get("arguments", {}))
-    return architecture

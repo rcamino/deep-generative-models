@@ -7,11 +7,12 @@ from torch import Tensor
 
 from typing import Dict
 
-from deep_generative_models.architecture import create_architecture, Architecture
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.checkpoints import Checkpoints
 from deep_generative_models.commandline import create_parent_directories_if_needed
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.dictionary import Dictionary
+from deep_generative_models.factories import create_architecture
 from deep_generative_models.training_logger import TrainingLogger
 from deep_generative_models.metadata import load_metadata, Metadata
 from deep_generative_models.models.optimization import create_optimizers, Optimizers
