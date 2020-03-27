@@ -12,7 +12,7 @@ from deep_generative_models.factory import MultiFactory
 class SingleInputLayer(InputLayer):
     output_size: int
 
-    def __init__(self, input_size) -> None:
+    def __init__(self, input_size: int) -> None:
         super(SingleInputLayer, self).__init__()
         self.output_size = input_size
 
