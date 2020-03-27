@@ -16,10 +16,12 @@ from deep_generative_models.tasks.train import Train, Datasets
 
 class TrainAutoEncoder(Train):
 
-    def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    datasets: Datasets) -> Dict[str, float]:
+    def prepare_training(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                         datasets: Datasets) -> None:
         architecture.autoencoder.train()
 
+    def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                    datasets: Datasets) -> Dict[str, float]:
         loss_by_batch = []
 
         for batch in DataLoader(datasets.train_features, batch_size=configuration.batch_size, shuffle=True):
