@@ -6,7 +6,7 @@ from torch.nn import Module
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.factory import MultiFactory
+from deep_generative_models.factory import MultiFactory, Factory
 from deep_generative_models.models.decoder import Decoder
 from deep_generative_models.models.encoder import Encoder
 
@@ -34,21 +34,29 @@ class AutoEncoder(Module):
         return self.decoder(code)
 
 
-class SingleVariableAutoEncoderFactory(MultiFactory):
+class AutoEncoderFactory(MultiFactory):
+
+    encoder_factory_name: str
+    decoder_factory_name: str
+
+    def __init__(self, factory_by_name: Dict[str, Factory], encoder_factory_name: str,
+                 decoder_factory_name: str) -> None:
+        super(AutoEncoderFactory, self).__init__(factory_by_name)
+        self.encoder_factory_name = encoder_factory_name
+        self.decoder_factory_name = decoder_factory_name
 
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:
-        return AutoEncoder(
-            self.create_other("SingleInputEncoder", architecture, metadata, global_configuration, configuration.encoder),
-            self.create_other("SingleOutputDecoder", architecture, metadata, global_configuration, configuration.decoder)
-        )
+        encoder = self.create_other(self.encoder_factory_name,
+                                    architecture,
+                                    metadata,
+                                    global_configuration,
+                                    configuration.encoder)
 
+        decoder = self.create_other(self.decoder_factory_name,
+                                    architecture,
+                                    metadata,
+                                    global_configuration,
+                                    configuration.decoder)
 
-class MultiVariableAutoEncoderFactory(MultiFactory):
-
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        return AutoEncoder(
-            self.create_other("MultiInputEncoder", architecture, metadata, global_configuration, configuration.encoder),
-            self.create_other("MultiOutputDecoder", architecture, metadata, global_configuration, configuration.decoder)
-        )
+        return AutoEncoder(encoder, decoder)

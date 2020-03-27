@@ -21,8 +21,7 @@ from deep_generative_models.losses.wgan_gp import WGANCriticLossWithGradientPena
 
 from deep_generative_models.metadata import Metadata
 
-from deep_generative_models.models.autoencoder import SingleVariableAutoEncoderFactory
-from deep_generative_models.models.autoencoder import MultiVariableAutoEncoderFactory
+from deep_generative_models.models.autoencoder import AutoEncoderFactory
 from deep_generative_models.models.decoder import SingleOutputDecoderFactory
 from deep_generative_models.models.decoder import MultiOutputDecoderFactory
 from deep_generative_models.models.denoising_autoencoder import DeNoisingAutoencoderFactory
@@ -75,8 +74,8 @@ factory_by_name["AutoEncoderLoss"] = AutoEncoderLossFactory(factory_by_name)
 factory_by_name["VAELoss"] = VAELossFactory(factory_by_name)
 
 # my modules that create other modules
-factory_by_name["SingleVariableAutoEncoder"] = SingleVariableAutoEncoderFactory(factory_by_name)
-factory_by_name["MultiVariableAutoEncoder"] = MultiVariableAutoEncoderFactory(factory_by_name)
+factory_by_name["SingleVariableAutoEncoder"] = AutoEncoderFactory(factory_by_name, "SingleInputEncoder", "SingleOutputDecoder")
+factory_by_name["MultiVariableAutoEncoder"] = AutoEncoderFactory(factory_by_name, "MultiInputEncoder", "MultiOutputDecoder")
 factory_by_name["SingleInputEncoder"] = SingleInputEncoderFactory(factory_by_name)
 factory_by_name["MultiInputEncoder"] = MultiInputEncoderFactory(factory_by_name)
 factory_by_name["SingleOutputDecoder"] = SingleOutputDecoderFactory(factory_by_name)
