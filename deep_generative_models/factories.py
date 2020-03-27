@@ -13,11 +13,11 @@ from deep_generative_models.layers.multi_output_layer import PartialMultiOutputL
 from deep_generative_models.layers.single_input_layer import SingleInputLayerFactory
 from deep_generative_models.layers.single_output_layer import PartialSingleOutputLayerFactory
 from deep_generative_models.losses.autoencoder import AutoEncoderLossFactory
-from deep_generative_models.losses.gan import GANGeneratorLossFactory, GANDiscriminatorLossFactory
+from deep_generative_models.losses.gan import GANGeneratorLoss, GANDiscriminatorLoss
 from deep_generative_models.losses.multi_reconstruction import MultiReconstructionLossFactory
 from deep_generative_models.losses.vae import VAELossFactory
 from deep_generative_models.losses.wgan import WGANGeneratorLoss, WGANCriticLoss
-from deep_generative_models.losses.wgan_gp import WGANCriticLossWithGradientPenaltyFactory
+from deep_generative_models.losses.wgan_gp import WGANCriticLossWithGradientPenalty
 
 from deep_generative_models.metadata import Metadata
 
@@ -47,11 +47,11 @@ factory_by_name = {
 
     # my losses
     "MultiReconstructionLoss": MultiReconstructionLossFactory(),
-    "GANGeneratorLoss": GANGeneratorLossFactory(),
-    "GANDiscriminatorLoss": GANDiscriminatorLossFactory(),
+    "GANGeneratorLoss": ClassFactoryWrapper(GANGeneratorLoss),
+    "GANDiscriminatorLoss": ClassFactoryWrapper(GANDiscriminatorLoss),
     "WGANGeneratorLoss": ClassFactoryWrapper(WGANGeneratorLoss),
     "WGANCriticLoss": ClassFactoryWrapper(WGANCriticLoss),
-    "WGANCriticLossWithGradientPenalty": WGANCriticLossWithGradientPenaltyFactory(),
+    "WGANCriticLossWithGradientPenalty": ClassFactoryWrapper(WGANCriticLossWithGradientPenalty),
 
     # PyTorch losses (could add more)
     "BCE": ClassFactoryWrapper(BCELoss),

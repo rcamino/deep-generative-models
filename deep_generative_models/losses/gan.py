@@ -1,13 +1,7 @@
-from typing import Any
-
 from torch import Tensor, FloatTensor, zeros, ones
 from torch.nn import Module, BCELoss
 
-from deep_generative_models.architecture import Architecture
-from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import Factory
 from deep_generative_models.gpu import to_gpu_if_available
-from deep_generative_models.metadata import Metadata
 
 
 def generate_positive_labels(size: int, smooth: bool):
@@ -42,13 +36,6 @@ class GANDiscriminatorLoss(Module):
         return real_loss + fake_loss
 
 
-class GANDiscriminatorLossFactory(Factory):
-
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        return GANDiscriminatorLoss(configuration.smooth_positive_labels)
-
-
 class GANGeneratorLoss(Module):
     smooth_positive_labels: bool
     bce_loss: BCELoss
@@ -63,10 +50,3 @@ class GANGeneratorLoss(Module):
         fake_predictions = discriminator(fake_features)
         positive_labels = generate_positive_labels(len(fake_predictions), self.smooth_positive_labels)
         return self.bce_loss(fake_predictions, positive_labels)
-
-
-class GANGeneratorLossFactory(Factory):
-
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        return GANGeneratorLoss(configuration.smooth_positive_labels)
