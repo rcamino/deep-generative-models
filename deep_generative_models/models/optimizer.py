@@ -15,13 +15,20 @@ class OptimizerFactory(Factory):
 
     @staticmethod
     def dependencies(configuration: Configuration) -> List[str]:
-        return configuration.modules
+        return configuration.parameters
 
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:
+        # collect the parameters from the indicated models
         parameters = []
-        for module_name in configuration.modules:
+        for module_name in configuration.parameters:
             parameters.extend(architecture[module_name].parameters())
-        arguments = configuration.get("arguments", default=[], transform_default=False)
-        keyword_arguments = configuration.get("keyword_arguments", default={}, transform_default=False)
-        return self.optimizer_class(parameters, *arguments, **keyword_arguments)
+
+        # copy the rest of the arguments
+        arguments = {}
+        for key, value in configuration.items():
+            if key != "parameters":
+                arguments[key] = value
+
+        # create the optimizer
+        return self.optimizer_class(parameters, **arguments)
