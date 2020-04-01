@@ -9,9 +9,17 @@ from deep_generative_models.metadata import Metadata
 class OptimizerFactory(Factory):
 
     optimizer_class: Type
+    optional_class_arguments: List[str]
 
-    def __init__(self, optimizer_class: Type):
+    def __init__(self, optimizer_class: Type, optional_class_arguments: List[str] = ()):
         self.optimizer_class = optimizer_class
+        self.optional_class_arguments = optional_class_arguments
+
+    def mandatory_arguments(self) -> List[str]:
+        return ["parameters"]
+
+    def optional_arguments(self) -> List[str]:
+        return self.optional_class_arguments
 
     @staticmethod
     def dependencies(configuration: Configuration) -> List[str]:

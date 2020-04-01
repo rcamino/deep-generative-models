@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 import torch
 
@@ -110,7 +110,9 @@ class MultiReconstructionLoss(Module):
 
 class MultiReconstructionLossFactory(Factory):
 
+    def optional_arguments(self) -> List[str]:
+        return ["reduction"]
+
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:
-        optional = configuration.get_all_defined(["reduction"])
-        return MultiReconstructionLoss(metadata, **optional)
+        return MultiReconstructionLoss(metadata, **configuration.get_all_defined(self.optional_arguments()))

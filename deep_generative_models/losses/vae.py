@@ -1,6 +1,6 @@
 import torch
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from torch import Tensor
 from torch.nn import Module
@@ -26,6 +26,9 @@ class VAELoss(Module):
 
 
 class VAELossFactory(MultiFactory):
+
+    def mandatory_arguments(self) -> List[str]:
+        return ["reconstruction_loss"]
 
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:

@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, List
 
 from torch import Tensor
 from torch.nn import Module, Sequential, Linear, Tanh
@@ -40,6 +40,12 @@ class Encoder(Module):
 
 class EncoderFactory(MultiFactory):
 
+    def mandatory_global_arguments(self) -> List[str]:
+        return ["code_size"]
+
+    def optional_arguments(self) -> List[str]:
+        return ["hidden_layers", "output_activation"]
+
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:
         # create the input layer
@@ -79,6 +85,9 @@ class SingleInputEncoderFactory(EncoderFactory):
 
 
 class MultiInputEncoderFactory(EncoderFactory):
+
+    def mandatory_arguments(self) -> List[str]:
+        return ["input_layer"]
 
     def create_input_layer(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                            configuration: Configuration) -> InputLayer:

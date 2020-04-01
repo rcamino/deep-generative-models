@@ -5,7 +5,8 @@ from deep_generative_models.activations.gumbel_softmax_sampling import GumbelSof
 from deep_generative_models.activations.softmax_sampling import SoftmaxSampling
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import ClassFactoryWrapper
+from deep_generative_models.factory import ClassFactoryWrapper, MissingGlobalFactoryArgument, MissingFactoryArgument, \
+    InvalidFactoryArgument
 from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
@@ -38,28 +39,27 @@ factory_by_name = {
     "SoftmaxSampling": ClassFactoryWrapper(SoftmaxSampling),
 
     # PyTorch activations (could add more)
-    "LeakyReLU": ClassFactoryWrapper(LeakyReLU),
+    "LeakyReLU": ClassFactoryWrapper(LeakyReLU, ["negative_slope"]),
     "ReLU": ClassFactoryWrapper(ReLU),
     "Sigmoid": ClassFactoryWrapper(Sigmoid),
-    "Softmax": ClassFactoryWrapper(Softmax),
     "Tanh": ClassFactoryWrapper(Tanh),
 
     # my losses
     "MultiReconstructionLoss": MultiReconstructionLossFactory(),
-    "GANGeneratorLoss": ClassFactoryWrapper(GANGeneratorLoss),
-    "GANDiscriminatorLoss": ClassFactoryWrapper(GANDiscriminatorLoss),
+    "GANGeneratorLoss": ClassFactoryWrapper(GANGeneratorLoss, ["smooth_positive_labels"]),
+    "GANDiscriminatorLoss": ClassFactoryWrapper(GANDiscriminatorLoss, ["smooth_positive_labels"]),
     "WGANGeneratorLoss": ClassFactoryWrapper(WGANGeneratorLoss),
     "WGANCriticLoss": ClassFactoryWrapper(WGANCriticLoss),
-    "WGANCriticLossWithGradientPenalty": ClassFactoryWrapper(WGANCriticLossWithGradientPenalty),
+    "WGANCriticLossWithGradientPenalty": ClassFactoryWrapper(WGANCriticLossWithGradientPenalty, ["weight"]),
 
     # PyTorch losses (could add more)
-    "BCE": ClassFactoryWrapper(BCELoss),
-    "CrossEntropy": ClassFactoryWrapper(CrossEntropyLoss),
-    "MSE": ClassFactoryWrapper(MSELoss),
+    "BCE": ClassFactoryWrapper(BCELoss, ["weight", "reduction"]),
+    "CrossEntropy": ClassFactoryWrapper(CrossEntropyLoss, ["weight", "reduction"]),
+    "MSE": ClassFactoryWrapper(MSELoss, ["reduction"]),
 
     # PyTorch optimizers (could add more)
-    "Adam": OptimizerFactory(Adam),
-    "SGD": OptimizerFactory(SGD),
+    "Adam": OptimizerFactory(Adam, ["lr", "betas", "eps", "weight_decay", "amsgrad"]),
+    "SGD": OptimizerFactory(SGD, ["lr", "momentum", "dampening", "weight_decay", "nesterov"]),
 }
 
 # my layers that create other modules
@@ -124,14 +124,25 @@ def create_architecture(metadata: Metadata, configuration: Configuration) -> Arc
         node = nodes_without_out_edges.pop()
         assert len(out_edges[node]) == 0
 
-        # create the module
+        # prepare the module
         child_configuration = configuration.architecture[node]
+        if "factory" not in child_configuration:
+            raise Exception("Missing factory name while creating module '{}'".format(node))
         factory = factory_by_name[child_configuration.factory]
+        arguments = child_configuration.get("arguments", {})
 
-        architecture[node] = factory.create(architecture,
-                                            metadata,
-                                            configuration,
-                                            child_configuration.get("arguments", {}))
+        # validate the module
+        try:
+            factory.validate_configuration(configuration, arguments)
+        except MissingGlobalFactoryArgument as e:
+            raise Exception("Missing global argument '{}' while creating module '{}'".format(e.name, node))
+        except MissingFactoryArgument as e:
+            raise Exception("Missing argument '{}' while creating module '{}'".format(e.name, node))
+        except InvalidFactoryArgument as e:
+            raise Exception("Invalid argument '{}' while creating module '{}'".format(e.name, node))
+
+        # create the module
+        architecture[node] = factory.create(architecture, metadata, configuration, arguments)
 
         # while the node has other nodes pointing at him
         while len(in_edges[node]) > 0:

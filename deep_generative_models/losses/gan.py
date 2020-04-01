@@ -15,7 +15,7 @@ class GANDiscriminatorLoss(Module):
     smooth_positive_labels: bool
     bce_loss: BCELoss
 
-    def __init__(self, smooth_positive_labels: bool) -> None:
+    def __init__(self, smooth_positive_labels: bool = False) -> None:
         super(GANDiscriminatorLoss, self).__init__()
         self.smooth_positive_labels = smooth_positive_labels
 
@@ -40,7 +40,7 @@ class GANGeneratorLoss(Module):
     smooth_positive_labels: bool
     bce_loss: BCELoss
 
-    def __init__(self, smooth_positive_labels: bool) -> None:
+    def __init__(self, smooth_positive_labels: bool = False) -> None:
         super(GANGeneratorLoss, self).__init__()
         self.smooth_positive_labels = smooth_positive_labels
 

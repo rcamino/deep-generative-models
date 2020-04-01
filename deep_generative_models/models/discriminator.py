@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from torch import Tensor
 from torch.nn import Module, Sequential, Linear, LeakyReLU, Sigmoid
@@ -44,6 +44,9 @@ class DiscriminatorFactory(MultiFactory):
     def __init__(self, factory_by_name: Dict[str, Factory], critic: bool = False) -> None:
         super(DiscriminatorFactory, self).__init__(factory_by_name)
         self.critic = critic
+
+    def optional_arguments(self) -> List[str]:
+        return ["hidden_layers"]
 
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:

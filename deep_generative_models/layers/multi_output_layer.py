@@ -1,6 +1,6 @@
 import torch
 
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 from torch import Tensor
 from torch.nn import Module, Linear, Sequential, ModuleList, Sigmoid
@@ -99,6 +99,9 @@ class MultiOutputLayerFactory(OutputLayerFactory):
 
 
 class PartialMultiOutputLayerFactory(MultiFactory):
+
+    def mandatory_arguments(self) -> List[str]:
+        return ["activation"]
 
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:

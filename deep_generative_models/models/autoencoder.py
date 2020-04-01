@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from torch import Tensor
 from torch.nn import Module
@@ -44,6 +44,9 @@ class AutoEncoderFactory(MultiFactory):
         super(AutoEncoderFactory, self).__init__(factory_by_name)
         self.encoder_factory_name = encoder_factory_name
         self.decoder_factory_name = decoder_factory_name
+
+    def mandatory_arguments(self) -> List[str]:
+        return ["encoder", "decoder"]
 
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:

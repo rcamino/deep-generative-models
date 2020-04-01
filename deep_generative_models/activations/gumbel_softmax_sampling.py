@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from torch import Tensor
 from torch.nn import Module
@@ -24,6 +24,9 @@ class GumbelSoftmaxSampling(Module):
 
 class GumbelSoftmaxSamplingFactory(Factory):
 
+    def mandatory_arguments(self) -> List[str]:
+        return ["temperature"]
+
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:
-        return GumbelSoftmaxSampling(global_configuration.temperature)
+        return GumbelSoftmaxSampling(configuration.temperature)

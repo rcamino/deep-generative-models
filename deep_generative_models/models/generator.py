@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from torch import Tensor
 from torch.nn import Module, ReLU, Sequential
@@ -34,6 +34,12 @@ class Generator(Module):
 
 class GeneratorFactory(MultiFactory):
 
+    def mandatory_global_arguments(self) -> List[str]:
+        return ["noise_size"]
+
+    def optional_arguments(self) -> List[str]:
+        return ["hidden_layers"]
+
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:
         # create the output layer factory
@@ -58,6 +64,9 @@ class GeneratorFactory(MultiFactory):
 
 class SingleOutputGeneratorFactory(GeneratorFactory):
 
+    def optional_arguments(self) -> List[str]:
+        return ["output_layer"] + super(SingleOutputGeneratorFactory, self).optional_arguments()
+
     def create_output_layer_factory(self, architecture: Architecture, metadata: Metadata,
                                     global_configuration: Configuration,
                                     configuration: Configuration) -> OutputLayerFactory:
@@ -72,6 +81,9 @@ class SingleOutputGeneratorFactory(GeneratorFactory):
 
 
 class MultiOutputGeneratorFactory(GeneratorFactory):
+
+    def mandatory_arguments(self) -> List[str]:
+        return ["output_layer"]
 
     def create_output_layer_factory(self, architecture: Architecture, metadata: Metadata,
                                     global_configuration: Configuration,

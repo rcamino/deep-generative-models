@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from torch import Tensor, exp, randn_like
 from torch.nn import Module, Linear
@@ -48,6 +48,9 @@ class VAEFactory(MultiFactory):
     def __init__(self, factory_by_name: Dict[str, Factory], factory_name: str):
         super(VAEFactory, self).__init__(factory_by_name)
         self.factory_name = factory_name
+
+    def mandatory_global_arguments(self) -> List[str]:
+        return ["split_size", "code_size"]
 
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:

@@ -1,7 +1,7 @@
 from torch import Tensor
 from torch.nn import Module, Linear, Sequential
 
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
@@ -38,6 +38,12 @@ class SingleOutputLayerFactory(OutputLayerFactory):
 
 
 class PartialSingleOutputLayerFactory(MultiFactory):
+
+    def mandatory_arguments(self) -> List[str]:
+        return ["output_size"]
+
+    def optional_arguments(self) -> List[str]:
+        return ["activation"]
 
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:

@@ -9,7 +9,7 @@ from deep_generative_models.losses.wgan import WGANCriticLoss
 class WGANCriticLossWithGradientPenalty(WGANCriticLoss):
     weight: float
 
-    def __init__(self, weight: float) -> None:
+    def __init__(self, weight: float = 1.0) -> None:
         super(WGANCriticLossWithGradientPenalty, self).__init__()
         self.weight = weight
 

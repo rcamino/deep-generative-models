@@ -61,6 +61,9 @@ class HiddenLayersFactory:
 
 class PartialHiddenLayersFactory(MultiFactory):
 
+    def optional_arguments(self) -> List[str]:
+        return ["sizes", "bn_decay", "activation"]
+
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:
         optional = configuration.get_all_defined(["sizes", "bn_decay"])

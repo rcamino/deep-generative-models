@@ -1,6 +1,6 @@
 import torch
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from torch import Tensor
 from torch.nn import ParameterList, Parameter
@@ -96,7 +96,9 @@ class MultiInputLayer(InputLayer):
 
 class MultiInputLayerFactory(MultiFactory):
 
+    def optional_arguments(self) -> List[str]:
+        return ["min_embedding_size", "max_embedding_size"]
+
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:
-        optional = configuration.get_all_defined(["min_embedding_size", "max_embedding_size"])
-        return MultiInputLayer(metadata, **optional)
+        return MultiInputLayer(metadata, **configuration.get_all_defined(self.optional_arguments()))

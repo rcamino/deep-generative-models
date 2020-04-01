@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from torch import Tensor
 from torch.nn import Module, Tanh, Sequential
@@ -34,6 +34,9 @@ class Decoder(Module):
 
 class DecoderFactory(MultiFactory):
 
+    def optional_arguments(self) -> List[str]:
+        return ["hidden_layers"]
+
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:
         # create the output layer factory
@@ -58,6 +61,9 @@ class DecoderFactory(MultiFactory):
 
 class SingleOutputDecoderFactory(DecoderFactory):
 
+    def optional_arguments(self) -> List[str]:
+        return ["output_layer"] + super(SingleOutputDecoderFactory, self).optional_arguments()
+
     def create_output_layer_factory(self, architecture: Architecture, metadata: Metadata,
                                     global_configuration: Configuration,
                                     configuration: Configuration) -> OutputLayerFactory:
@@ -72,6 +78,9 @@ class SingleOutputDecoderFactory(DecoderFactory):
 
 
 class MultiOutputDecoderFactory(DecoderFactory):
+
+    def mandatory_arguments(self) -> List[str]:
+        return ["output_layer"]
 
     def create_output_layer_factory(self, architecture: Architecture, metadata: Metadata,
                                     global_configuration: Configuration,

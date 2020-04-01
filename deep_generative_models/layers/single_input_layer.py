@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from torch import Tensor
 
@@ -24,6 +24,9 @@ class SingleInputLayer(InputLayer):
 
 
 class SingleInputLayerFactory(MultiFactory):
+
+    def mandatory_arguments(self) -> List[str]:
+        return ["input_size"]
 
     def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
                configuration: Configuration) -> Any:
