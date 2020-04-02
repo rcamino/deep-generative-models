@@ -19,4 +19,4 @@ if __name__ == '__main__':
     options_parser.add_argument("configuration", type=str, help="Configuration json file.")
     options = options_parser.parse_args()
 
-    TrainMedGAN().run(load_configuration(options.configuration))
+    TrainMedGAN().timed_run(load_configuration(options.configuration))

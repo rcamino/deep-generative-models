@@ -1,4 +1,3 @@
-import time
 import torch
 
 import numpy as np
@@ -25,8 +24,6 @@ class Datasets(Dictionary[Tensor]):
 class Train(Task):
 
     def run(self, configuration: Configuration) -> None:
-        start_time = time.time()
-
         datasets = Datasets()
         for dataset_name, dataset_path in configuration.data.items():
             datasets[dataset_name] = torch.from_numpy(np.load(dataset_path))
@@ -75,7 +72,6 @@ class Train(Task):
 
         # finish
         logger.close()
-        print("Total time: {:02f}s".format(time.time() - start_time))
 
     def prepare_training(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                          datasets: Datasets) -> None:
