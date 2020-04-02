@@ -52,6 +52,9 @@ class VAEFactory(MultiFactory):
     def mandatory_architecture_arguments(self) -> List[str]:
         return ["split_size", "code_size"]
 
+    def mandatory_arguments(self) -> List[str]:
+        return ["encoder", "decoder"]
+
     def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         autoencoder = self.create_other(self.factory_name, architecture, metadata, arguments)
         return VAE(autoencoder, architecture.arguments.split_size, architecture.arguments.code_size)
