@@ -5,7 +5,7 @@ from torch.nn import Module
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import MultiFactory
+from deep_generative_models.component_factory import MultiComponentFactory
 from deep_generative_models.metadata import Metadata
 
 
@@ -24,7 +24,7 @@ class AutoEncoderLoss(Module):
         return self.reconstruction_loss(outputs["reconstructed"], features)
 
 
-class AutoEncoderLossFactory(MultiFactory):
+class AutoEncoderLossFactory(MultiComponentFactory):
 
     def mandatory_arguments(self) -> List[str]:
         return ["reconstruction_loss"]

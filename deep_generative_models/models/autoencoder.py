@@ -6,7 +6,7 @@ from torch.nn import Module
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.factory import MultiFactory, Factory
+from deep_generative_models.component_factory import MultiComponentFactory, ComponentFactory
 from deep_generative_models.models.decoder import Decoder
 from deep_generative_models.models.encoder import Encoder
 
@@ -34,12 +34,12 @@ class AutoEncoder(Module):
         return self.decoder(code)
 
 
-class AutoEncoderFactory(MultiFactory):
+class AutoEncoderFactory(MultiComponentFactory):
 
     encoder_factory_name: str
     decoder_factory_name: str
 
-    def __init__(self, factory_by_name: Dict[str, Factory], encoder_factory_name: str,
+    def __init__(self, factory_by_name: Dict[str, ComponentFactory], encoder_factory_name: str,
                  decoder_factory_name: str) -> None:
         super(AutoEncoderFactory, self).__init__(factory_by_name)
         self.encoder_factory_name = encoder_factory_name

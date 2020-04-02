@@ -8,7 +8,7 @@ from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.hidden_layers import HiddenLayersFactory
 from deep_generative_models.layers.input_layer import InputLayer
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.factory import MultiFactory
+from deep_generative_models.component_factory import MultiComponentFactory
 
 
 class Encoder(Module):
@@ -38,7 +38,7 @@ class Encoder(Module):
         return self.layers(inputs)
 
 
-class EncoderFactory(MultiFactory):
+class EncoderFactory(MultiComponentFactory):
 
     def mandatory_architecture_arguments(self) -> List[str]:
         return ["code_size"]

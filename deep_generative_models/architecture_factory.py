@@ -1,12 +1,13 @@
-from torch.nn import LeakyReLU, ReLU, Sigmoid, Softmax, Tanh, BCELoss, CrossEntropyLoss, MSELoss
+from torch.nn import LeakyReLU, ReLU, Sigmoid, Tanh, BCELoss, CrossEntropyLoss, MSELoss
+
 from torch.optim import Adam, SGD
 
 from deep_generative_models.activations.gumbel_softmax_sampling import GumbelSoftmaxSamplingFactory
 from deep_generative_models.activations.softmax_sampling import SoftmaxSampling
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import ClassFactoryWrapper, MissingArchitectureArgument, MissingFactoryArgument, \
-    InvalidFactoryArgument
+from deep_generative_models.component_factory import ComponentFactoryFromClass, MissingArchitectureArgument
+from deep_generative_models.arguments import MissingArgument, InvalidArgument
 from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
@@ -36,26 +37,26 @@ from deep_generative_models.models.vae import VAEFactory
 factory_by_name = {
     # my activations
     "GumbelSoftmaxSampling": GumbelSoftmaxSamplingFactory(),
-    "SoftmaxSampling": ClassFactoryWrapper(SoftmaxSampling),
+    "SoftmaxSampling": ComponentFactoryFromClass(SoftmaxSampling),
 
     # PyTorch activations (could add more)
-    "LeakyReLU": ClassFactoryWrapper(LeakyReLU, ["negative_slope"]),
-    "ReLU": ClassFactoryWrapper(ReLU),
-    "Sigmoid": ClassFactoryWrapper(Sigmoid),
-    "Tanh": ClassFactoryWrapper(Tanh),
+    "LeakyReLU": ComponentFactoryFromClass(LeakyReLU, ["negative_slope"]),
+    "ReLU": ComponentFactoryFromClass(ReLU),
+    "Sigmoid": ComponentFactoryFromClass(Sigmoid),
+    "Tanh": ComponentFactoryFromClass(Tanh),
 
     # my losses
     "MultiReconstructionLoss": MultiReconstructionLossFactory(),
-    "GANGeneratorLoss": ClassFactoryWrapper(GANGeneratorLoss, ["smooth_positive_labels"]),
-    "GANDiscriminatorLoss": ClassFactoryWrapper(GANDiscriminatorLoss, ["smooth_positive_labels"]),
-    "WGANGeneratorLoss": ClassFactoryWrapper(WGANGeneratorLoss),
-    "WGANCriticLoss": ClassFactoryWrapper(WGANCriticLoss),
-    "WGANCriticLossWithGradientPenalty": ClassFactoryWrapper(WGANCriticLossWithGradientPenalty, ["weight"]),
+    "GANGeneratorLoss": ComponentFactoryFromClass(GANGeneratorLoss, ["smooth_positive_labels"]),
+    "GANDiscriminatorLoss": ComponentFactoryFromClass(GANDiscriminatorLoss, ["smooth_positive_labels"]),
+    "WGANGeneratorLoss": ComponentFactoryFromClass(WGANGeneratorLoss),
+    "WGANCriticLoss": ComponentFactoryFromClass(WGANCriticLoss),
+    "WGANCriticLossWithGradientPenalty": ComponentFactoryFromClass(WGANCriticLossWithGradientPenalty, ["weight"]),
 
     # PyTorch losses (could add more)
-    "BCE": ClassFactoryWrapper(BCELoss, ["weight", "reduction"]),
-    "CrossEntropy": ClassFactoryWrapper(CrossEntropyLoss, ["weight", "reduction"]),
-    "MSE": ClassFactoryWrapper(MSELoss, ["reduction"]),
+    "BCE": ComponentFactoryFromClass(BCELoss, ["weight", "reduction"]),
+    "CrossEntropy": ComponentFactoryFromClass(CrossEntropyLoss, ["weight", "reduction"]),
+    "MSE": ComponentFactoryFromClass(MSELoss, ["reduction"]),
 
     # PyTorch optimizers (could add more)
     "Adam": OptimizerFactory(Adam, ["lr", "betas", "eps", "weight_decay", "amsgrad"]),
@@ -134,12 +135,15 @@ def create_architecture(metadata: Metadata, configuration: Configuration) -> Arc
 
         # validate the component
         try:
-            factory.validate_arguments(configuration.arguments, arguments)
+            factory.validate_architecture_arguments(configuration.arguments)
         except MissingArchitectureArgument as e:
             raise Exception("Missing architecture argument '{}' while creating component '{}'".format(e.name, node))
-        except MissingFactoryArgument as e:
+
+        try:
+            factory.validate_arguments(arguments)
+        except MissingArgument as e:
             raise Exception("Missing argument '{}' while creating component '{}'".format(e.name, node))
-        except InvalidFactoryArgument as e:
+        except InvalidArgument as e:
             raise Exception("Invalid argument '{}' while creating component '{}'".format(e.name, node))
 
         # create the component

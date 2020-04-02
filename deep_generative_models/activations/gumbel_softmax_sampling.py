@@ -7,7 +7,7 @@ from torch.nn.functional import gumbel_softmax
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import Factory
+from deep_generative_models.component_factory import ComponentFactory
 from deep_generative_models.metadata import Metadata
 
 
@@ -22,7 +22,7 @@ class GumbelSoftmaxSampling(Module):
         return gumbel_softmax(inputs, hard=not self.training, tau=self.temperature)
 
 
-class GumbelSoftmaxSamplingFactory(Factory):
+class GumbelSoftmaxSamplingFactory(ComponentFactory):
 
     def mandatory_arguments(self) -> List[str]:
         return ["temperature"]

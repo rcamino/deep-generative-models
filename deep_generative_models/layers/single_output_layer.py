@@ -7,7 +7,7 @@ from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.output_layer import OutputLayerFactory
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.factory import MultiFactory
+from deep_generative_models.component_factory import MultiComponentFactory
 
 
 class SingleOutputLayer(Module):
@@ -37,7 +37,7 @@ class SingleOutputLayerFactory(OutputLayerFactory):
         return SingleOutputLayer(input_size, self.output_size, activation=self.activation)
 
 
-class PartialSingleOutputLayerFactory(MultiFactory):
+class PartialSingleOutputLayerFactory(MultiComponentFactory):
 
     def mandatory_arguments(self) -> List[str]:
         return ["output_size"]

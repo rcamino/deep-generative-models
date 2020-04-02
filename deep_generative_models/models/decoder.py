@@ -8,7 +8,7 @@ from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.hidden_layers import HiddenLayersFactory
 from deep_generative_models.layers.output_layer import OutputLayerFactory
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.factory import MultiFactory
+from deep_generative_models.component_factory import MultiComponentFactory
 
 
 class Decoder(Module):
@@ -32,7 +32,7 @@ class Decoder(Module):
         return self.layers(code)
 
 
-class DecoderFactory(MultiFactory):
+class DecoderFactory(MultiComponentFactory):
 
     def optional_arguments(self) -> List[str]:
         return ["hidden_layers"]

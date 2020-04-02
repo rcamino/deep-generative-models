@@ -8,7 +8,7 @@ from torch.nn.functional import cross_entropy, binary_cross_entropy, mse_loss
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import Factory
+from deep_generative_models.component_factory import ComponentFactory
 from deep_generative_models.metadata import Metadata, VariableMetadata
 
 
@@ -108,7 +108,7 @@ class MultiReconstructionLoss(Module):
         return loss
 
 
-class MultiReconstructionLossFactory(Factory):
+class MultiReconstructionLossFactory(ComponentFactory):
 
     def optional_arguments(self) -> List[str]:
         return ["reduction"]

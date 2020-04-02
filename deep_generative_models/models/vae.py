@@ -6,7 +6,7 @@ from torch.nn import Module, Linear
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.factory import MultiFactory, Factory
+from deep_generative_models.component_factory import MultiComponentFactory, ComponentFactory
 from deep_generative_models.models.autoencoder import AutoEncoder
 
 
@@ -42,10 +42,10 @@ class VAE(Module):
         return self.autoencoder.decode(code)
 
 
-class VAEFactory(MultiFactory):
+class VAEFactory(MultiComponentFactory):
     factory_name: str
 
-    def __init__(self, factory_by_name: Dict[str, Factory], factory_name: str):
+    def __init__(self, factory_by_name: Dict[str, ComponentFactory], factory_name: str):
         super(VAEFactory, self).__init__(factory_by_name)
         self.factory_name = factory_name
 

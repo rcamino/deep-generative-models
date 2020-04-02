@@ -5,7 +5,7 @@ from torch.nn import Module, Linear, BatchNorm1d, Sequential
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import MultiFactory
+from deep_generative_models.component_factory import MultiComponentFactory
 from deep_generative_models.metadata import Metadata
 
 
@@ -59,7 +59,7 @@ class HiddenLayersFactory:
         return HiddenLayers(Sequential(*layers), previous_layer_size)
 
 
-class PartialHiddenLayersFactory(MultiFactory):
+class PartialHiddenLayersFactory(MultiComponentFactory):
 
     def optional_arguments(self) -> List[str]:
         return ["sizes", "bn_decay", "activation"]

@@ -5,7 +5,7 @@ from torch.nn import Module, ReLU, Sequential
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import MultiFactory
+from deep_generative_models.component_factory import MultiComponentFactory
 from deep_generative_models.layers.hidden_layers import HiddenLayersFactory
 from deep_generative_models.layers.output_layer import OutputLayerFactory
 from deep_generative_models.metadata import Metadata
@@ -32,7 +32,7 @@ class Generator(Module):
         return self.layers(noise)
 
 
-class GeneratorFactory(MultiFactory):
+class GeneratorFactory(MultiComponentFactory):
 
     def mandatory_architecture_arguments(self) -> List[str]:
         return ["noise_size"]

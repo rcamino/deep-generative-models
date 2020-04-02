@@ -5,7 +5,7 @@ from torch.nn import Module, Sequential, Linear, LeakyReLU, Sigmoid
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import MultiFactory, Factory
+from deep_generative_models.component_factory import MultiComponentFactory, ComponentFactory
 from deep_generative_models.layers.hidden_layers import HiddenLayersFactory
 from deep_generative_models.metadata import Metadata
 
@@ -38,10 +38,10 @@ class Discriminator(Module):
         return self.layers(inputs).view(-1)
 
 
-class DiscriminatorFactory(MultiFactory):
+class DiscriminatorFactory(MultiComponentFactory):
     critic: bool
 
-    def __init__(self, factory_by_name: Dict[str, Factory], critic: bool = False) -> None:
+    def __init__(self, factory_by_name: Dict[str, ComponentFactory], critic: bool = False) -> None:
         super(DiscriminatorFactory, self).__init__(factory_by_name)
         self.critic = critic
 

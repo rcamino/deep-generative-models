@@ -2,11 +2,11 @@ from typing import Type, Any, List
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import Factory
+from deep_generative_models.component_factory import ComponentFactory
 from deep_generative_models.metadata import Metadata
 
 
-class OptimizerFactory(Factory):
+class OptimizerFactory(ComponentFactory):
 
     optimizer_class: Type
     optional_class_arguments: List[str]

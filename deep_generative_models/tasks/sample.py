@@ -3,7 +3,7 @@ import numpy as np
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.checkpoints import Checkpoints
 from deep_generative_models.configuration import Configuration, load_configuration
-from deep_generative_models.factories import create_architecture
+from deep_generative_models.architecture_factory import create_architecture
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import load_metadata, Metadata
 from deep_generative_models.tasks.task import Task
