@@ -33,11 +33,11 @@ class Train(Task):
         architecture = create_architecture(metadata, load_configuration(configuration.architecture))
         architecture.to_gpu_if_available()
 
-        checkpoints = Checkpoints(create_parent_directories_if_needed(configuration.checkpoint),
-                                  configuration.max_checkpoint_delay)
+        create_parent_directories_if_needed(configuration.checkpoint)
+        checkpoints = Checkpoints()
 
-        if checkpoints.exists():
-            checkpoint = checkpoints.load()
+        if checkpoints.exists(configuration.checkpoint):
+            checkpoint = checkpoints.load(configuration.checkpoint)
             checkpoints.load_states(checkpoint["architecture"], architecture)
         else:
             architecture.initialize()
@@ -65,10 +65,10 @@ class Train(Task):
             checkpoint["epoch"] = epoch
 
             # save checkpoint
-            checkpoints.delayed_save(checkpoint)
+            checkpoints.delayed_save(checkpoint, configuration.checkpoint, configuration.max_checkpoint_delay)
 
         # force save of last checkpoint
-        checkpoints.save(checkpoint)
+        checkpoints.save(checkpoint, configuration.checkpoint)
 
         # finish
         logger.close()

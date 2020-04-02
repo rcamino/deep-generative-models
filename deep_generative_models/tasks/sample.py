@@ -19,8 +19,8 @@ class Sample(Task):
         architecture = create_architecture(metadata, load_configuration(configuration.architecture))
         architecture.to_gpu_if_available()
 
-        checkpoints = Checkpoints(configuration.checkpoint)
-        checkpoint = checkpoints.load()
+        checkpoints = Checkpoints()
+        checkpoint = checkpoints.load(configuration.checkpoint)
         checkpoints.load_states(checkpoint["architecture"], architecture)
 
         samples = np.zeros((configuration.num_samples, metadata.get_num_features()), dtype=np.float32)
