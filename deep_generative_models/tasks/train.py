@@ -12,7 +12,7 @@ from deep_generative_models.commandline import create_parent_directories_if_need
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.architecture_factory import create_architecture
-from deep_generative_models.training_logger import TrainingLogger
+from deep_generative_models.tasks.train_logger import TrainLogger
 from deep_generative_models.metadata import load_metadata, Metadata
 from deep_generative_models.tasks.task import Task
 
@@ -59,7 +59,7 @@ class Train(Task):
                 "epoch": 0
             }
 
-        logger = TrainingLogger(create_parent_directories_if_needed(configuration.logs), checkpoint["epoch"] > 0)
+        logger = TrainLogger(create_parent_directories_if_needed(configuration.logs), checkpoint["epoch"] > 0)
 
         self.prepare_training(configuration, metadata, architecture, datasets)
 
