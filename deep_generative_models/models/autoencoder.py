@@ -48,18 +48,7 @@ class AutoEncoderFactory(MultiFactory):
     def mandatory_arguments(self) -> List[str]:
         return ["encoder", "decoder"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        encoder = self.create_other(self.encoder_factory_name,
-                                    architecture,
-                                    metadata,
-                                    global_configuration,
-                                    configuration.encoder)
-
-        decoder = self.create_other(self.decoder_factory_name,
-                                    architecture,
-                                    metadata,
-                                    global_configuration,
-                                    configuration.decoder)
-
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        encoder = self.create_other(self.encoder_factory_name, architecture, metadata, arguments.encoder)
+        decoder = self.create_other(self.decoder_factory_name, architecture, metadata, arguments.decoder)
         return AutoEncoder(encoder, decoder)

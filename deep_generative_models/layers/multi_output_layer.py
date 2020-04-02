@@ -103,12 +103,8 @@ class PartialMultiOutputLayerFactory(MultiFactory):
     def mandatory_arguments(self) -> List[str]:
         return ["activation"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        activation_configuration = configuration.activation
-        categorical_activation = self.create_other(activation_configuration.factory,
-                                                   architecture,
-                                                   metadata,
-                                                   global_configuration,
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        activation_configuration = arguments.activation
+        categorical_activation = self.create_other(activation_configuration.factory, architecture, metadata,
                                                    activation_configuration.get("arguments", {}))
         return MultiOutputLayerFactory(metadata, categorical_activation)

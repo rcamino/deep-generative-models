@@ -9,7 +9,7 @@ from typing import Dict
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.checkpoints import Checkpoints
 from deep_generative_models.commandline import create_parent_directories_if_needed
-from deep_generative_models.configuration import Configuration
+from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.factories import create_architecture
 from deep_generative_models.training_logger import TrainingLogger
@@ -30,7 +30,7 @@ class Train(Task):
 
         metadata = load_metadata(configuration.metadata)
 
-        architecture = create_architecture(metadata, configuration)
+        architecture = create_architecture(metadata, load_configuration(configuration.architecture))
         architecture.to_gpu_if_available()
 
         checkpoints = Checkpoints(create_parent_directories_if_needed(configuration.checkpoint),

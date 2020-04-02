@@ -28,6 +28,5 @@ class SingleInputLayerFactory(MultiFactory):
     def mandatory_arguments(self) -> List[str]:
         return ["input_size"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        return SingleInputLayer(configuration.input_size)
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        return SingleInputLayer(arguments.input_size)

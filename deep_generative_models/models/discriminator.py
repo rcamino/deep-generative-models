@@ -48,14 +48,10 @@ class DiscriminatorFactory(MultiFactory):
     def optional_arguments(self) -> List[str]:
         return ["hidden_layers"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         # create the hidden layers factory
-        hidden_layers_factory = self.create_other("HiddenLayers",
-                                                  architecture,
-                                                  metadata,
-                                                  global_configuration,
-                                                  configuration.get("hidden_layers", {}))
+        hidden_layers_factory = self.create_other("HiddenLayers", architecture, metadata,
+                                                  arguments.get("hidden_layers", {}))
 
         # create the discriminator
         return Discriminator(metadata.get_num_features(), hidden_layers_factory, critic=self.critic)

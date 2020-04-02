@@ -7,10 +7,10 @@ from deep_generative_models.metadata import Metadata
 
 class Factory:
 
-    def dependencies(self, configuration: Configuration) -> List[str]:
+    def dependencies(self, arguments: Configuration) -> List[str]:
         return []
 
-    def mandatory_global_arguments(self) -> List[str]:
+    def mandatory_architecture_arguments(self) -> List[str]:
         return []
 
     def mandatory_arguments(self) -> List[str]:
@@ -19,14 +19,14 @@ class Factory:
     def optional_arguments(self) -> List[str]:
         return []
 
-    def validate_configuration(self, global_configuration: Configuration, configuration: Configuration) -> None:
-        # global mandatory arguments
-        for mandatory_global_argument in self.mandatory_global_arguments():
-            if mandatory_global_argument not in global_configuration:
-                raise MissingGlobalFactoryArgument(mandatory_global_argument)
+    def validate_arguments(self, architecture_arguments: Configuration, arguments: Configuration) -> None:
+        # architecture mandatory arguments
+        for mandatory_architecture_argument in self.mandatory_architecture_arguments():
+            if mandatory_architecture_argument not in architecture_arguments:
+                raise MissingArchitectureArgument(mandatory_architecture_argument)
 
         # keep the remaining arguments here
-        remaining_arguments = set(configuration.keys())
+        remaining_arguments = set(arguments.keys())
 
         # mandatory arguments
         for mandatory_argument in self.mandatory_arguments():
@@ -44,8 +44,7 @@ class Factory:
         for remaining_argument in remaining_arguments:
             raise InvalidFactoryArgument(remaining_argument)
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         raise NotImplementedError
 
 
@@ -56,22 +55,21 @@ class MultiFactory(Factory):
         self.factory_by_name = factory_by_name
 
     def create_other(self, other_name: str, architecture: Architecture, metadata: Metadata,
-                     global_configuration: Configuration, other_configuration: Configuration) -> Any:
+                     other_arguments: Configuration) -> Any:
         other_factory = self.factory_by_name[other_name]
 
         try:
-            other_factory.validate_configuration(global_configuration, other_configuration)
-        except MissingGlobalFactoryArgument as e:
-            raise Exception("Missing global argument '{}' while creating other module '{}'".format(e.name, other_name))
+            other_factory.validate_arguments(architecture.arguments, other_arguments)
+        except MissingArchitectureArgument as e:
+            raise Exception("Missing architecture argument '{}' while creating other component '{}'".format(e.name, other_name))
         except MissingFactoryArgument as e:
-            raise Exception("Missing argument '{}' while creating other module '{}'".format(e.name, other_name))
+            raise Exception("Missing argument '{}' while creating other component '{}'".format(e.name, other_name))
         except InvalidFactoryArgument as e:
-            raise Exception("Invalid argument '{}' while creating other module '{}'".format(e.name, other_name))
+            raise Exception("Invalid argument '{}' while creating other component '{}'".format(e.name, other_name))
 
-        return other_factory.create(architecture, metadata, global_configuration, other_configuration)
+        return other_factory.create(architecture, metadata, other_arguments)
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         raise NotImplementedError
 
 
@@ -87,9 +85,8 @@ class ClassFactoryWrapper(Factory):
     def optional_arguments(self) -> List[str]:
         return self.optional_class_arguments
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        return self.wrapped_class(**configuration.get_all_defined(self.optional_class_arguments))
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        return self.wrapped_class(**arguments.get_all_defined(self.optional_class_arguments))
 
 
 class FactoryArgumentError(Exception):
@@ -101,7 +98,7 @@ class FactoryArgumentError(Exception):
         self.name = name
 
 
-class MissingGlobalFactoryArgument(FactoryArgumentError):
+class MissingArchitectureArgument(FactoryArgumentError):
     pass
 
 

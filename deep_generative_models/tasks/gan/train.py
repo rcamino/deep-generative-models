@@ -105,7 +105,7 @@ class TrainGAN(Train):
         return to_cpu_if_was_in_gpu(loss).item()
 
     def sample_fake(self, configuration: Configuration, architecture: Architecture, size: int) -> Tensor:
-        noise = to_gpu_if_available(FloatTensor(size, configuration.noise_size).normal_())
+        noise = to_gpu_if_available(FloatTensor(size, architecture.arguments.noise_size).normal_())
         return architecture.generator(noise)
 
 

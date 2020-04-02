@@ -64,16 +64,12 @@ class PartialHiddenLayersFactory(MultiFactory):
     def optional_arguments(self) -> List[str]:
         return ["sizes", "bn_decay", "activation"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        optional = configuration.get_all_defined(["sizes", "bn_decay"])
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        optional = arguments.get_all_defined(["sizes", "bn_decay"])
 
-        if "activation" in configuration:
-            activation_configuration = configuration.activation
-            optional["activation"] = self.create_other(activation_configuration.factory,
-                                                       architecture,
-                                                       metadata,
-                                                       global_configuration,
+        if "activation" in arguments:
+            activation_configuration = arguments.activation
+            optional["activation"] = self.create_other(activation_configuration.factory, architecture, metadata,
                                                        activation_configuration.get("arguments", {}))
 
         return HiddenLayersFactory(**optional)

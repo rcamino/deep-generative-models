@@ -45,14 +45,10 @@ class PartialSingleOutputLayerFactory(MultiFactory):
     def optional_arguments(self) -> List[str]:
         return ["activation"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         optional = {}
-        if "activation" in configuration:
-            activation_configuration = configuration.activation
-            optional["activation"] = self.create_other(activation_configuration.factory,
-                                                       architecture,
-                                                       metadata,
-                                                       global_configuration,
+        if "activation" in arguments:
+            activation_configuration = arguments.activation
+            optional["activation"] = self.create_other(activation_configuration.factory, architecture, metadata,
                                                        activation_configuration.get("arguments", {}))
-        return SingleOutputLayerFactory(configuration.output_size, **optional)
+        return SingleOutputLayerFactory(arguments.output_size, **optional)

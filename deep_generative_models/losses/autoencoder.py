@@ -29,10 +29,6 @@ class AutoEncoderLossFactory(MultiFactory):
     def mandatory_arguments(self) -> List[str]:
         return ["reconstruction_loss"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        return AutoEncoderLoss(self.create_other(configuration.reconstruction_loss.factory,
-                                                 architecture,
-                                                 metadata,
-                                                 global_configuration,
-                                                 configuration.reconstruction_loss.get("arguments", {})))
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        return AutoEncoderLoss(self.create_other(arguments.reconstruction_loss.factory, architecture, metadata,
+                                                 arguments.reconstruction_loss.get("arguments", {})))

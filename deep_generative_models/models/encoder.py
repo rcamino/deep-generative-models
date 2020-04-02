@@ -40,47 +40,41 @@ class Encoder(Module):
 
 class EncoderFactory(MultiFactory):
 
-    def mandatory_global_arguments(self) -> List[str]:
+    def mandatory_architecture_arguments(self) -> List[str]:
         return ["code_size"]
 
     def optional_arguments(self) -> List[str]:
         return ["hidden_layers", "output_activation"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         # create the input layer
-        input_layer = self.create_input_layer(architecture, metadata, global_configuration, configuration)
+        input_layer = self.create_input_layer(architecture, metadata, arguments)
 
         # create the hidden layers factory
-        hidden_layers_factory = self.create_other("HiddenLayers",
-                                                  architecture,
-                                                  metadata,
-                                                  global_configuration,
-                                                  configuration.get("hidden_layers", {}))
+        hidden_layers_factory = self.create_other("HiddenLayers", architecture, metadata,
+                                                  arguments.get("hidden_layers", {}))
 
         # create the output activation
         optional = {}
-        if "output_activation" in configuration:
-            optional["output_activation"] = self.create_other(configuration.output_activation.factory,
-                                                              architecture,
+        if "output_activation" in arguments:
+            optional["output_activation"] = self.create_other(arguments.output_activation.factory, architecture,
                                                               metadata,
-                                                              global_configuration,
-                                                              configuration.output_activation.get("arguments", {}))
+                                                              arguments.output_activation.get("arguments", {}))
 
         # create the encoder
-        return Encoder(input_layer, global_configuration.code_size, hidden_layers_factory, **optional)
+        return Encoder(input_layer, architecture.arguments.code_size, hidden_layers_factory, **optional)
 
-    def create_input_layer(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-                           configuration: Configuration) -> InputLayer:
+    def create_input_layer(self, architecture: Architecture, metadata: Metadata,
+                           arguments: Configuration) -> InputLayer:
         raise NotImplementedError
 
 
 class SingleInputEncoderFactory(EncoderFactory):
 
-    def create_input_layer(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-                           configuration: Configuration) -> InputLayer:
+    def create_input_layer(self, architecture: Architecture, metadata: Metadata,
+                           arguments: Configuration) -> InputLayer:
         # override the input layer size
-        return self.create_other("SingleInputLayer", architecture, metadata, global_configuration,
+        return self.create_other("SingleInputLayer", architecture, metadata,
                                  Configuration({"input_size": metadata.get_num_features()}))
 
 
@@ -89,7 +83,6 @@ class MultiInputEncoderFactory(EncoderFactory):
     def mandatory_arguments(self) -> List[str]:
         return ["input_layer"]
 
-    def create_input_layer(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-                           configuration: Configuration) -> InputLayer:
-        return self.create_other("MultiInputLayer", architecture, metadata, global_configuration,
-                                 configuration.input_layer)
+    def create_input_layer(self, architecture: Architecture, metadata: Metadata,
+                           arguments: Configuration) -> InputLayer:
+        return self.create_other("MultiInputLayer", architecture, metadata, arguments.input_layer)

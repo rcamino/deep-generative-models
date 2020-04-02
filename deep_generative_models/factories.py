@@ -5,7 +5,7 @@ from deep_generative_models.activations.gumbel_softmax_sampling import GumbelSof
 from deep_generative_models.activations.softmax_sampling import SoftmaxSampling
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.factory import ClassFactoryWrapper, MissingGlobalFactoryArgument, MissingFactoryArgument, \
+from deep_generative_models.factory import ClassFactoryWrapper, MissingArchitectureArgument, MissingFactoryArgument, \
     InvalidFactoryArgument
 from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
 
@@ -62,18 +62,18 @@ factory_by_name = {
     "SGD": OptimizerFactory(SGD, ["lr", "momentum", "dampening", "weight_decay", "nesterov"]),
 }
 
-# my layers that create other modules
+# my layers that create other components
 factory_by_name["HiddenLayers"] = PartialHiddenLayersFactory(factory_by_name)
 factory_by_name["SingleInputLayer"] = SingleInputLayerFactory(factory_by_name)
 factory_by_name["MultiInputLayer"] = MultiInputLayerFactory(factory_by_name)
 factory_by_name["SingleOutputLayer"] = PartialSingleOutputLayerFactory(factory_by_name)
 factory_by_name["MultiOutputLayer"] = PartialMultiOutputLayerFactory(factory_by_name)
 
-# my losses that create other modules
+# my losses that create other components
 factory_by_name["AutoEncoderLoss"] = AutoEncoderLossFactory(factory_by_name)
 factory_by_name["VAELoss"] = VAELossFactory(factory_by_name)
 
-# my modules that create other modules
+# my components that create other components
 factory_by_name["SingleVariableAutoEncoder"] = AutoEncoderFactory(factory_by_name, "SingleInputEncoder", "SingleOutputDecoder")
 factory_by_name["MultiVariableAutoEncoder"] = AutoEncoderFactory(factory_by_name, "MultiInputEncoder", "MultiOutputDecoder")
 factory_by_name["SingleInputEncoder"] = SingleInputEncoderFactory(factory_by_name)
@@ -91,22 +91,23 @@ factory_by_name["MultiVariableVAE"] = VAEFactory(factory_by_name, "MultiVariable
 
 
 def create_architecture(metadata: Metadata, configuration: Configuration) -> Architecture:
-    architecture = Architecture()
+    architecture = Architecture(configuration.arguments)
 
-    # create the dependency nodes
+    # create the dependency graph
+    # nodes are component names and edges are dependencies between components
     nodes = set()
     in_edges = dict()
     out_edges = dict()
-    for node in configuration.architecture.keys():
+    for node in configuration.components.keys():
         nodes.add(node)
         in_edges[node] = set()
         out_edges[node] = set()
 
     # create the dependency edges
     nodes_without_out_edges = set()
-    for node, child_configuration in configuration.architecture.items():
-        factory = factory_by_name[child_configuration.factory]
-        dependencies = factory.dependencies(child_configuration.get("arguments", {}))
+    for node, component_configuration in configuration.components.items():
+        factory = factory_by_name[component_configuration.factory]
+        dependencies = factory.dependencies(component_configuration.get("arguments", {}))
         if len(dependencies) == 0:
             nodes_without_out_edges.add(node)
         else:
@@ -114,35 +115,35 @@ def create_architecture(metadata: Metadata, configuration: Configuration) -> Arc
                 out_edges[node].add(other_node)  # the node needs the other node
                 in_edges[other_node].add(node)  # the other node is needed by the node
 
-    # create modules until the graph is empty (topological sort)
+    # create components until the graph is empty (topological sort)
     while len(nodes) > 0:
         # if there are no nodes without out edges there must be a loop
         if len(nodes_without_out_edges) == 0:
-            raise Exception("Dependencies cannot be met for modules: {}.".format(", ".join(nodes)))
+            raise Exception("Dependencies cannot be met for components: {}.".format(", ".join(nodes)))
 
         # get any node without out edges
         node = nodes_without_out_edges.pop()
         assert len(out_edges[node]) == 0
 
-        # prepare the module
-        child_configuration = configuration.architecture[node]
-        if "factory" not in child_configuration:
-            raise Exception("Missing factory name while creating module '{}'".format(node))
-        factory = factory_by_name[child_configuration.factory]
-        arguments = child_configuration.get("arguments", {})
+        # prepare the component
+        component_configuration = configuration.components[node]
+        if "factory" not in component_configuration:
+            raise Exception("Missing factory name while creating component '{}'".format(node))
+        factory = factory_by_name[component_configuration.factory]
+        arguments = component_configuration.get("arguments", {})
 
-        # validate the module
+        # validate the component
         try:
-            factory.validate_configuration(configuration, arguments)
-        except MissingGlobalFactoryArgument as e:
-            raise Exception("Missing global argument '{}' while creating module '{}'".format(e.name, node))
+            factory.validate_arguments(configuration.arguments, arguments)
+        except MissingArchitectureArgument as e:
+            raise Exception("Missing architecture argument '{}' while creating component '{}'".format(e.name, node))
         except MissingFactoryArgument as e:
-            raise Exception("Missing argument '{}' while creating module '{}'".format(e.name, node))
+            raise Exception("Missing argument '{}' while creating component '{}'".format(e.name, node))
         except InvalidFactoryArgument as e:
-            raise Exception("Invalid argument '{}' while creating module '{}'".format(e.name, node))
+            raise Exception("Invalid argument '{}' while creating component '{}'".format(e.name, node))
 
-        # create the module
-        architecture[node] = factory.create(architecture, metadata, configuration, arguments)
+        # create the component
+        architecture[node] = factory.create(architecture, metadata, arguments)
 
         # while the node has other nodes pointing at him
         while len(in_edges[node]) > 0:

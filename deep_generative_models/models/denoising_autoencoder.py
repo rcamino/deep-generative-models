@@ -50,7 +50,6 @@ class DeNoisingAutoencoderFactory(MultiFactory):
     def optional_arguments(self) -> List[str]:
         return ["noise_mean", "noise_std"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        autoencoder = self.create_other(self.factory_name, metadata, global_configuration, configuration)
-        return DeNoisingAutoencoder(autoencoder, **configuration.get_all_defined(self.optional_arguments()))
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        autoencoder = self.create_other(self.factory_name, metadata, arguments, )
+        return DeNoisingAutoencoder(autoencoder, **arguments.get_all_defined(self.optional_arguments()))

@@ -18,7 +18,7 @@ class Checkpoints(object):
     last_flush_time: Optional[float]
     kept_checkpoint: Optional[Checkpoint]
 
-    def __init__(self, path: str, max_delay: int) -> None:
+    def __init__(self, path: str, max_delay: int = 0) -> None:
         self.path = path
         self.max_seconds_without_save = max_delay
 

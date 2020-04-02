@@ -37,25 +37,19 @@ class DecoderFactory(MultiFactory):
     def optional_arguments(self) -> List[str]:
         return ["hidden_layers"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         # create the output layer factory
-        output_layer_factory = self.create_output_layer_factory(architecture, metadata, global_configuration,
-                                                                configuration)
+        output_layer_factory = self.create_output_layer_factory(architecture, metadata, arguments)
 
         # create the hidden layers factory
-        hidden_layers_factory = self.create_other("HiddenLayers",
-                                                  architecture,
-                                                  metadata,
-                                                  global_configuration,
-                                                  configuration.get("hidden_layers", {}))
+        hidden_layers_factory = self.create_other("HiddenLayers", architecture, metadata,
+                                                  arguments.get("hidden_layers", {}))
 
         # create the decoder
-        return Decoder(global_configuration.code_size, hidden_layers_factory, output_layer_factory)
+        return Decoder(architecture.arguments.code_size, hidden_layers_factory, output_layer_factory)
 
     def create_output_layer_factory(self, architecture: Architecture, metadata: Metadata,
-                                    global_configuration: Configuration,
-                                    configuration: Configuration) -> OutputLayerFactory:
+                                    arguments: Configuration) -> OutputLayerFactory:
         raise NotImplementedError
 
 
@@ -65,16 +59,14 @@ class SingleOutputDecoderFactory(DecoderFactory):
         return ["output_layer"] + super(SingleOutputDecoderFactory, self).optional_arguments()
 
     def create_output_layer_factory(self, architecture: Architecture, metadata: Metadata,
-                                    global_configuration: Configuration,
-                                    configuration: Configuration) -> OutputLayerFactory:
+                                    arguments: Configuration) -> OutputLayerFactory:
         # override the output layer size
         output_layer_configuration = {"output_size": metadata.get_num_features()}
         # copy activation arguments only if defined
-        if "output_layer" in configuration and "activation" in configuration.output_layer:
-            output_layer_configuration["activation"] = configuration.output_layer.activation
+        if "output_layer" in arguments and "activation" in arguments.output_layer:
+            output_layer_configuration["activation"] = arguments.output_layer.activation
         # create the output layer factory
-        return self.create_other("SingleOutputLayer", architecture, metadata, global_configuration,
-                                 Configuration(output_layer_configuration))
+        return self.create_other("SingleOutputLayer", architecture, metadata, Configuration(output_layer_configuration))
 
 
 class MultiOutputDecoderFactory(DecoderFactory):
@@ -83,8 +75,6 @@ class MultiOutputDecoderFactory(DecoderFactory):
         return ["output_layer"]
 
     def create_output_layer_factory(self, architecture: Architecture, metadata: Metadata,
-                                    global_configuration: Configuration,
-                                    configuration: Configuration) -> OutputLayerFactory:
+                                    arguments: Configuration) -> OutputLayerFactory:
         # create the output layer factory
-        return self.create_other("MultiOutputLayer", architecture, metadata, global_configuration,
-                                 configuration.output_layer)
+        return self.create_other("MultiOutputLayer", architecture, metadata, arguments.output_layer)

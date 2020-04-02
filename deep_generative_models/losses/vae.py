@@ -30,17 +30,13 @@ class VAELossFactory(MultiFactory):
     def mandatory_arguments(self) -> List[str]:
         return ["reconstruction_loss"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         # override the reduction argument
-        reconstruction_loss_configuration = configuration.reconstruction_loss.get("arguments", {})
+        reconstruction_loss_configuration = arguments.reconstruction_loss.get("arguments", {})
         if "reduction" in reconstruction_loss_configuration:
             assert reconstruction_loss_configuration["reduction"] == "sum"
         else:
             reconstruction_loss_configuration["reduction"] = "sum"
         # create the vae loss
-        return VAELoss(self.create_other(configuration.reconstruction_loss.factory,
-                                         architecture,
-                                         metadata,
-                                         global_configuration,
+        return VAELoss(self.create_other(arguments.reconstruction_loss.factory, architecture, metadata,
                                          reconstruction_loss_configuration))

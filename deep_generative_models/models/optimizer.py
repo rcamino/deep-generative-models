@@ -21,20 +21,18 @@ class OptimizerFactory(Factory):
     def optional_arguments(self) -> List[str]:
         return self.optional_class_arguments
 
-    @staticmethod
-    def dependencies(configuration: Configuration) -> List[str]:
-        return configuration.parameters
+    def dependencies(self, arguments: Configuration) -> List[str]:
+        return arguments.parameters
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         # collect the parameters from the indicated models
         parameters = []
-        for module_name in configuration.parameters:
+        for module_name in arguments.parameters:
             parameters.extend(architecture[module_name].parameters())
 
         # copy the rest of the arguments
         arguments = {}
-        for key, value in configuration.items():
+        for key, value in arguments.items():
             if key != "parameters":
                 arguments[key] = value
 

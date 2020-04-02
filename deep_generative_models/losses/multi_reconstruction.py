@@ -113,6 +113,5 @@ class MultiReconstructionLossFactory(Factory):
     def optional_arguments(self) -> List[str]:
         return ["reduction"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        return MultiReconstructionLoss(metadata, **configuration.get_all_defined(self.optional_arguments()))
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        return MultiReconstructionLoss(metadata, **arguments.get_all_defined(self.optional_arguments()))

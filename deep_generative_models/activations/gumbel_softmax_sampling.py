@@ -27,6 +27,5 @@ class GumbelSoftmaxSamplingFactory(Factory):
     def mandatory_arguments(self) -> List[str]:
         return ["temperature"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        return GumbelSoftmaxSampling(configuration.temperature)
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        return GumbelSoftmaxSampling(arguments.temperature)

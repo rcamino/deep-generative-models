@@ -99,6 +99,5 @@ class MultiInputLayerFactory(MultiFactory):
     def optional_arguments(self) -> List[str]:
         return ["min_embedding_size", "max_embedding_size"]
 
-    def create(self, architecture: Architecture, metadata: Metadata, global_configuration: Configuration,
-               configuration: Configuration) -> Any:
-        return MultiInputLayer(metadata, **configuration.get_all_defined(self.optional_arguments()))
+    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        return MultiInputLayer(metadata, **arguments.get_all_defined(self.optional_arguments()))
