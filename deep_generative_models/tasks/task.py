@@ -1,9 +1,10 @@
 import time
 
 from deep_generative_models.configuration import Configuration
+from deep_generative_models.arguments import ArgumentValidator
 
 
-class Task:
+class Task(ArgumentValidator):
 
     def timed_run(self, configuration: Configuration) -> None:
         start_time = time.time()

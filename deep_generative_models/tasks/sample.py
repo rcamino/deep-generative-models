@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 
 from deep_generative_models.architecture import Architecture
@@ -13,6 +15,16 @@ from torch import Tensor, no_grad
 
 class Sample(Task):
 
+    def mandatory_arguments(self) -> List[str]:
+        return [
+            "metadata",
+            "architecture",
+            "checkpoint",
+            "output",
+            "batch_size",
+            "sample_size"
+        ]
+
     def run(self, configuration: Configuration) -> None:
         metadata = load_metadata(configuration.metadata)
 
@@ -23,12 +35,12 @@ class Sample(Task):
         checkpoint = checkpoints.load(configuration.checkpoint)
         checkpoints.load_states(checkpoint["architecture"], architecture)
 
-        samples = np.zeros((configuration.num_samples, metadata.get_num_features()), dtype=np.float32)
+        samples = np.zeros((configuration.sample_size, metadata.get_num_features()), dtype=np.float32)
 
         start = 0
         end = 0
         iterations = 0
-        while start < configuration.num_samples:
+        while start < configuration.sample_size:
             # do not calculate gradients
             with no_grad():
                 # sample from the model
@@ -44,7 +56,7 @@ class Sample(Task):
             # if there was a change
             if real_batch_size > 0:
                 # do not go further than the desired number of samples
-                end = min(start + real_batch_size, configuration.num_samples)
+                end = min(start + real_batch_size, configuration.sample_size)
                 # limit the samples taken from the batch based on what is missing
                 samples[start:end, :] = batch_samples[:min(real_batch_size, end - start), :]
 

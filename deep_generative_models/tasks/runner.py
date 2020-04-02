@@ -27,7 +27,9 @@ task_by_name = {
 class TaskRunner(Task):
 
     def run(self, configuration: Configuration) -> None:
-        task_by_name[configuration.task].run(configuration.arguments)
+        task = task_by_name[configuration.task]
+        task.validate_arguments(configuration.arguments)
+        task.run(configuration.arguments)
 
 
 if __name__ == '__main__':

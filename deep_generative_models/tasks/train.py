@@ -4,7 +4,7 @@ import numpy as np
 
 from torch import Tensor
 
-from typing import Dict
+from typing import Dict, List
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.checkpoints import Checkpoints
@@ -22,6 +22,18 @@ class Datasets(Dictionary[Tensor]):
 
 
 class Train(Task):
+
+    def mandatory_arguments(self) -> List[str]:
+        return [
+            "data",
+            "metadata",
+            "architecture",
+            "checkpoint",
+            "logs",
+            "batch_size",
+            "max_checkpoint_delay",
+            "epochs"
+        ]
 
     def run(self, configuration: Configuration) -> None:
         datasets = Datasets()
