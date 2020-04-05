@@ -30,7 +30,7 @@ from deep_generative_models.models.denoising_autoencoder import DeNoisingAutoenc
 from deep_generative_models.models.discriminator import DiscriminatorFactory
 from deep_generative_models.models.encoder import SingleInputEncoderFactory, MultiInputEncoderFactory
 from deep_generative_models.models.generator import SingleOutputGeneratorFactory, MultiOutputGeneratorFactory
-from deep_generative_models.models.optimizer import OptimizerFactory
+from deep_generative_models.optimizers.optimizer_factory import OptimizerFactory
 from deep_generative_models.models.vae import VAEFactory
 
 
