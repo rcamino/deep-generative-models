@@ -70,5 +70,3 @@ class ComponentFactoryFromClass(ComponentFactory):
 
 class MissingArchitectureArgument(ArgumentError):
     pass
-
-
