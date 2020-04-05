@@ -6,7 +6,7 @@ from torch import Tensor
 
 from typing import Dict, List
 
-from deep_generative_models.architecture import Architecture
+from deep_generative_models.architecture import Architecture, ArchitectureConfigurationValidator
 from deep_generative_models.checkpoints import Checkpoints
 from deep_generative_models.commandline import create_parent_directories_if_needed
 from deep_generative_models.configuration import Configuration, load_configuration
@@ -21,7 +21,7 @@ class Datasets(Dictionary[Tensor]):
     pass
 
 
-class Train(Task):
+class Train(Task, ArchitectureConfigurationValidator):
 
     def mandatory_arguments(self) -> List[str]:
         return [
@@ -42,7 +42,9 @@ class Train(Task):
 
         metadata = load_metadata(configuration.metadata)
 
-        architecture = create_architecture(metadata, load_configuration(configuration.architecture))
+        architecture_configuration = load_configuration(configuration.architecture)
+        self.validate_architecture_configuration(architecture_configuration)
+        architecture = create_architecture(metadata, architecture_configuration)
         architecture.to_gpu_if_available()
 
         create_parent_directories_if_needed(configuration.checkpoint)

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 from torch.nn import Module
 from torch.optim.optimizer import Optimizer
@@ -14,7 +14,6 @@ Component = Union[Module, Optimizer]
 
 
 class Architecture(Dictionary[Component]):
-
     arguments: Configuration
 
     def __init__(self, arguments: Configuration):
@@ -32,3 +31,25 @@ class Architecture(Dictionary[Component]):
     def initialize(self):
         for module in self.values():
             initialize_module(module)
+
+
+class ArchitectureConfigurationValidator:
+
+    def mandatory_architecture_arguments(self) -> List[str]:
+        return []
+
+    def mandatory_architecture_components(self) -> List[str]:
+        return []
+
+    def validate_architecture_configuration(self, architecture_configuration: Configuration) -> None:
+        # mandatory arguments
+        defined_arguments = set(architecture_configuration.arguments.keys())
+        for mandatory_argument in self.mandatory_architecture_arguments():
+            if mandatory_argument not in defined_arguments:
+                raise Exception("Missing architecture argument '{}'".format(mandatory_argument))
+
+        # mandatory components
+        defined_components = set(architecture_configuration.components.keys())
+        for mandatory_component in self.mandatory_architecture_components():
+            if mandatory_component not in defined_components:
+                raise Exception("Missing architecture component '{}'".format(mandatory_component))

@@ -4,7 +4,7 @@ from typing import List
 
 import numpy as np
 
-from deep_generative_models.architecture import Architecture
+from deep_generative_models.architecture import Architecture, ArchitectureConfigurationValidator
 from deep_generative_models.checkpoints import Checkpoints
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.architecture_factory import create_architecture
@@ -15,7 +15,7 @@ from deep_generative_models.tasks.task import Task
 from torch import Tensor
 
 
-class Sample(Task):
+class Sample(Task, ArchitectureConfigurationValidator):
 
     def mandatory_arguments(self) -> List[str]:
         return [
@@ -30,7 +30,9 @@ class Sample(Task):
     def run(self, configuration: Configuration) -> None:
         metadata = load_metadata(configuration.metadata)
 
-        architecture = create_architecture(metadata, load_configuration(configuration.architecture))
+        architecture_configuration = load_configuration(configuration.architecture)
+        self.validate_architecture_configuration(architecture_configuration)
+        architecture = create_architecture(metadata, architecture_configuration)
         architecture.to_gpu_if_available()
 
         checkpoints = Checkpoints()

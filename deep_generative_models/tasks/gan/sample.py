@@ -1,5 +1,7 @@
 import argparse
 
+from typing import List
+
 from torch import Tensor, FloatTensor
 
 from deep_generative_models.architecture import Architecture
@@ -10,6 +12,9 @@ from deep_generative_models.tasks.sample import Sample
 
 
 class SampleGAN(Sample):
+
+    def mandatory_architecture_components(self) -> List[str]:
+        return ["generator"]
 
     def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture) -> Tensor:
         noise = to_gpu_if_available(FloatTensor(configuration.batch_size, architecture.arguments.noise_size).normal_())

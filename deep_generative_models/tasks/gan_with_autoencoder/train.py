@@ -22,10 +22,14 @@ class TrainGANWithAutoencoder(TrainGAN):
         super(TrainGANWithAutoencoder, self).__init__()
         self.autoencoder_train_task = TrainAutoEncoder()
 
+    def mandatory_architecture_components(self) -> List[str]:
+        return super(TrainGANWithAutoencoder, self).mandatory_architecture_components() \
+               + self.autoencoder_train_task.mandatory_architecture_components()
+
     def prepare_training(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                          datasets: Datasets) -> None:
         super(TrainGANWithAutoencoder, self).prepare_training(configuration, metadata, architecture, datasets)
-        architecture.autoencoder.train()
+        self.autoencoder_train_task.prepare_training(configuration, metadata, architecture)
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                     datasets: Datasets) -> Dict[str, float]:

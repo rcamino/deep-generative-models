@@ -17,6 +17,25 @@ from deep_generative_models.tasks.train import Train, Datasets
 
 class TrainGAN(Train):
 
+    def mandatory_arguments(self) -> List[str]:
+        return super(TrainGAN, self).mandatory_arguments() + ["discriminator_steps", "generator_steps"]
+
+    def optional_arguments(self) -> List[str]:
+        return super(TrainGAN, self).optional_arguments() + ["discriminator_clamp"]
+
+    def mandatory_architecture_arguments(self) -> List[str]:
+        return ["noise_size"]
+
+    def mandatory_architecture_components(self) -> List[str]:
+        return [
+            "generator",
+            "discriminator",
+            "discriminator_optimizer",
+            "discriminator_loss",
+            "generator_optimizer",
+            "generator_loss"
+        ]
+
     def prepare_training(self, configuration: Configuration, metadata: Metadata, architecture: Architecture, datasets: Datasets) -> None:
         architecture.generator.train()
         architecture.discriminator.train()

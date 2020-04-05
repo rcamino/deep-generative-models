@@ -1,4 +1,5 @@
 import argparse
+from typing import List
 
 from torch import Tensor, FloatTensor
 
@@ -10,6 +11,12 @@ from deep_generative_models.tasks.sample import Sample
 
 
 class SampleVAE(Sample):
+
+    def mandatory_architecture_arguments(self) -> List[str]:
+        return ["code_size"]
+
+    def mandatory_architecture_components(self) -> List[str]:
+        return ["autoencoder"]
 
     def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture) -> Tensor:
         code = to_gpu_if_available(FloatTensor(configuration.batch_size, architecture.arguments.code_size).normal_())

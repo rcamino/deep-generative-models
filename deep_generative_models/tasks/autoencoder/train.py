@@ -5,7 +5,7 @@ import numpy as np
 from torch import Tensor
 from torch.utils.data.dataloader import DataLoader
 
-from typing import Dict
+from typing import Dict, List
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
@@ -15,6 +15,13 @@ from deep_generative_models.tasks.train import Train, Datasets
 
 
 class TrainAutoEncoder(Train):
+
+    def mandatory_architecture_components(self) -> List[str]:
+        return [
+            "autoencoder",
+            "autoencoder_optimizer",
+            "reconstruction_loss"
+        ]
 
     def prepare_training(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                          datasets: Datasets) -> None:
