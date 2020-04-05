@@ -1,5 +1,6 @@
 import argparse
 
+from deep_generative_models.arguments import InvalidArgument
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.tasks.arae.train import TrainARAE
 from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
@@ -37,7 +38,12 @@ class TaskRunner(Task):
 
     def run(self, configuration: Configuration) -> None:
         task = task_by_name[configuration.task]
-        task.validate_arguments(configuration.arguments)
+
+        try:
+            task.validate_arguments(configuration.arguments)
+        except InvalidArgument as e:
+            raise Exception("Invalid argument '{}' while running task '{}'".format(e.name, configuration.task))
+
         task.run(configuration.arguments)
 
 
