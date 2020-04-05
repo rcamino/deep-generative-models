@@ -1,4 +1,5 @@
 import argparse
+
 from typing import List
 
 from torch import Tensor, FloatTensor
