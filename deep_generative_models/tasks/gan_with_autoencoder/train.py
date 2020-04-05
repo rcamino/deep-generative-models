@@ -22,6 +22,9 @@ class TrainGANWithAutoencoder(TrainGAN):
         super(TrainGANWithAutoencoder, self).__init__()
         self.autoencoder_train_task = TrainAutoEncoder()
 
+    def mandatory_arguments(self) -> List[str]:
+        return super(TrainGANWithAutoencoder, self).mandatory_arguments() + ["autoencoder_steps"]
+
     def mandatory_architecture_components(self) -> List[str]:
         return super(TrainGANWithAutoencoder, self).mandatory_architecture_components() \
                + self.autoencoder_train_task.mandatory_architecture_components()
