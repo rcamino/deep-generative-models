@@ -11,7 +11,7 @@ class TrainARAE(TrainGANWithAutoencoder):
 
     def train_discriminator_step(self, configuration: Configuration, architecture: Architecture,
                                  real_features: Tensor) -> float:
-        real_code = architecture.autoencoder.encode(real_features)
+        real_code = architecture.autoencoder.encode(real_features)["code"]
         return super(TrainARAE, self).train_discriminator_step(configuration, architecture, real_code)
 
 

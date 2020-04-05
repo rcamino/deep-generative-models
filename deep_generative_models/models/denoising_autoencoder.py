@@ -29,8 +29,9 @@ class DeNoisingAutoencoder(Module):
         return outputs
 
     def encode(self, inputs: Tensor) -> Dict[str, Tensor]:
-        outputs = {"noisy": self.add_noise(inputs)}
-        outputs["code"] = self.autoencoder.encode(outputs["noisy"])
+        noisy = self.add_noise(inputs)
+        outputs = self.autoencoder.encode(noisy)
+        outputs["noisy"] = noisy
         return outputs
 
     def add_noise(self, inputs: Tensor) -> Tensor:

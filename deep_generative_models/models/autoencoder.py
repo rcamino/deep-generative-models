@@ -23,12 +23,12 @@ class AutoEncoder(Module):
         self.decoder = decoder
 
     def forward(self, inputs: Tensor) -> Dict[str, Tensor]:
-        outputs = {"code": self.encode(inputs)}
+        outputs = self.encode(inputs)
         outputs["reconstructed"] = self.decode(outputs["code"])
         return outputs
 
-    def encode(self, inputs: Tensor) -> Tensor:
-        return self.encoder(inputs)
+    def encode(self, inputs: Tensor) -> Dict[str, Tensor]:
+        return {"code": self.encoder(inputs)}
 
     def decode(self, code: Tensor) -> Tensor:
         return self.decoder(code)

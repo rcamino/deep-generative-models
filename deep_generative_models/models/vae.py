@@ -1,6 +1,8 @@
+import torch
+
 from typing import Any, Dict, List
 
-from torch import Tensor, exp, randn_like
+from torch import Tensor
 from torch.nn import Module, Linear
 
 from deep_generative_models.architecture import Architecture
@@ -24,22 +26,26 @@ class VAE(Module):
 
     def forward(self, inputs: Tensor) -> Dict[str, Tensor]:
         outputs = self.encode(inputs)
-        outputs["code"] = self.re_parameterize(outputs["mu"], outputs["log_var"])
         outputs["reconstructed"] = self.decode(outputs["code"])
         return outputs
 
     def encode(self, inputs: Tensor) -> Dict[str, Tensor]:
-        outputs = self.autoencoder.encode(inputs)
-        return {"mu": self.mu_layer(outputs), "log_var": self.log_var_layer(outputs)}
-
-    @staticmethod
-    def re_parameterize(mu: Tensor, log_var: Tensor) -> Tensor:
-        std = exp(log_var / 2)
-        eps = randn_like(std)
-        return eps.mul(std).add_(mu)
+        outputs = self.encode_parameters(inputs)
+        outputs["code"] = self.re_parametrize(outputs["mu"], outputs["log_var"])
+        return outputs
 
     def decode(self, code: Tensor) -> Tensor:
         return self.autoencoder.decode(code)
+
+    def encode_parameters(self, inputs: Tensor) -> Dict[str, Tensor]:
+        split_inputs = self.autoencoder.encode(inputs)["code"]
+        return {"mu": self.mu_layer(split_inputs), "log_var": self.log_var_layer(split_inputs)}
+
+    @staticmethod
+    def re_parametrize(mu: Tensor, log_var: Tensor) -> Tensor:
+        std = torch.exp(log_var / 2)
+        eps = torch.randn_like(std)
+        return eps * std + mu
 
 
 class VAEFactory(MultiComponentFactory):
