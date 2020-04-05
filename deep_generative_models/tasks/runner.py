@@ -14,8 +14,10 @@ task_by_name = {
     # train
     "TrainARAE": TrainARAE(),
     "TrainAutoEncoder": TrainAutoEncoder(),
+    "TrainDeNoisingAutoEncoder": TrainAutoEncoder(),
     "TrainGAN": TrainGAN(),
     "TrainMedGAN": TrainMedGAN(),
+    "TrainVAE": TrainAutoEncoder(),
 
     # sample
     "SampleGAN": SampleGAN(),
