@@ -3,6 +3,7 @@ import argparse
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.tasks.arae.train import TrainARAE
 from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
+from deep_generative_models.tasks.encode import Encode
 from deep_generative_models.tasks.gan.sample import SampleGAN
 from deep_generative_models.tasks.gan.train import TrainGAN
 from deep_generative_models.tasks.gan_with_autoencoder.sample import SampleGANWithAutoEncoder
@@ -24,6 +25,11 @@ task_by_name = {
     "SampleGAN": SampleGAN(),
     "SampleMedGAN": SampleGANWithAutoEncoder(),
     "SampleVAE": SampleVAE(),
+
+    # encode
+    "EncodeWithAutoEncoder": Encode(),
+    "EncodeWithDeNoisingAutoEncoder": Encode(),
+    "EncodeWithVAE": Encode(),
 }
 
 
