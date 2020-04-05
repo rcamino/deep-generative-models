@@ -1,3 +1,5 @@
+import torch
+
 from typing import List
 
 import numpy as np
@@ -10,7 +12,7 @@ from deep_generative_models.gpu import to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import load_metadata, Metadata
 from deep_generative_models.tasks.task import Task
 
-from torch import Tensor, no_grad
+from torch import Tensor
 
 
 class Sample(Task):
@@ -42,7 +44,7 @@ class Sample(Task):
         iterations = 0
         while start < configuration.sample_size:
             # do not calculate gradients
-            with no_grad():
+            with torch.no_grad():
                 # sample from the model
                 batch_samples = self.generate_sample(configuration, metadata, architecture)
 
