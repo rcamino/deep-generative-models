@@ -20,8 +20,9 @@ task_by_name = {
     "TrainVAE": TrainAutoEncoder(),
 
     # sample
+    "SampleARAE": SampleGANWithAutoEncoder(),
     "SampleGAN": SampleGAN(),
-    "SampleGANWithAutoEncoder": SampleGANWithAutoEncoder(),
+    "SampleMedGAN": SampleGANWithAutoEncoder(),
     "SampleVAE": SampleVAE(),
 }
 
