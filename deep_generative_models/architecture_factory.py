@@ -32,7 +32,7 @@ from deep_generative_models.models.encoder import SingleInputEncoderFactory, Mul
 from deep_generative_models.models.generator import SingleOutputGeneratorFactory, MultiOutputGeneratorFactory
 from deep_generative_models.optimizers.optimizer_factory import OptimizerFactory
 from deep_generative_models.models.vae import VAEFactory
-
+from deep_generative_models.optimizers.wgan_optimizer import WGANOptimizerFactory
 
 factory_by_name = {
     # my activations
@@ -73,6 +73,9 @@ factory_by_name["MultiOutputLayer"] = PartialMultiOutputLayerFactory(factory_by_
 # my losses that create other components
 factory_by_name["AutoEncoderLoss"] = AutoEncoderLossFactory(factory_by_name)
 factory_by_name["VAELoss"] = VAELossFactory(factory_by_name)
+
+# my optimizers that create other components
+factory_by_name["WGANOptimizer"] = WGANOptimizerFactory(factory_by_name)
 
 # my components that create other components
 factory_by_name["SingleVariableAutoEncoder"] = AutoEncoderFactory(factory_by_name, "SingleInputEncoder", "SingleOutputDecoder")

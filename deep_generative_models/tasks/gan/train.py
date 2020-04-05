@@ -20,9 +20,6 @@ class TrainGAN(Train):
     def mandatory_arguments(self) -> List[str]:
         return super(TrainGAN, self).mandatory_arguments() + ["discriminator_steps", "generator_steps"]
 
-    def optional_arguments(self) -> List[str]:
-        return super(TrainGAN, self).optional_arguments() + ["discriminator_clamp"]
-
     def mandatory_architecture_arguments(self) -> List[str]:
         return ["noise_size"]
 
@@ -88,11 +85,6 @@ class TrainGAN(Train):
 
         # update the discriminator weights
         architecture.discriminator_optimizer.step()
-
-        # clamp discriminator parameters (usually for WGAN)
-        if "discriminator_clamp" in configuration:
-            for parameter in architecture.discriminator.parameters():
-                parameter.data.clamp_(-configuration.discriminator_clamp, configuration.discriminator_clamp)
 
         # return the loss
         return to_cpu_if_was_in_gpu(loss).item()

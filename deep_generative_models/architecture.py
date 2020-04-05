@@ -7,10 +7,11 @@ from deep_generative_models.configuration import Configuration
 from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 from deep_generative_models.models.initialization import initialize_module
+from deep_generative_models.optimizers.wrapped_optimizer import WrappedOptimizer
 
 
 # I don't know how to name this...
-Component = Union[Module, Optimizer]
+Component = Union[Module, Optimizer, WrappedOptimizer]
 
 
 class Architecture(Dictionary[Component]):
