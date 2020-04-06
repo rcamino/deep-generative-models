@@ -10,6 +10,7 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.architecture_factory import create_architecture
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import load_metadata, Metadata
+from deep_generative_models.rng import seed_all
 from deep_generative_models.tasks.task import Task
 
 from torch import Tensor
@@ -27,7 +28,12 @@ class Sample(Task, ArchitectureConfigurationValidator):
             "sample_size"
         ]
 
+    def optional_arguments(self) -> List[str]:
+        return ["seed"]
+
     def run(self, configuration: Configuration) -> None:
+        seed_all(configuration.get("seed"))
+
         metadata = load_metadata(configuration.metadata)
 
         architecture_configuration = load_configuration(configuration.architecture)

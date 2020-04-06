@@ -12,6 +12,7 @@ from deep_generative_models.commandline import create_parent_directories_if_need
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.architecture_factory import create_architecture
+from deep_generative_models.rng import seed_all
 from deep_generative_models.tasks.train_logger import TrainLogger
 from deep_generative_models.metadata import load_metadata, Metadata
 from deep_generative_models.tasks.task import Task
@@ -35,7 +36,12 @@ class Train(Task, ArchitectureConfigurationValidator):
             "epochs"
         ]
 
+    def optional_arguments(self) -> List[str]:
+        return ["seed"]
+
     def run(self, configuration: Configuration) -> None:
+        seed_all(configuration.get("seed"))
+
         datasets = Datasets()
         for dataset_name, dataset_path in configuration.data.items():
             datasets[dataset_name] = torch.from_numpy(np.load(dataset_path))
