@@ -20,10 +20,10 @@ class WGANOptimizer(WrappedOptimizer):
         self.discriminator_clamp = discriminator_clamp
 
     def step(self, closure: Optional[Callable[[], float]] = None) -> None:
+        super(WGANOptimizer, self).step(closure)
+
         for parameter in self.discriminator.parameters():
             parameter.data.clamp_(-self.discriminator_clamp, self.discriminator_clamp)
-
-        super(WGANOptimizer, self).step(closure)
 
 
 class WGANOptimizerFactory(MultiComponentFactory):
