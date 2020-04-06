@@ -29,12 +29,22 @@ class TrainAutoEncoder(Train):
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                     datasets: Datasets) -> Dict[str, float]:
-        loss_by_batch = []
+        train_loss_by_batch = []
 
         for batch in DataLoader(datasets.train_features, batch_size=configuration.batch_size, shuffle=True):
-            loss_by_batch.append(self.train_batch(architecture, batch))
+            train_loss_by_batch.append(self.train_batch(architecture, batch))
 
-        return {"reconstruction_mean_loss": np.mean(loss_by_batch).item()}
+        losses = {"train_reconstruction_mean_loss": np.mean(train_loss_by_batch).item()}
+
+        if "val_features" in datasets:
+            val_loss_by_batch = []
+
+            for batch in DataLoader(datasets.val_features, batch_size=configuration.batch_size, shuffle=True):
+                val_loss_by_batch.append(self.val_batch(architecture, batch))
+
+            losses["val_reconstruction_mean_loss"] = np.mean(val_loss_by_batch).item()
+
+        return losses
 
     @staticmethod
     def train_batch(architecture: Architecture, batch: Tensor) -> float:
@@ -47,6 +57,13 @@ class TrainAutoEncoder(Train):
 
         architecture.autoencoder_optimizer.step()
 
+        loss = to_cpu_if_was_in_gpu(loss)
+        return loss.item()
+
+    @staticmethod
+    def val_batch(architecture: Architecture, batch: Tensor) -> float:
+        outputs = architecture.autoencoder(batch)
+        loss = architecture.reconstruction_loss(outputs, batch)
         loss = to_cpu_if_was_in_gpu(loss)
         return loss.item()
 

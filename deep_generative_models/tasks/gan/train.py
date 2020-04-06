@@ -54,8 +54,8 @@ class TrainGAN(Train):
                 break
 
         # loss aggregation
-        losses = {"generator_mean_loss": np.mean(losses_by_batch["generator"]).item(),
-                  "discriminator_mean_loss": np.mean(losses_by_batch["discriminator"]).item()}
+        losses = {"generator_train_mean_loss": np.mean(losses_by_batch["generator"]).item(),
+                  "discriminator_train_mean_loss": np.mean(losses_by_batch["discriminator"]).item()}
 
         return losses
 
