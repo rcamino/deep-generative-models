@@ -63,8 +63,6 @@ class Train(Task, ArchitectureConfigurationValidator):
 
         logger = TrainLogger(create_parent_directories_if_needed(configuration.logs), checkpoint["epoch"] > 0)
 
-        self.prepare_training(configuration, metadata, architecture, datasets)
-
         for epoch in range(checkpoint["epoch"] + 1, configuration.epochs + 1):
             # train discriminator and generator
             logger.start_timer()
@@ -86,10 +84,6 @@ class Train(Task, ArchitectureConfigurationValidator):
 
         # finish
         logger.close()
-
-    def prepare_training(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                         datasets: Datasets) -> None:
-        raise NotImplementedError
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                     datasets: Datasets) -> Dict[str, float]:

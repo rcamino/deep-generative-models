@@ -36,6 +36,11 @@ class TrainGANWithAutoencoder(TrainGAN):
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                     datasets: Datasets) -> Dict[str, float]:
+        # train
+        architecture.autoencoder.train()
+        architecture.generator.train()
+        architecture.discriminator.train()
+
         # prepare to accumulate losses per batch
         losses_by_batch = {"autoencoder": [], "generator": [], "discriminator": []}
 
@@ -57,6 +62,8 @@ class TrainGANWithAutoencoder(TrainGAN):
                   "discriminator_train_mean_loss": np.mean(losses_by_batch["discriminator"]).item()}
 
         # validation
+        architecture.autoencoder.eval()
+
         if "val_features" in datasets:
             autoencoder_val_losses_by_batch = []
 

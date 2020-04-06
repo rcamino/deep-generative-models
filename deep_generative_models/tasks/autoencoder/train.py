@@ -23,12 +23,10 @@ class TrainAutoEncoder(Train):
             "reconstruction_loss"
         ]
 
-    def prepare_training(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                         datasets: Datasets) -> None:
-        architecture.autoencoder.train()
-
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                     datasets: Datasets) -> Dict[str, float]:
+        architecture.autoencoder.train()
+
         train_loss_by_batch = []
 
         for batch in DataLoader(datasets.train_features, batch_size=configuration.batch_size, shuffle=True):
@@ -37,6 +35,8 @@ class TrainAutoEncoder(Train):
         losses = {"train_reconstruction_mean_loss": np.mean(train_loss_by_batch).item()}
 
         if "val_features" in datasets:
+            architecture.autoencoder.eval()
+
             val_loss_by_batch = []
 
             for batch in DataLoader(datasets.val_features, batch_size=configuration.batch_size, shuffle=True):

@@ -33,12 +33,12 @@ class TrainGAN(Train):
             "generator_loss"
         ]
 
-    def prepare_training(self, configuration: Configuration, metadata: Metadata, architecture: Architecture, datasets: Datasets) -> None:
+    def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                    datasets: Datasets) -> Dict[str, float]:
+        # train
         architecture.generator.train()
         architecture.discriminator.train()
 
-    def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    datasets: Datasets) -> Dict[str, float]:
         # prepare to accumulate losses per batch
         losses_by_batch = {"generator": [], "discriminator": []}
 
