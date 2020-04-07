@@ -21,6 +21,7 @@ class SampleVAE(Sample):
 
     def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture) -> Tensor:
         code = to_gpu_if_available(FloatTensor(configuration.batch_size, architecture.arguments.code_size).normal_())
+        architecture.autoencoder.eval()
         return architecture.autoencoder.decode(code)
 
 

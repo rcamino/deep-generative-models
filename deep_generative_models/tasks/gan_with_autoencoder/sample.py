@@ -19,5 +19,7 @@ class SampleGANWithAutoEncoder(Sample):
 
     def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture) -> Tensor:
         noise = to_gpu_if_available(FloatTensor(configuration.batch_size, architecture.arguments.noise_size).normal_())
+        architecture.autoencoder.eval()
+        architecture.generator.eval()
         code = architecture.generator(noise)
         return architecture.autoencoder.decode(code)
