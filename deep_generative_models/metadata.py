@@ -1,13 +1,22 @@
 import json
 
-from typing import Dict, Generator
+from typing import Dict, Generator, List
 
 
 class VariableMetadata:
 
+    metadata: Dict
+    variable_index: int
+
     def __init__(self, metadata: Dict, variable_index: int) -> None:
         self.metadata = metadata
         self.variable_index = variable_index
+
+    def get_index(self) -> int:
+        return self.variable_index
+
+    def get_feature_index(self) -> int:
+        return sum(self.metadata["variable_sizes"][:self.get_index()])
 
     def get_type(self) -> str:
         return self.metadata["variable_types"][self.variable_index]
@@ -27,8 +36,39 @@ class VariableMetadata:
     def is_numerical(self) -> bool:
         return self.get_type() == "numerical"
 
+    def get_absolute_index_from_value(self, value: str) -> int:
+        if not self.is_categorical():
+            raise Exception("The variable '{}' is not categorical.".format(self.get_name()))
+        return self.metadata["value_to_index"][self.get_name()][value]
+
+    def get_relative_index_from_value(self, value: str) -> int:
+        if not self.is_categorical():
+            raise Exception("The variable '{}' is not categorical.".format(self.get_name()))
+        return self.get_absolute_index_from_value(value) - self.get_feature_index()
+
+    def get_value_from_absolute_index(self, absolute_index: int) -> int:
+        if not self.is_categorical():
+            raise Exception("The variable '{}' is not categorical.".format(self.get_name()))
+        name, value = self.metadata["index_to_value"][absolute_index]
+        if name != self.get_name():
+            raise Exception("The absolute index {:d} does not belong to the variable '{}'."
+                            .format(absolute_index, self.get_name()))
+        return value
+
+    def get_value_from_relative_index(self, relative_index: int) -> int:
+        if not self.is_categorical():
+            raise Exception("The variable '{}' is not categorical.".format(self.get_name()))
+        return self.get_value_from_absolute_index(relative_index + self.get_feature_index())
+
+    def get_values(self) -> List[str]:
+        if not self.is_categorical():
+            raise Exception("The variable '{}' is not categorical.".format(self.get_name()))
+        return self.metadata["value_to_index"][self.get_name()].keys()
+
 
 class Metadata:
+
+    metadata: Dict
 
     def __init__(self, metadata: Dict) -> None:
         self.metadata = metadata
