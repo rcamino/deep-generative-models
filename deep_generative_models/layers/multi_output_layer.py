@@ -50,7 +50,7 @@ class MultiOutputLayer(Module):
         # accumulate binary or numerical variables into "blocks"
         current_block = None
 
-        for variable_metadata in metadata.get_by_variable():
+        for variable_metadata in metadata.get_by_independent_variable():
             # first check if a block needs to be created
             if current_block is not None and not current_block.matches_type(variable_metadata):
                 # create the block

@@ -129,7 +129,7 @@ class RejectionSampling(SampleStrategy):
         # for each desired variable value
         for variable, keep_value in self.keep_values.items():
             # check that the variable is either categorical or binary
-            variable_metadata = metadata.get_variable_by_name(variable)
+            variable_metadata = metadata.get_independent_variable_by_name(variable)
             if not (variable_metadata.is_categorical() or variable_metadata.is_binary()):
                 raise Exception("Cannot reject variable '{}' because it has an invalid type.".format(variable))
             # separate the variable
@@ -139,7 +139,7 @@ class RejectionSampling(SampleStrategy):
             if variable_metadata.is_categorical():
                 value = torch.argmax(value, dim=1)
             # get the relative id of the value that should be kept
-            keep_value_id = variable_metadata.get_relative_index_from_value(keep_value)
+            keep_value_id = variable_metadata.get_index_from_value(keep_value)
             # keep only the samples with the desired value for that variable
             samples = samples[value == keep_value_id, :]
 

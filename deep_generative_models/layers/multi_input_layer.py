@@ -32,7 +32,7 @@ class MultiInputLayer(InputLayer):
         # this reference is for using the embeddings during the forward pass
         self.embedding_by_variable = {}
 
-        for i, variable_metadata in enumerate(self.metadata.get_by_variable()):
+        for i, variable_metadata in enumerate(self.metadata.get_by_independent_variable()):
             # if it is a numerical variable
             if variable_metadata.is_numerical():
                 assert variable_metadata.get_size() == 1
@@ -64,7 +64,7 @@ class MultiInputLayer(InputLayer):
         if self.has_categorical:
             outputs = []
             start = 0
-            for variable_metadata in self.metadata.get_by_variable():
+            for variable_metadata in self.metadata.get_by_independent_variable():
                 # extract the variable
                 end = start + variable_metadata.get_size()
                 variable = inputs[:, start:end]
