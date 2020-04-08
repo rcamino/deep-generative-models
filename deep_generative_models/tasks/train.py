@@ -44,7 +44,7 @@ class Train(Task, ArchitectureConfigurationValidator):
 
         datasets = Datasets()
         for dataset_name, dataset_path in configuration.data.items():
-            datasets[dataset_name] = torch.from_numpy(np.load(dataset_path))
+            datasets[dataset_name] = torch.from_numpy(np.load(dataset_path)).float()
 
         metadata = load_metadata(configuration.metadata)
 
