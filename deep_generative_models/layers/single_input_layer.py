@@ -6,7 +6,7 @@ from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.input_layer import InputLayer
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.component_factory import MultiComponentFactory
+from deep_generative_models.component_factory import ComponentFactory
 
 
 class SingleInputLayer(InputLayer):
@@ -23,7 +23,7 @@ class SingleInputLayer(InputLayer):
         return self.output_size
 
 
-class SingleInputLayerFactory(MultiComponentFactory):
+class SingleInputLayerFactory(ComponentFactory):
 
     def mandatory_arguments(self) -> List[str]:
         return ["input_size"]

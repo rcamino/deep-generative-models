@@ -35,6 +35,9 @@ from deep_generative_models.models.vae import VAEFactory
 from deep_generative_models.optimizers.wgan_optimizer import WGANOptimizerFactory
 
 factory_by_name = {
+    # my layers
+    "SingleInputLayer": SingleInputLayerFactory(),
+
     # my activations
     "GumbelSoftmaxSampling": GumbelSoftmaxSamplingFactory(),
     "SoftmaxSampling": ComponentFactoryFromClass(SoftmaxSampling),
@@ -65,7 +68,6 @@ factory_by_name = {
 
 # my layers that create other components
 factory_by_name["HiddenLayers"] = PartialHiddenLayersFactory(factory_by_name)
-factory_by_name["SingleInputLayer"] = SingleInputLayerFactory(factory_by_name)
 factory_by_name["MultiInputLayer"] = MultiInputLayerFactory(factory_by_name)
 factory_by_name["SingleOutputLayer"] = PartialSingleOutputLayerFactory(factory_by_name)
 factory_by_name["MultiOutputLayer"] = PartialMultiOutputLayerFactory(factory_by_name)
