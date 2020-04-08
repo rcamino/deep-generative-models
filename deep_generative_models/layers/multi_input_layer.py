@@ -7,6 +7,7 @@ from torch.nn import ParameterList, Parameter
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
+from deep_generative_models.layers.embeddings import compute_embedding_size
 from deep_generative_models.layers.input_layer import InputLayer
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.component_factory import MultiComponentFactory
@@ -43,7 +44,7 @@ class MultiInputLayer(InputLayer):
                 variable_size = variable_metadata.get_size()
 
                 # this is an arbitrary rule of thumb taken from several blog posts
-                embedding_size = max(min_embedding_size, min(max_embedding_size, int(variable_size / 2)))
+                embedding_size = compute_embedding_size(variable_size, min_embedding_size, max_embedding_size)
 
                 # the embedding is implemented manually to be able to use one hot encoding
                 # PyTorch embedding only accepts as input label encoding

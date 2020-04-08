@@ -1,6 +1,9 @@
+from typing import Optional
+
 from torch import Tensor, FloatTensor, zeros, ones
 from torch.nn import Module, BCELoss
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.gpu import to_gpu_if_available
 
 
@@ -21,14 +24,15 @@ class GANDiscriminatorLoss(Module):
 
         self.bce_loss = BCELoss()
 
-    def forward(self, discriminator: Module, real_features: Tensor, fake_features: Tensor) -> Tensor:
+    def forward(self, architecture: Architecture, real_features: Tensor, fake_features: Tensor,
+                condition: Optional[Tensor] = None) -> Tensor:
         # real loss
-        real_predictions = discriminator(real_features)
+        real_predictions = architecture.discriminator(real_features, condition=condition)
         positive_labels = generate_positive_labels(len(real_predictions), self.smooth_positive_labels)
         real_loss = self.bce_loss(real_predictions, positive_labels)
 
         # fake loss
-        fake_predictions = discriminator(fake_features)
+        fake_predictions = architecture.discriminator(fake_features, condition=condition)
         negative_labels = zeros(len(fake_predictions))
         fake_loss = self.bce_loss(fake_predictions, negative_labels)
 
@@ -46,7 +50,7 @@ class GANGeneratorLoss(Module):
 
         self.bce_loss = BCELoss()
 
-    def forward(self, discriminator: Module, fake_features: Tensor) -> Tensor:
-        fake_predictions = discriminator(fake_features)
+    def forward(self, architecture: Architecture, fake_features: Tensor, condition: Optional[Tensor] = None) -> Tensor:
+        fake_predictions = architecture.discriminator(fake_features, condition=condition)
         positive_labels = generate_positive_labels(len(fake_predictions), self.smooth_positive_labels)
         return self.bce_loss(fake_predictions, positive_labels)

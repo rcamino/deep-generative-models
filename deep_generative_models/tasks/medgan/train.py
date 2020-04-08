@@ -1,16 +1,18 @@
 import argparse
 
+from typing import Optional
+
 from torch import Tensor
 
 from deep_generative_models.architecture import Architecture
-from deep_generative_models.configuration import Configuration, load_configuration
+from deep_generative_models.configuration import load_configuration
 from deep_generative_models.tasks.gan_with_autoencoder.train import TrainGANWithAutoencoder
 
 
 class TrainMedGAN(TrainGANWithAutoencoder):
 
-    def sample_fake(self, configuration: Configuration, architecture: Architecture, size: int) -> Tensor:
-        fake_code = super(TrainMedGAN, self).sample_fake(configuration, architecture, size)
+    def sample_fake(self, architecture: Architecture, size: int, condition: Optional[Tensor] = None) -> Tensor:
+        fake_code = super(TrainMedGAN, self).sample_fake(architecture, size, condition=condition)
         return architecture.autoencoder.decode(fake_code)
 
 

@@ -6,6 +6,8 @@ from torch.utils.data.dataloader import DataLoader
 
 from typing import Dict, Iterator, List
 
+from torch.utils.data.dataset import TensorDataset
+
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
@@ -39,15 +41,26 @@ class TrainGANWithAutoencoder(TrainGAN):
         # prepare to accumulate losses per batch
         losses_by_batch = {"autoencoder": [], "generator": [], "discriminator": []}
 
+        # conditional
+        if "conditional" in architecture.arguments:
+            train_datasets = TensorDataset(datasets.train_features, datasets.train_labels)
+        # non-conditional
+        else:
+            train_datasets = datasets.train_features
+
         # an epoch will stop at any point if there are no more batches
         # it does not matter if there are models with remaining steps
-        data_iterator = iter(DataLoader(datasets.train_features, batch_size=configuration.batch_size, shuffle=True))
+        data_iterator = iter(DataLoader(train_datasets, batch_size=configuration.batch_size, shuffle=True))
 
         while True:
             try:
-                losses_by_batch["autoencoder"].extend(self.train_autoencoder_steps(configuration, architecture, data_iterator))
-                losses_by_batch["discriminator"].extend(self.train_discriminator_steps(configuration, architecture, data_iterator))
-                losses_by_batch["generator"].extend(self.train_generator_steps(configuration, architecture))
+                losses_by_batch["autoencoder"].extend(
+                    self.train_autoencoder_steps(configuration, architecture, data_iterator))
+
+                losses_by_batch["discriminator"].extend(
+                    self.train_discriminator_steps(configuration, metadata, architecture, data_iterator))
+
+                losses_by_batch["generator"].extend(self.train_generator_steps(configuration, metadata, architecture))
             except StopIteration:
                 break
 

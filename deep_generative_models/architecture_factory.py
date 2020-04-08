@@ -8,6 +8,7 @@ from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.component_factory import ComponentFactoryFromClass, MissingArchitectureArgument
 from deep_generative_models.arguments import MissingArgument, InvalidArgument
+from deep_generative_models.layers.conditional_layer import ConditionalLayerFactory
 from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
@@ -36,6 +37,7 @@ from deep_generative_models.optimizers.wgan_optimizer import WGANOptimizerFactor
 
 factory_by_name = {
     # my layers
+    "ConditionalLayer": ConditionalLayerFactory(),
     "SingleInputLayer": SingleInputLayerFactory(),
 
     # my activations

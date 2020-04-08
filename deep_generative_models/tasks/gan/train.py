@@ -6,13 +6,18 @@ from torch import Tensor, FloatTensor
 
 from torch.utils.data.dataloader import DataLoader
 
-from typing import Dict, List, Iterator
+from typing import Dict, List, Iterator, Union, Tuple, Optional
+
+from torch.utils.data.dataset import TensorDataset
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.tasks.train import Train, Datasets
+
+
+TrainBatch = Union[Tensor, Tuple[Tensor, Tensor]]
 
 
 class TrainGAN(Train):
@@ -42,14 +47,23 @@ class TrainGAN(Train):
         # prepare to accumulate losses per batch
         losses_by_batch = {"generator": [], "discriminator": []}
 
+        # conditional
+        if "conditional" in architecture.arguments:
+            train_datasets = TensorDataset(datasets.train_features, datasets.train_labels)
+        # non-conditional
+        else:
+            train_datasets = datasets.train_features
+
         # an epoch will stop at any point if there are no more batches
         # it does not matter if there are models with remaining steps
-        data_iterator = iter(DataLoader(datasets.train_features, batch_size=configuration.batch_size, shuffle=True))
+        data_iterator = iter(DataLoader(train_datasets, batch_size=configuration.batch_size, shuffle=True))
 
         while True:
             try:
-                losses_by_batch["discriminator"].extend(self.train_discriminator_steps(configuration, architecture, data_iterator))
-                losses_by_batch["generator"].extend(self.train_generator_steps(configuration, architecture))
+                losses_by_batch["discriminator"].extend(
+                    self.train_discriminator_steps(configuration, metadata, architecture, data_iterator))
+
+                losses_by_batch["generator"].extend(self.train_generator_steps(configuration, metadata, architecture))
             except StopIteration:
                 break
 
@@ -59,26 +73,35 @@ class TrainGAN(Train):
 
         return losses
 
-    def train_discriminator_steps(self, configuration: Configuration, architecture: Architecture,
-                                  data_iterator: Iterator[Tensor]) -> List[float]:
+    def train_discriminator_steps(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                                  data_iterator: Iterator[TrainBatch]) -> List[float]:
         losses = []
         for _ in range(configuration.discriminator_steps):
             batch = next(data_iterator)
-            loss = self.train_discriminator_step(configuration, architecture, batch)
+            loss = self.train_discriminator_step(configuration, metadata, architecture, batch)
             losses.append(loss)
         return losses
 
-    def train_discriminator_step(self, configuration: Configuration, architecture: Architecture,
-                                 real_features: Tensor) -> float:
+    def train_discriminator_step(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                                 batch: TrainBatch) -> float:
+        # conditional
+        if "conditional" in architecture.arguments:
+            # use the same conditions for the real and fake features
+            real_features, condition = batch
+        # non-conditional
+        else:
+            real_features = batch
+            condition = None
+
         # clean previous gradients
         architecture.discriminator_optimizer.zero_grad()
 
         # generate a batch of fake features with the same size as the real feature batch
-        fake_features = self.sample_fake(configuration, architecture, len(real_features))
+        fake_features = self.sample_fake(architecture, len(real_features), condition=condition)
         fake_features = fake_features.detach()  # do not propagate to the generator
 
         # calculate loss
-        loss = architecture.discriminator_loss(architecture.discriminator, real_features, fake_features)
+        loss = architecture.discriminator_loss(architecture, real_features, fake_features, condition=condition)
 
         # calculate gradients
         loss.backward()
@@ -89,22 +112,29 @@ class TrainGAN(Train):
         # return the loss
         return to_cpu_if_was_in_gpu(loss).item()
 
-    def train_generator_steps(self, configuration: Configuration, architecture: Architecture) -> List[float]:
+    def train_generator_steps(self, configuration: Configuration, metadata: Metadata,
+                              architecture: Architecture) -> List[float]:
         losses = []
         for _ in range(configuration.generator_steps):
-            loss = self.train_generator_step(configuration, architecture)
+            loss = self.train_generator_step(configuration, metadata, architecture)
             losses.append(loss)
         return losses
 
-    def train_generator_step(self, configuration: Configuration, architecture: Architecture) -> float:
+    def train_generator_step(self, configuration: Configuration, metadata: Metadata,
+                             architecture: Architecture) -> float:
         # clean previous gradients
         architecture.generator_optimizer.zero_grad()
 
+        # for now uniform distribution is used but could be controlled in a different way
+        # also this works for both binary and categorical dependent variables
+        number_of_conditions = metadata.get_dependent_variable().get_size()
+        condition = to_gpu_if_available(FloatTensor(configuration.batch_size).uniform_(0, number_of_conditions))
+
         # generate a full batch of fake features
-        fake_features = self.sample_fake(configuration, architecture, configuration.batch_size)
+        fake_features = self.sample_fake(architecture, configuration.batch_size, condition=condition)
 
         # calculate loss
-        loss = architecture.generator_loss(architecture.discriminator, fake_features)
+        loss = architecture.generator_loss(architecture, fake_features, condition=condition)
 
         # calculate gradients
         loss.backward()
@@ -115,9 +145,10 @@ class TrainGAN(Train):
         # return the loss
         return to_cpu_if_was_in_gpu(loss).item()
 
-    def sample_fake(self, configuration: Configuration, architecture: Architecture, size: int) -> Tensor:
+    def sample_fake(self, architecture: Architecture, size: int, condition: Optional[Tensor] = None) -> Tensor:
+        # for now the noise comes from a normal distribution but could be other distribution
         noise = to_gpu_if_available(FloatTensor(size, architecture.arguments.noise_size).normal_())
-        return architecture.generator(noise)
+        return architecture.generator(noise, condition=condition)
 
 
 if __name__ == '__main__':
