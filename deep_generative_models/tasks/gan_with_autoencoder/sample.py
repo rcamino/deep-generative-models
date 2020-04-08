@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from torch import Tensor, FloatTensor
 
@@ -17,9 +17,10 @@ class SampleGANWithAutoEncoder(Sample):
     def mandatory_architecture_components(self) -> List[str]:
         return ["generator", "autoencoder"]
 
-    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture) -> Tensor:
+    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                        condition: Optional[Tensor] = None) -> Tensor:
         noise = to_gpu_if_available(FloatTensor(configuration.batch_size, architecture.arguments.noise_size).normal_())
         architecture.autoencoder.eval()
         architecture.generator.eval()
-        code = architecture.generator(noise)
+        code = architecture.generator(noise, condition=condition)
         return architecture.autoencoder.decode(code)

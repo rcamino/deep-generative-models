@@ -1,6 +1,6 @@
 import torch
 
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import numpy as np
 
@@ -90,7 +90,8 @@ class Sample(Task, ArchitectureConfigurationValidator):
         # save the samples
         np.save(configuration.output, samples)
 
-    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture) -> Tensor:
+    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                        condition: Optional[Tensor] = None) -> Tensor:
         raise NotImplementedError
 
 
@@ -162,7 +163,21 @@ class RejectionSampling(SampleStrategy):
         return samples
 
 
+class ConditionalSampling(SampleStrategy):
+
+    condition: int
+
+    def __init__(self, condition: int):
+        self.condition = condition
+
+    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                        sampler: Sample) -> Tensor:
+        condition = torch.ones(configuration.batch_size, dtype=torch.float) * self.condition
+        return sampler.generate_sample(configuration, metadata, architecture, condition=condition)
+
+
 strategy_class_by_name = {
     "default": DefaultSampleStrategy,
-    "rejection": RejectionSampling
+    "rejection": RejectionSampling,
+    "conditional": ConditionalSampling,
 }

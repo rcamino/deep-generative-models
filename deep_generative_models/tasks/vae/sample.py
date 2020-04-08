@@ -1,6 +1,6 @@
 import argparse
 
-from typing import List
+from typing import List, Optional
 
 from torch import Tensor, FloatTensor
 
@@ -19,7 +19,8 @@ class SampleVAE(Sample):
     def mandatory_architecture_components(self) -> List[str]:
         return ["autoencoder"]
 
-    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture) -> Tensor:
+    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                        condition: Optional[Tensor] = None) -> Tensor:
         code = to_gpu_if_available(FloatTensor(configuration.batch_size, architecture.arguments.code_size).normal_())
         architecture.autoencoder.eval()
         return architecture.autoencoder.decode(code)

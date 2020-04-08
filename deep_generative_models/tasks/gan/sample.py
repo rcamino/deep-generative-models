@@ -1,6 +1,6 @@
 import argparse
 
-from typing import List
+from typing import List, Optional
 
 from torch import Tensor, FloatTensor
 
@@ -16,10 +16,11 @@ class SampleGAN(Sample):
     def mandatory_architecture_components(self) -> List[str]:
         return ["generator"]
 
-    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture) -> Tensor:
+    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                        condition: Optional[Tensor] = None) -> Tensor:
         noise = to_gpu_if_available(FloatTensor(configuration.batch_size, architecture.arguments.noise_size).normal_())
         architecture.generator.eval()
-        return architecture.generator(noise)
+        return architecture.generator(noise, condition=condition)
 
 
 if __name__ == '__main__':
