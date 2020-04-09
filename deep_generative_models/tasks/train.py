@@ -2,9 +2,10 @@ import torch
 
 import numpy as np
 
-from torch import Tensor
+from typing import Dict, List
 
-from typing import Dict, List, Union, Tuple
+from torch import Tensor
+from torch.utils.data import Dataset, DataLoader
 
 from deep_generative_models.architecture import Architecture, ArchitectureConfigurationValidator
 from deep_generative_models.checkpoints import Checkpoints
@@ -18,11 +19,30 @@ from deep_generative_models.metadata import load_metadata, Metadata
 from deep_generative_models.tasks.task import Task
 
 
+# the data loader returns a dictionary even if the datasets iterator returns datasets
+# so sadly I need this batch class to be a normal dictionary
+Batch = Dict[str, Tensor]
+
+
 class Datasets(Dictionary[Tensor]):
     pass
 
 
-Batch = Union[Tensor, Tuple[Tensor, Tensor]]
+class DatasetsIterator(Dataset):
+
+    datasets: Datasets
+
+    def __init__(self, datasets: Datasets) -> None:
+        self.datasets = datasets
+
+    def __len__(self) -> int:
+        return next(iter(self.datasets.values())).shape[0]
+
+    def __getitem__(self, index) -> Batch:
+        indexed = {}
+        for key, values in self.datasets.items():
+            indexed[key] = values[index]
+        return indexed
 
 
 class Train(Task, ArchitectureConfigurationValidator):
@@ -41,6 +61,10 @@ class Train(Task, ArchitectureConfigurationValidator):
 
     def optional_arguments(self) -> List[str]:
         return ["seed"]
+
+    @staticmethod
+    def iterate_datasets(configuration: Configuration, datasets: Datasets):
+        return iter(DataLoader(DatasetsIterator(datasets), batch_size=configuration.batch_size, shuffle=True))
 
     def run(self, configuration: Configuration) -> None:
         seed_all(configuration.get("seed"))

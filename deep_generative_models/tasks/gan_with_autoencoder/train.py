@@ -2,8 +2,6 @@ import numpy as np
 
 from typing import Dict, Iterator, List
 
-from torch.utils.data import TensorDataset, DataLoader
-
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
@@ -39,14 +37,16 @@ class TrainGANWithAutoencoder(TrainGAN):
 
         # conditional
         if "conditional" in architecture.arguments:
-            train_datasets = TensorDataset(datasets.train_features, datasets.train_labels)
+            train_datasets = Datasets({"features": datasets.train_features, "labels": datasets.train_labels})
+            val_datasets = Datasets({"features": datasets.val_features, "labels": datasets.val_labels})
         # non-conditional
         else:
-            train_datasets = datasets.train_features
+            train_datasets = Datasets({"features": datasets.train_features})
+            val_datasets = Datasets({"features": datasets.val_features})
 
         # an epoch will stop at any point if there are no more batches
         # it does not matter if there are models with remaining steps
-        data_iterator = iter(DataLoader(train_datasets, batch_size=configuration.batch_size, shuffle=True))
+        data_iterator = self.iterate_datasets(configuration, train_datasets)
 
         while True:
             try:
@@ -71,7 +71,7 @@ class TrainGANWithAutoencoder(TrainGAN):
         if "val_features" in datasets:
             autoencoder_val_losses_by_batch = []
 
-            for batch in DataLoader(datasets.val_features, batch_size=configuration.batch_size, shuffle=True):
+            for batch in self.iterate_datasets(configuration, val_datasets):
                 autoencoder_val_losses_by_batch.append(self.autoencoder_train_task.val_batch(architecture, batch))
 
             losses["autoencoder_val_mean_loss"] = np.mean(autoencoder_val_losses_by_batch).item()

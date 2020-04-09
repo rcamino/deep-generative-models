@@ -5,7 +5,6 @@ import numpy as np
 from typing import Dict, List, Iterator, Optional
 
 from torch import Tensor, FloatTensor
-from torch.utils.data import TensorDataset, DataLoader
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
@@ -43,14 +42,14 @@ class TrainGAN(Train):
 
         # conditional
         if "conditional" in architecture.arguments:
-            train_datasets = TensorDataset(datasets.train_features, datasets.train_labels)
+            train_datasets = Datasets({"features": datasets.train_features, "labels": datasets.train_labels})
         # non-conditional
         else:
-            train_datasets = datasets.train_features
+            train_datasets = Datasets({"features": datasets.train_features})
 
         # an epoch will stop at any point if there are no more batches
         # it does not matter if there are models with remaining steps
-        data_iterator = iter(DataLoader(train_datasets, batch_size=configuration.batch_size, shuffle=True))
+        data_iterator = self.iterate_datasets(configuration, train_datasets)
 
         while True:
             try:
@@ -78,24 +77,16 @@ class TrainGAN(Train):
 
     def train_discriminator_step(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                                  batch: Batch) -> float:
-        # conditional
-        if "conditional" in architecture.arguments:
-            # use the same conditions for the real and fake features
-            real_features, condition = batch
-        # non-conditional
-        else:
-            real_features = batch
-            condition = None
-
         # clean previous gradients
         architecture.discriminator_optimizer.zero_grad()
 
         # generate a batch of fake features with the same size as the real feature batch
-        fake_features = self.sample_fake(architecture, len(real_features), condition=condition)
+        fake_features = self.sample_fake(architecture, len(batch["features"]), condition=batch.get("labels"))
         fake_features = fake_features.detach()  # do not propagate to the generator
 
         # calculate loss
-        loss = architecture.discriminator_loss(architecture, real_features, fake_features, condition=condition)
+        loss = architecture.discriminator_loss(architecture, batch["features"], fake_features,
+                                               condition=batch.get("labels"))
 
         # calculate gradients
         loss.backward()
