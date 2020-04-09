@@ -3,14 +3,14 @@ import argparse
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.tasks.gan.train import TrainBatch
 from deep_generative_models.tasks.gan_with_autoencoder.train import TrainGANWithAutoencoder
+from deep_generative_models.tasks.train import Batch
 
 
 class TrainARAE(TrainGANWithAutoencoder):
 
     def train_discriminator_step(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                 batch: TrainBatch) -> float:
+                                 batch: Batch) -> float:
         if "conditional" in architecture.arguments:
             real_features, real_labels = batch
             real_code = architecture.autoencoder.encode(real_features)["code"]

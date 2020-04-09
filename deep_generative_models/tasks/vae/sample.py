@@ -23,7 +23,7 @@ class SampleVAE(Sample):
                         condition: Optional[Tensor] = None) -> Tensor:
         code = to_gpu_if_available(FloatTensor(configuration.batch_size, architecture.arguments.code_size).normal_())
         architecture.autoencoder.eval()
-        return architecture.autoencoder.decode(code)
+        return architecture.autoencoder.decode(code, condition=condition)
 
 
 if __name__ == '__main__':

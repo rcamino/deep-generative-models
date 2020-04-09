@@ -21,12 +21,12 @@ class Encode(Task, ArchitectureConfigurationValidator):
             "metadata",
             "architecture",
             "checkpoint",
-            "input",
+            "features",
             "output",
         ]
 
     def optional_arguments(self) -> List[str]:
-        return ["seed"]
+        return ["seed", "labels"]
 
     def mandatory_architecture_components(self) -> List[str]:
         return ["autoencoder"]
@@ -46,11 +46,17 @@ class Encode(Task, ArchitectureConfigurationValidator):
         checkpoints.load_states(checkpoint["architecture"], architecture)
 
         # load the features
-        features = torch.from_numpy(np.load(configuration.input))
+        features = torch.from_numpy(np.load(configuration.features)).float()
+
+        # conditional
+        if "labels" in configuration:
+            condition = torch.from_numpy(np.load(configuration.labels)).float()
+        else:
+            condition = None
 
         # encode
         with torch.no_grad():
-            code = architecture.autoencoder.encode(features)["code"]
+            code = architecture.autoencoder.encode(features, condition=condition)["code"]
 
         # save the code
         code = to_cpu_if_was_in_gpu(code)

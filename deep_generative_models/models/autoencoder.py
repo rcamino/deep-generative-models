@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from torch import Tensor
 from torch.nn import Module
@@ -22,16 +22,16 @@ class AutoEncoder(Module):
         self.encoder = encoder
         self.decoder = decoder
 
-    def forward(self, inputs: Tensor) -> Dict[str, Tensor]:
+    def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Dict[str, Tensor]:
         outputs = self.encode(inputs)
         outputs["reconstructed"] = self.decode(outputs["code"])
         return outputs
 
-    def encode(self, inputs: Tensor) -> Dict[str, Tensor]:
-        return {"code": self.encoder(inputs)}
+    def encode(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Dict[str, Tensor]:
+        return {"code": self.encoder(inputs, condition=condition)}
 
-    def decode(self, code: Tensor) -> Tensor:
-        return self.decoder(code)
+    def decode(self, code: Tensor, condition: Optional[Tensor] = None) -> Tensor:
+        return self.decoder(code, condition=condition)
 
 
 class AutoEncoderFactory(MultiComponentFactory):

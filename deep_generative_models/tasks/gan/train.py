@@ -2,22 +2,16 @@ import argparse
 
 import numpy as np
 
+from typing import Dict, List, Iterator, Optional
+
 from torch import Tensor, FloatTensor
-
-from torch.utils.data.dataloader import DataLoader
-
-from typing import Dict, List, Iterator, Union, Tuple, Optional
-
-from torch.utils.data.dataset import TensorDataset
+from torch.utils.data import TensorDataset, DataLoader
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.tasks.train import Train, Datasets
-
-
-TrainBatch = Union[Tensor, Tuple[Tensor, Tensor]]
+from deep_generative_models.tasks.train import Train, Datasets, Batch
 
 
 class TrainGAN(Train):
@@ -74,16 +68,16 @@ class TrainGAN(Train):
         return losses
 
     def train_discriminator_steps(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                  data_iterator: Iterator[TrainBatch]) -> List[float]:
+                                  batch_iterator: Iterator[Batch]) -> List[float]:
         losses = []
         for _ in range(configuration.discriminator_steps):
-            batch = next(data_iterator)
+            batch = next(batch_iterator)
             loss = self.train_discriminator_step(configuration, metadata, architecture, batch)
             losses.append(loss)
         return losses
 
     def train_discriminator_step(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                 batch: TrainBatch) -> float:
+                                 batch: Batch) -> float:
         # conditional
         if "conditional" in architecture.arguments:
             # use the same conditions for the real and fake features

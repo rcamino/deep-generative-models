@@ -4,7 +4,7 @@ import numpy as np
 
 from torch import Tensor
 
-from typing import Dict, List
+from typing import Dict, List, Union, Tuple
 
 from deep_generative_models.architecture import Architecture, ArchitectureConfigurationValidator
 from deep_generative_models.checkpoints import Checkpoints
@@ -20,6 +20,9 @@ from deep_generative_models.tasks.task import Task
 
 class Datasets(Dictionary[Tensor]):
     pass
+
+
+Batch = Union[Tensor, Tuple[Tensor, Tensor]]
 
 
 class Train(Task, ArchitectureConfigurationValidator):

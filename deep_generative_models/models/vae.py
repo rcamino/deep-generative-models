@@ -1,6 +1,6 @@
 import torch
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from torch import Tensor
 from torch.nn import Module, Linear
@@ -24,21 +24,21 @@ class VAE(Module):
         self.mu_layer = Linear(split_size, code_size)
         self.log_var_layer = Linear(split_size, code_size)
 
-    def forward(self, inputs: Tensor) -> Dict[str, Tensor]:
-        outputs = self.encode(inputs)
-        outputs["reconstructed"] = self.decode(outputs["code"])
+    def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Dict[str, Tensor]:
+        outputs = self.encode(inputs, condition=condition)
+        outputs["reconstructed"] = self.decode(outputs["code"], condition=condition)
         return outputs
 
-    def encode(self, inputs: Tensor) -> Dict[str, Tensor]:
-        outputs = self.encode_parameters(inputs)
+    def encode(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Dict[str, Tensor]:
+        outputs = self.encode_parameters(inputs, condition=condition)
         outputs["code"] = self.re_parametrize(outputs["mu"], outputs["log_var"])
         return outputs
 
-    def decode(self, code: Tensor) -> Tensor:
-        return self.autoencoder.decode(code)
+    def decode(self, code: Tensor, condition: Optional[Tensor] = None) -> Tensor:
+        return self.autoencoder.decode(code, condition=condition)
 
-    def encode_parameters(self, inputs: Tensor) -> Dict[str, Tensor]:
-        split_inputs = self.autoencoder.encode(inputs)["code"]
+    def encode_parameters(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Dict[str, Tensor]:
+        split_inputs = self.autoencoder.encode(inputs, condition=condition)["code"]
         return {"mu": self.mu_layer(split_inputs), "log_var": self.log_var_layer(split_inputs)}
 
     @staticmethod

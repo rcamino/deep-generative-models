@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from torch import Tensor, empty_like
 from torch.nn import Module
@@ -23,22 +23,22 @@ class DeNoisingAutoencoder(Module):
         self.noise_mean = noise_mean
         self.noise_std = noise_std
 
-    def forward(self, inputs: Tensor) -> Dict[str, Tensor]:
+    def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Dict[str, Tensor]:
         outputs = self.encode(inputs)
         outputs["reconstructed"] = self.decode(outputs["code"])
         return outputs
 
-    def encode(self, inputs: Tensor) -> Dict[str, Tensor]:
+    def encode(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Dict[str, Tensor]:
         noisy = self.add_noise(inputs)
-        outputs = self.autoencoder.encode(noisy)
+        outputs = self.autoencoder.encode(noisy, condition=condition)
         outputs["noisy"] = noisy
         return outputs
 
     def add_noise(self, inputs: Tensor) -> Tensor:
         return empty_like(inputs).normal_(self.noise_mean, self.noise_std) + inputs
 
-    def decode(self, code: Tensor) -> Tensor:
-        return self.autoencoder.decode(code)
+    def decode(self, code: Tensor, condition: Optional[Tensor] = None) -> Tensor:
+        return self.autoencoder.decode(code, condition=condition)
 
 
 class DeNoisingAutoencoderFactory(MultiComponentFactory):

@@ -1,19 +1,15 @@
 import numpy as np
 
-from torch import Tensor
-
-from torch.utils.data.dataloader import DataLoader
-
 from typing import Dict, Iterator, List
 
-from torch.utils.data.dataset import TensorDataset
+from torch.utils.data import TensorDataset, DataLoader
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
 from deep_generative_models.tasks.gan.train import TrainGAN
-from deep_generative_models.tasks.train import Datasets
+from deep_generative_models.tasks.train import Datasets, Batch
 
 
 class TrainGANWithAutoencoder(TrainGAN):
@@ -83,10 +79,10 @@ class TrainGANWithAutoencoder(TrainGAN):
         return losses
 
     def train_autoencoder_steps(self, configuration: Configuration, architecture: Architecture,
-                                data_iterator: Iterator[Tensor]) -> List[float]:
+                                batch_iterator: Iterator[Batch]) -> List[float]:
         losses = []
         for _ in range(configuration.autoencoder_steps):
-            batch = next(data_iterator)
+            batch = next(batch_iterator)
             loss = self.autoencoder_train_task.train_batch(architecture, batch)
             losses.append(loss)
         return losses
