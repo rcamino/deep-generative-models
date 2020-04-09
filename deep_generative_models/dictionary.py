@@ -1,10 +1,10 @@
-from typing import TypeVar, Generic, Dict, Optional, KeysView, ValuesView, ItemsView
+from typing import TypeVar, Generic, Dict, Optional, KeysView, ValuesView, ItemsView, Mapping, Iterator
 
 
 T = TypeVar('T')
 
 
-class Dictionary(Generic[T]):
+class Dictionary(Generic[T], Mapping):
     _wrapped: Dict[str, T]
 
     def __init__(self, wrapped: Optional[Dict[str, T]] = None) -> None:
@@ -34,6 +34,9 @@ class Dictionary(Generic[T]):
 
     def __setitem__(self, key: str, value: T) -> None:
         self._wrapped[key] = value
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.keys())
 
     def keys(self) -> KeysView[str]:
         return self._wrapped.keys()
