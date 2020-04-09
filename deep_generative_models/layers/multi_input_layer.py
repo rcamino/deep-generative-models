@@ -1,6 +1,6 @@
 import torch
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from torch import Tensor
 from torch.nn import ParameterList, Parameter
@@ -61,7 +61,10 @@ class MultiInputLayer(InputLayer):
                 raise Exception("Unexpected variable type '{}' for variable '{}'.".format(
                     variable_metadata.get_type(), variable_metadata.get_name()))
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Tensor:
+        if condition is not None:
+            raise Exception("An unexpected condition was received.")
+
         if self.has_categorical:
             outputs = []
             start = 0

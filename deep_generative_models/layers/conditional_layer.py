@@ -1,36 +1,26 @@
 import torch
 
-from typing import Any, List
+from typing import Optional
 
 from torch import Tensor
 from torch.nn import Embedding, Identity, Module
 
-from deep_generative_models.architecture import Architecture
-from deep_generative_models.configuration import Configuration
 from deep_generative_models.layers.embeddings import compute_embedding_size
 from deep_generative_models.layers.input_layer import InputLayer
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.component_factory import ComponentFactory
-
-
-def concatenate_condition_if_needed(inputs, condition, conditional_layer):
-    if conditional_layer is None and condition is not None:
-        raise Exception("An unexpected condition was received.")
-    elif conditional_layer is not None and condition is None:
-        raise Exception("Expected condition not received.")
-    elif conditional_layer is not None and condition is not None:
-        return torch.cat((inputs, conditional_layer(condition)), dim=1)
-    else:
-        return inputs
 
 
 class ConditionalLayer(InputLayer):
 
+    input_layer: InputLayer
     output_size: int
     layer: Module
 
-    def __init__(self, metadata: Metadata, min_embedding_size: int = 2, max_embedding_size: int = 50) -> None:
+    def __init__(self, input_layer: InputLayer, metadata: Metadata, min_embedding_size: int = 2,
+                 max_embedding_size: int = 50) -> None:
         super(ConditionalLayer, self).__init__()
+
+        self.input_layer = input_layer
 
         dependent_variable = metadata.get_dependent_variable()
 
@@ -44,17 +34,14 @@ class ConditionalLayer(InputLayer):
         else:
             raise Exception("Invalid dependent variable type for conditional layer.")
 
-    def forward(self, inputs: Tensor) -> Tensor:
-        return self.layer(inputs.view(-1, 1))
+    def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Tensor:
+        if condition is None:
+            raise Exception("Expected condition not received.")
+
+        return torch.cat((
+            self.input_layer(inputs),
+            self.layer(condition.view(-1, 1))
+        ), dim=1)
 
     def get_output_size(self) -> int:
-        return self.output_size
-
-
-class ConditionalLayerFactory(ComponentFactory):
-
-    def optional_arguments(self) -> List[str]:
-        return ["min_embedding_size", "max_embedding_size"]
-
-    def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
-        return ConditionalLayer(metadata, **arguments.get_all_defined(self.optional_arguments()))
+        return self.input_layer.get_output_size() + self.output_size

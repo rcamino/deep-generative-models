@@ -5,7 +5,7 @@ from torch.nn import Module, Sequential, Linear, Tanh
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.layers.conditional_layer import concatenate_condition_if_needed, ConditionalLayer
+from deep_generative_models.layers.conditional_layer import ConditionalLayer
 from deep_generative_models.layers.hidden_layers import HiddenLayersFactory
 from deep_generative_models.layers.input_layer import InputLayer
 from deep_generative_models.metadata import Metadata
@@ -15,25 +15,17 @@ from deep_generative_models.component_factory import MultiComponentFactory
 class Encoder(Module):
 
     input_layer: InputLayer
-    conditional_layer: Optional[ConditionalLayer]
     layers: Sequential
 
     def __init__(self, input_layer: InputLayer, code_size: int, hidden_layers_factory: HiddenLayersFactory,
-                 output_activation: Optional[Module] = None,
-                 conditional_layer: Optional[ConditionalLayer] = None) -> None:
+                 output_activation: Optional[Module] = None) -> None:
         super(Encoder, self).__init__()
 
         # input layer
         self.input_layer = input_layer
-        input_size = input_layer.get_output_size()
-
-        # conditional
-        self.conditional_layer = conditional_layer
-        if self.conditional_layer is not None:
-            input_size += self.conditional_layer.get_output_size()
 
         # hidden layers
-        hidden_layers = hidden_layers_factory.create(input_size, default_activation=Tanh())
+        hidden_layers = hidden_layers_factory.create(input_layer.get_output_size(), default_activation=Tanh())
 
         # output layer
         output_layer = Linear(hidden_layers.get_output_size(), code_size)
@@ -49,8 +41,7 @@ class Encoder(Module):
         self.layers = Sequential(*layers)
 
     def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Tensor:
-        inputs = concatenate_condition_if_needed(self.input_layer(inputs), condition, self.conditional_layer)
-        return self.layers(inputs)
+        return self.layers(self.input_layer(inputs, condition=condition))
 
 
 class EncoderFactory(MultiComponentFactory):
@@ -65,6 +56,11 @@ class EncoderFactory(MultiComponentFactory):
         # create the input layer
         input_layer = self.create_input_layer(architecture, metadata, arguments)
 
+        # conditional
+        if "conditional" in architecture.arguments:
+            # wrap the input layer with a conditional layer
+            input_layer = ConditionalLayer(input_layer, metadata, **architecture.arguments.conditional)
+
         # create the hidden layers factory
         hidden_layers_factory = self.create_other("HiddenLayers", architecture, metadata,
                                                   arguments.get("hidden_layers", {}))
@@ -75,11 +71,6 @@ class EncoderFactory(MultiComponentFactory):
             optional["output_activation"] = self.create_other(arguments.output_activation.factory, architecture,
                                                               metadata,
                                                               arguments.output_activation.get("arguments", {}))
-
-        # conditional
-        if "conditional" in architecture.arguments:
-            optional["conditional_layer"] = self.create_other("ConditionalLayer", architecture, metadata,
-                                                              architecture.arguments.conditional)
 
         # create the encoder
         return Encoder(input_layer, architecture.arguments.code_size, hidden_layers_factory, **optional)
