@@ -119,10 +119,15 @@ class TrainGAN(Train):
         # clean previous gradients
         architecture.generator_optimizer.zero_grad()
 
-        # for now uniform distribution is used but could be controlled in a different way
-        # also this works for both binary and categorical dependent variables
-        number_of_conditions = metadata.get_dependent_variable().get_size()
-        condition = to_gpu_if_available(FloatTensor(configuration.batch_size).uniform_(0, number_of_conditions))
+        # conditional
+        if "conditional" in architecture.arguments:
+            # for now uniform distribution is used but could be controlled in a different way
+            # also this works for both binary and categorical dependent variables
+            number_of_conditions = metadata.get_dependent_variable().get_size()
+            condition = to_gpu_if_available(FloatTensor(configuration.batch_size).uniform_(0, number_of_conditions))
+        # non-conditional
+        else:
+            condition = None
 
         # generate a full batch of fake features
         fake_features = self.sample_fake(architecture, configuration.batch_size, condition=condition)
