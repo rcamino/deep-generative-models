@@ -6,15 +6,15 @@ from deep_generative_models.architecture import Architecture
 from deep_generative_models.component_factory import MultiComponentFactory
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.models.discriminator import Discriminator
+from deep_generative_models.models.feed_forward import FeedForward
 from deep_generative_models.optimizers.wrapped_optimizer import WrappedOptimizer
 
 
 class WGANOptimizer(WrappedOptimizer):
-    discriminator: Discriminator
+    discriminator: FeedForward
     discriminator_clamp: float
 
-    def __init__(self, optimizer: Optimizer, discriminator: Discriminator, discriminator_clamp: float):
+    def __init__(self, optimizer: Optimizer, discriminator: FeedForward, discriminator_clamp: float):
         super(WGANOptimizer, self).__init__(optimizer)
         self.discriminator = discriminator
         self.discriminator_clamp = discriminator_clamp

@@ -1,48 +1,15 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from torch import Tensor
-from torch.nn import Module, Sequential, Linear, LeakyReLU, Sigmoid
+from torch.nn import LeakyReLU, Sigmoid, Sequential
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.component_factory import MultiComponentFactory, ComponentFactory
 from deep_generative_models.layers.conditional_layer import ConditionalLayer
-from deep_generative_models.layers.hidden_layers import HiddenLayersFactory
-from deep_generative_models.layers.input_layer import InputLayer
+from deep_generative_models.layers.single_output_layer import SingleOutputLayerFactory
+from deep_generative_models.layers.view import View
 from deep_generative_models.metadata import Metadata
-
-
-class Discriminator(Module):
-
-    input_layer: InputLayer
-    layers: Sequential
-
-    def __init__(self, input_layer: InputLayer, hidden_layers_factory: HiddenLayersFactory,
-                 critic: bool = False) -> None:
-        super(Discriminator, self).__init__()
-
-        # input layer
-        self.input_layer = input_layer
-
-        # hidden layers
-        hidden_layers = hidden_layers_factory.create(input_layer.get_output_size(), default_activation=LeakyReLU(0.2))
-
-        # concat hidden layers with output layer
-        layers = [
-            hidden_layers,
-            Linear(hidden_layers.get_output_size(), 1)
-        ]
-
-        # add the activation
-        # unless it is a critic, which has linear output
-        if not critic:
-            layers.append(Sigmoid())
-
-        # transform the list of layers into a sequential model
-        self.layers = Sequential(*layers)
-
-    def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Tensor:
-        return self.layers(self.input_layer(inputs, condition=condition)).view(-1)
+from deep_generative_models.models.feed_forward import FeedForward
 
 
 class DiscriminatorFactory(MultiComponentFactory):
@@ -69,5 +36,15 @@ class DiscriminatorFactory(MultiComponentFactory):
         hidden_layers_factory = self.create_other("HiddenLayers", architecture, metadata,
                                                   arguments.get("hidden_layers", {}))
 
+        # create the output activation
+        if self.critic:
+            output_activation = View(-1)
+        else:
+            output_activation = Sequential(Sigmoid(), View(-1))
+
+        # create the output layer factory
+        output_layer_factory = SingleOutputLayerFactory(1, activation=output_activation)
+
         # create the discriminator
-        return Discriminator(input_layer, hidden_layers_factory, critic=self.critic)
+        return FeedForward(input_layer, hidden_layers_factory, output_layer_factory,
+                           default_hidden_activation=LeakyReLU(0.2))

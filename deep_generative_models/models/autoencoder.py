@@ -7,16 +7,15 @@ from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.component_factory import MultiComponentFactory, ComponentFactory
-from deep_generative_models.models.decoder import Decoder
-from deep_generative_models.models.encoder import Encoder
+from deep_generative_models.models.feed_forward import FeedForward
 
 
 class AutoEncoder(Module):
 
-    encoder: Encoder
-    decoder: Decoder
+    encoder: FeedForward
+    decoder: FeedForward
 
-    def __init__(self, encoder: Encoder, decoder: Decoder) -> None:
+    def __init__(self, encoder: FeedForward, decoder: FeedForward) -> None:
         super(AutoEncoder, self).__init__()
 
         self.encoder = encoder
