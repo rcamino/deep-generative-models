@@ -35,7 +35,7 @@ class MultiInputLayer(InputLayer):
 
         for i, variable_metadata in enumerate(self.metadata.get_by_independent_variable()):
             # if it is a numerical variable
-            if variable_metadata.is_numerical():
+            if variable_metadata.is_binary() or variable_metadata.is_numerical():
                 assert variable_metadata.get_size() == 1
                 self.output_size += 1
 
