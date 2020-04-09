@@ -29,7 +29,6 @@ class Datasets(Dictionary[Tensor]):
 
 
 class DatasetsIterator(Dataset):
-
     datasets: Datasets
 
     def __init__(self, datasets: Datasets) -> None:

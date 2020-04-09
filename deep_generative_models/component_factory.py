@@ -26,7 +26,7 @@ class ComponentFactory(ArgumentValidator):
 
 class MultiComponentFactory(ComponentFactory):
     factory_by_name: Dict[str, ComponentFactory]
-    
+
     def __init__(self, factory_by_name: Dict[str, ComponentFactory]) -> None:
         self.factory_by_name = factory_by_name
 
@@ -37,7 +37,8 @@ class MultiComponentFactory(ComponentFactory):
         try:
             other_factory.validate_architecture_arguments(architecture.arguments)
         except MissingArchitectureArgument as e:
-            raise Exception("Missing architecture argument '{}' while creating other component '{}'".format(e.name, other_name))
+            raise Exception(
+                "Missing architecture argument '{}' while creating other component '{}'".format(e.name, other_name))
 
         try:
             other_factory.validate_arguments(other_arguments)
@@ -53,7 +54,6 @@ class MultiComponentFactory(ComponentFactory):
 
 
 class ComponentFactoryFromClass(ComponentFactory):
-
     wrapped_class: Type
     optional_class_arguments: List[str]
 

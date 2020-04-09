@@ -11,7 +11,6 @@ from deep_generative_models.models.feed_forward import FeedForward
 
 
 class AutoEncoder(Module):
-
     encoder: FeedForward
     decoder: FeedForward
 
@@ -34,7 +33,6 @@ class AutoEncoder(Module):
 
 
 class AutoEncoderFactory(MultiComponentFactory):
-
     encoder_factory_name: str
     decoder_factory_name: str
 

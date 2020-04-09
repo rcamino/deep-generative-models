@@ -33,7 +33,6 @@ class ArgumentValidator:
 
 
 class ArgumentError(Exception):
-
     name: str
 
     def __init__(self, name: str) -> None:

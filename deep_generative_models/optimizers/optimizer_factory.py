@@ -7,7 +7,6 @@ from deep_generative_models.metadata import Metadata
 
 
 class OptimizerFactory(ComponentFactory):
-
     optimizer_class: Type
     optional_class_arguments: List[str]
 

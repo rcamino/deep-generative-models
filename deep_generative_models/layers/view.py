@@ -5,7 +5,6 @@ from torch.nn import Module
 
 
 class View(Module):
-
     shape: Tuple[int, ...]
 
     def __init__(self, *shape: int) -> None:

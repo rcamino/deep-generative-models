@@ -9,7 +9,6 @@ from deep_generative_models.layers.output_layer import OutputLayerFactory
 
 
 class FeedForward(Module):
-
     input_layer: InputLayer
     hidden_layers: HiddenLayers
     output_layer: Module

@@ -11,7 +11,6 @@ from deep_generative_models.metadata import Metadata
 
 
 class ConditionalLayer(InputLayer):
-
     input_layer: InputLayer
     output_size: int
     layer: Module

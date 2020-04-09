@@ -164,7 +164,6 @@ class RejectionSampling(SampleStrategy):
 
 
 class ConditionalSampling(SampleStrategy):
-
     condition: int
 
     def __init__(self, condition: int):

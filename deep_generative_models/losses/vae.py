@@ -12,7 +12,6 @@ from deep_generative_models.metadata import Metadata
 
 
 class VAELoss(Module):
-
     reconstruction_loss: Module
 
     def __init__(self, reconstruction_loss: Module):

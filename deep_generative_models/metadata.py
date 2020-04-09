@@ -4,7 +4,6 @@ from typing import Dict, Generator, List
 
 
 class VariableMetadata:
-
     metadata: Dict
 
     def __init__(self, metadata: Dict) -> None:
@@ -36,7 +35,6 @@ class VariableMetadata:
 
 
 class IndependentVariableMetadata(VariableMetadata):
-
     variable_index: int
 
     def __init__(self, metadata: Dict, variable_index: int) -> None:
@@ -142,7 +140,6 @@ class DependentVariableMetadata(VariableMetadata):
 
 
 class Metadata:
-
     metadata: Dict
 
     def __init__(self, metadata: Dict) -> None:

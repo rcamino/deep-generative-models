@@ -13,7 +13,6 @@ from deep_generative_models.models.autoencoder import AutoEncoder
 
 
 class VAE(Module):
-
     autoencoder: AutoEncoder
 
     def __init__(self, autoencoder: AutoEncoder, split_size: int, code_size: int) -> None:

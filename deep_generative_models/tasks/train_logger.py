@@ -7,7 +7,6 @@ from typing import Optional, IO
 
 
 class TrainLogger(object):
-
     PRINT_FORMAT = "epoch {:d}/{:d} {}: {:.05f} Time: {:.2f} s"
     CSV_COLUMNS = ["epoch", "metric_name", "metric_value", "time"]
 

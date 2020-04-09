@@ -11,7 +11,6 @@ from deep_generative_models.models.autoencoder import AutoEncoder
 
 
 class DeNoisingAutoencoder(Module):
-
     autoencoder: AutoEncoder
     noise_mean: float
     noise_std: float

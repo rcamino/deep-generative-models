@@ -17,7 +17,6 @@ class WGANCriticLossWithGradientPenalty(WGANCriticLoss):
 
     def forward(self, architecture: Architecture, real_features: Tensor, fake_features: Tensor,
                 condition: Optional[Tensor] = None) -> Tensor:
-
         loss = super(WGANCriticLossWithGradientPenalty, self).forward(
             architecture, real_features, fake_features, condition=condition)
 
