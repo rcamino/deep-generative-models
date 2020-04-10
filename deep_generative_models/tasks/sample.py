@@ -139,10 +139,10 @@ class RejectionSampling(SampleStrategy):
             # for categorical variables we need to transform one-hot encoding into label encoding
             if variable_metadata.is_categorical():
                 value = torch.argmax(value, dim=1)
-            # get the relative id of the value that should be kept
-            keep_value_id = variable_metadata.get_index_from_value(keep_value)
+            # reshape value
+            value = value.view(-1)
             # keep only the samples with the desired value for that variable
-            samples = samples[value == keep_value_id, :]
+            samples = samples[value == keep_value, :]
 
         # recalculate after filtering
         real_batch_size = len(samples)
