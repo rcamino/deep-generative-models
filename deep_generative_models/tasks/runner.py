@@ -1,6 +1,6 @@
 import argparse
 
-from deep_generative_models.arguments import InvalidArgument
+from deep_generative_models.arguments import InvalidArgument, MissingArgument
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.tasks.arae.train import TrainARAE
 from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
@@ -41,6 +41,8 @@ class TaskRunner(Task):
 
         try:
             task.validate_arguments(configuration.arguments)
+        except MissingArgument as e:
+            raise Exception("Missing argument '{}' while running task '{}'".format(e.name, configuration.task))
         except InvalidArgument as e:
             raise Exception("Invalid argument '{}' while running task '{}'".format(e.name, configuration.task))
 
