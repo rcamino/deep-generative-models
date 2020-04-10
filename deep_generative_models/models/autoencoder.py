@@ -21,8 +21,8 @@ class AutoEncoder(Module):
         self.decoder = decoder
 
     def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Dict[str, Tensor]:
-        outputs = self.encode(inputs)
-        outputs["reconstructed"] = self.decode(outputs["code"])
+        outputs = self.encode(inputs, condition=condition)
+        outputs["reconstructed"] = self.decode(outputs["code"], condition=condition)
         return outputs
 
     def encode(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Dict[str, Tensor]:
