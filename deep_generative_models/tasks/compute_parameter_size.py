@@ -2,10 +2,21 @@ import argparse
 
 from torch.nn import Module
 
+from deep_generative_models.architecture import Architecture
 from deep_generative_models.architecture_factory import create_architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.metadata import load_metadata
 from deep_generative_models.tasks.task import Task
+
+
+def compute_parameter_size(architecture: Architecture) -> int:
+    size = 0
+    for component in architecture.values():
+        if isinstance(component, Module):  # skip optimizers
+            for parameter in component.parameters():
+                if parameter.requires_grad:
+                    size += parameter.numel()
+    return size
 
 
 class ComputeParameterSize(Task):
@@ -13,14 +24,7 @@ class ComputeParameterSize(Task):
     def run(self, configuration: Configuration) -> None:
         metadata = load_metadata(configuration.metadata)
         architecture = create_architecture(metadata, load_configuration(configuration.architecture))
-
-        size = 0
-        for component in architecture.values():
-            if isinstance(component, Module):  # skip optimizers
-                for parameter in component.parameters():
-                    if parameter.requires_grad:
-                        size += parameter.numel()
-
+        size = compute_parameter_size(architecture)
         print(configuration.name, size)
 
 
