@@ -13,6 +13,7 @@ from deep_generative_models.commandline import create_parent_directories_if_need
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.architecture_factory import create_architecture
+from deep_generative_models.gpu import to_gpu_if_available
 from deep_generative_models.rng import seed_all
 from deep_generative_models.tasks.train_logger import TrainLogger
 from deep_generative_models.metadata import load_metadata, Metadata
@@ -70,7 +71,7 @@ class Train(Task, ArchitectureConfigurationValidator):
 
         datasets = Datasets()
         for dataset_name, dataset_path in configuration.data.items():
-            datasets[dataset_name] = torch.from_numpy(np.load(dataset_path)).float()
+            datasets[dataset_name] = to_gpu_if_available(torch.from_numpy(np.load(dataset_path)).float())
 
         metadata = load_metadata(configuration.metadata)
 

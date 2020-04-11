@@ -8,7 +8,7 @@ from deep_generative_models.architecture import ArchitectureConfigurationValidat
 from deep_generative_models.checkpoints import Checkpoints
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.architecture_factory import create_architecture
-from deep_generative_models.gpu import to_cpu_if_was_in_gpu
+from deep_generative_models.gpu import to_cpu_if_was_in_gpu, to_gpu_if_available
 from deep_generative_models.metadata import load_metadata
 from deep_generative_models.rng import seed_all
 from deep_generative_models.tasks.task import Task
@@ -46,11 +46,11 @@ class Encode(Task, ArchitectureConfigurationValidator):
         checkpoints.load_states(checkpoint["architecture"], architecture)
 
         # load the features
-        features = torch.from_numpy(np.load(configuration.features)).float()
+        features = to_gpu_if_available(torch.from_numpy(np.load(configuration.features)).float())
 
         # conditional
         if "labels" in configuration:
-            condition = torch.from_numpy(np.load(configuration.labels)).float()
+            condition = to_gpu_if_available(torch.from_numpy(np.load(configuration.labels)).float())
         else:
             condition = None
 
