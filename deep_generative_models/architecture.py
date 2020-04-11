@@ -22,16 +22,19 @@ class Architecture(Dictionary[Component]):
         self.__dict__["arguments"] = arguments  # to avoid the wrapped dictionary
 
     def to_gpu_if_available(self) -> None:
-        for name, module in self.items():
-            self[name] = to_gpu_if_available(module)
+        for name, component in self.items():
+            if isinstance(component, Module):  # skip optimizers
+                self[name] = to_gpu_if_available(component)
 
     def to_cpu_if_was_in_gpu(self) -> None:
-        for name, module in self.items():
-            self[name] = to_cpu_if_was_in_gpu(module)
+        for name, component in self.items():
+            if isinstance(component, Module):  # skip optimizers
+                self[name] = to_cpu_if_was_in_gpu(component)
 
     def initialize(self):
-        for module in self.values():
-            initialize_module(module)
+        for component in self.values():
+            if isinstance(component, Module):  # skip optimizers
+                initialize_module(component)
 
 
 class ArchitectureConfigurationValidator:
