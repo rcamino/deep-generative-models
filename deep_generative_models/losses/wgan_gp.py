@@ -4,7 +4,7 @@ from torch import Tensor, rand, ones_like
 from torch.autograd import grad
 
 from deep_generative_models.architecture import Architecture
-from deep_generative_models.gpu import to_cpu_if_was_in_gpu
+from deep_generative_models.gpu import to_cpu_if_was_in_gpu, to_gpu_if_available
 from deep_generative_models.losses.wgan import WGANCriticLoss
 
 
@@ -23,7 +23,7 @@ class WGANCriticLossWithGradientPenalty(WGANCriticLoss):
         # calculate gradient penalty
         alpha = rand(len(real_features), 1)
         alpha = alpha.expand(real_features.size())
-        alpha = to_cpu_if_was_in_gpu(alpha)
+        alpha = to_gpu_if_available(alpha)
 
         interpolates = alpha * real_features + ((1 - alpha) * fake_features)
         interpolates.requires_grad_()
