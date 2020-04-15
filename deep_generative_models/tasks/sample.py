@@ -8,7 +8,7 @@ from deep_generative_models.architecture import Architecture, ArchitectureConfig
 from deep_generative_models.checkpoints import Checkpoints
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.architecture_factory import create_architecture
-from deep_generative_models.gpu import to_cpu_if_was_in_gpu
+from deep_generative_models.gpu import to_cpu_if_was_in_gpu, to_gpu_if_available
 from deep_generative_models.metadata import load_metadata, Metadata, VariableMetadata
 from deep_generative_models.rng import seed_all
 from deep_generative_models.tasks.task import Task
@@ -171,7 +171,7 @@ class ConditionalSampling(SampleStrategy):
 
     def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                         sampler: Sample) -> Tensor:
-        condition = torch.ones(configuration.batch_size, dtype=torch.float) * self.condition
+        condition = to_gpu_if_available(torch.ones(configuration.batch_size, dtype=torch.float) * self.condition)
         return sampler.generate_sample(configuration, metadata, architecture, condition=condition)
 
 
