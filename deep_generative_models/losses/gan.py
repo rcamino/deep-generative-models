@@ -33,7 +33,7 @@ class GANDiscriminatorLoss(Module):
 
         # fake loss
         fake_predictions = architecture.discriminator(fake_features, condition=condition)
-        negative_labels = zeros(len(fake_predictions))
+        negative_labels = to_gpu_if_available(zeros(len(fake_predictions)))
         fake_loss = self.bce_loss(fake_predictions, negative_labels)
 
         # total loss
