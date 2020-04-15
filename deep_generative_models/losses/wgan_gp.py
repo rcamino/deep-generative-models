@@ -33,7 +33,7 @@ class WGANCriticLossWithGradientPenalty(WGANCriticLoss):
 
         gradients = grad(outputs=discriminator_interpolates,
                          inputs=interpolates,
-                         grad_outputs=to_cpu_if_was_in_gpu(ones_like(discriminator_interpolates)),
+                         grad_outputs=to_gpu_if_available(ones_like(discriminator_interpolates)),
                          create_graph=True,
                          retain_graph=True,
                          only_inputs=True)[0]
