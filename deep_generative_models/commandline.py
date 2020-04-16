@@ -57,7 +57,6 @@ class DelayedKeyboardInterrupt:
     def handler(self, signal_number, frame):
         # accumulate the received signal
         self.signals_received.append((signal_number, frame))
-        print('Delaying received signal', signal_number)
 
     def __exit__(self, exception_type, exception_value, traceback):
         # restore signal handlers
@@ -66,8 +65,6 @@ class DelayedKeyboardInterrupt:
 
         # resume received signals
         for signal_number, frame in self.signals_received:
-            print('Resuming received signal', signal_number)
-
             # get the old handler
             old_handler = self.old_handler_by_signal_number[signal_number]
 

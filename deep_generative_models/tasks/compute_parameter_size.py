@@ -25,7 +25,7 @@ class ComputeParameterSize(Task):
         metadata = load_metadata(configuration.metadata)
         architecture = create_architecture(metadata, load_configuration(configuration.architecture))
         size = compute_parameter_size(architecture)
-        print(configuration.name, size)
+        self.logger.info("{}: {:d}".format(configuration.name, size))
 
 
 if __name__ == '__main__':

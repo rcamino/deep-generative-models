@@ -94,7 +94,8 @@ class Train(Task, ArchitectureConfigurationValidator):
                 "epoch": 0
             }
 
-        logger = TrainLogger(create_parent_directories_if_needed(configuration.logs), checkpoint["epoch"] > 0)
+        log_path = create_parent_directories_if_needed(configuration.logs)
+        logger = TrainLogger(self.logger, log_path, checkpoint["epoch"] > 0)
 
         for epoch in range(checkpoint["epoch"] + 1, configuration.epochs + 1):
             # train discriminator and generator

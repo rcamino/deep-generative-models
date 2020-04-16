@@ -1,6 +1,7 @@
 import numpy as np
 
-from typing import Dict, Iterator, List
+from logging import Logger
+from typing import Dict, Iterator, List, Optional
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
@@ -14,9 +15,9 @@ class TrainGANWithAutoencoder(TrainGAN):
 
     autoencoder_train_task: TrainAutoEncoder
 
-    def __init__(self):
-        super(TrainGANWithAutoencoder, self).__init__()
-        self.autoencoder_train_task = TrainAutoEncoder()
+    def __init__(self, logger: Optional[Logger] = None):
+        super(TrainGANWithAutoencoder, self).__init__(logger=logger)
+        self.autoencoder_train_task = TrainAutoEncoder(logger=logger)
 
     def mandatory_arguments(self) -> List[str]:
         return super(TrainGANWithAutoencoder, self).mandatory_arguments() + ["autoencoder_steps"]
