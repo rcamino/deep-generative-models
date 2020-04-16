@@ -14,18 +14,32 @@ from deep_generative_models.models.feed_forward import FeedForward
 
 class DiscriminatorFactory(MultiComponentFactory):
     critic: bool
+    code: bool
 
-    def __init__(self, factory_by_name: Dict[str, ComponentFactory], critic: bool = False) -> None:
+    def __init__(self, factory_by_name: Dict[str, ComponentFactory], critic: bool = False, code: bool = False) -> None:
         super(DiscriminatorFactory, self).__init__(factory_by_name)
         self.critic = critic
+        self.code = code
+
+    def mandatory_architecture_arguments(self) -> List[str]:
+        if self.code:
+            return ["code_size"]
+        else:
+            return []
 
     def optional_arguments(self) -> List[str]:
         return ["hidden_layers"]
 
     def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         # create input layer
+        input_layer_configuration = {}
+        if self.code:
+            input_layer_configuration["input_size"] = architecture.arguments.code_size
+        else:
+            input_layer_configuration["input_size"] = metadata.get_num_features()
+
         input_layer = self.create_other("SingleInputLayer", architecture, metadata,
-                                        Configuration({"input_size": metadata.get_num_features()}))
+                                        Configuration(input_layer_configuration))
 
         # conditional
         if "conditional" in architecture.arguments:

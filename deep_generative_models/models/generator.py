@@ -1,10 +1,10 @@
-from typing import Any, List
+from typing import Any, List, Dict
 
 from torch.nn import ReLU
 
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.component_factory import MultiComponentFactory
+from deep_generative_models.component_factory import MultiComponentFactory, ComponentFactory
 from deep_generative_models.layers.conditional_layer import ConditionalLayer
 from deep_generative_models.layers.output_layer import OutputLayerFactory
 from deep_generative_models.metadata import Metadata
@@ -45,6 +45,17 @@ class GeneratorFactory(MultiComponentFactory):
 
 
 class SingleOutputGeneratorFactory(GeneratorFactory):
+    code: bool
+
+    def __init__(self, factory_by_name: Dict[str, ComponentFactory], code: bool = False) -> None:
+        super(SingleOutputGeneratorFactory, self).__init__(factory_by_name)
+        self.code = code
+
+    def mandatory_architecture_arguments(self) -> List[str]:
+        arguments = super(SingleOutputGeneratorFactory, self).mandatory_architecture_arguments()
+        if self.code:
+            arguments.append("code_size")
+        return arguments
 
     def optional_arguments(self) -> List[str]:
         return ["output_layer"] + super(SingleOutputGeneratorFactory, self).optional_arguments()
@@ -52,7 +63,11 @@ class SingleOutputGeneratorFactory(GeneratorFactory):
     def create_output_layer_factory(self, architecture: Architecture, metadata: Metadata,
                                     arguments: Configuration) -> OutputLayerFactory:
         # override the output layer size
-        output_layer_configuration = {"output_size": metadata.get_num_features()}
+        output_layer_configuration = {}
+        if self.code:
+            output_layer_configuration["output_size"] = architecture.arguments.code_size
+        else:
+            output_layer_configuration["output_size"] = metadata.get_num_features()
         # copy activation arguments only if defined
         if "output_layer" in arguments and "activation" in arguments.output_layer:
             output_layer_configuration["activation"] = arguments.output_layer.activation

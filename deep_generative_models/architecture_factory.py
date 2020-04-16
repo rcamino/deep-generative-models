@@ -86,14 +86,17 @@ factory_by_name["SingleInputEncoder"] = SingleInputEncoderFactory(factory_by_nam
 factory_by_name["MultiInputEncoder"] = MultiInputEncoderFactory(factory_by_name)
 factory_by_name["SingleOutputDecoder"] = SingleOutputDecoderFactory(factory_by_name)
 factory_by_name["MultiOutputDecoder"] = MultiOutputDecoderFactory(factory_by_name)
-factory_by_name["SingleOutputGenerator"] = SingleOutputGeneratorFactory(factory_by_name)
+factory_by_name["SingleOutputGenerator"] = SingleOutputGeneratorFactory(factory_by_name, code=False)
 factory_by_name["MultiOutputGenerator"] = MultiOutputGeneratorFactory(factory_by_name)
-factory_by_name["Discriminator"] = DiscriminatorFactory(factory_by_name, critic=False)
-factory_by_name["Critic"] = DiscriminatorFactory(factory_by_name, critic=True)
+factory_by_name["Discriminator"] = DiscriminatorFactory(factory_by_name, critic=False, code=False)
+factory_by_name["Critic"] = DiscriminatorFactory(factory_by_name, critic=True, code=False)
 factory_by_name["SingleVariableDeNoisingAutoencoder"] = DeNoisingAutoencoderFactory(factory_by_name, "SingleVariableAutoEncoder")
 factory_by_name["MultiVariableDeNoisingAutoencoder"] = DeNoisingAutoencoderFactory(factory_by_name, "MultiVariableAutoEncoder")
 factory_by_name["SingleVariableVAE"] = VAEFactory(factory_by_name, "SingleVariableAutoEncoder")
 factory_by_name["MultiVariableVAE"] = VAEFactory(factory_by_name, "MultiVariableAutoEncoder")
+factory_by_name["CodeGenerator"] = SingleOutputGeneratorFactory(factory_by_name, code=True)
+factory_by_name["CodeDiscriminator"] = DiscriminatorFactory(factory_by_name, critic=False, code=True)
+factory_by_name["CodeCritic"] = DiscriminatorFactory(factory_by_name, critic=True, code=True)
 
 
 def create_architecture(metadata: Metadata, configuration: Configuration) -> Architecture:
