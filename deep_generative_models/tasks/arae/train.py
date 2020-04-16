@@ -12,9 +12,13 @@ class TrainARAE(TrainGANWithAutoencoder):
     def train_discriminator_step(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                                  batch: Batch) -> float:
         encoded_batch = dict()
-        encoded_batch["features"] = architecture.autoencoder.encode(batch["features"])["code"]
         if "conditional" in architecture.arguments:
+            encode_result = architecture.autoencoder.encode(batch["features"], condition=batch["labels"])
+            encoded_batch["features"] = encode_result["code"]
             encoded_batch["labels"] = batch["labels"]
+        else:
+            encode_result = architecture.autoencoder.encode(batch["features"])
+            encoded_batch["features"] = encode_result["code"]
         return super(TrainARAE, self).train_discriminator_step(configuration, metadata, architecture, encoded_batch)
 
 
