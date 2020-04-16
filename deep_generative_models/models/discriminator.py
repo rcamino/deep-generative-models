@@ -6,6 +6,7 @@ from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.component_factory import MultiComponentFactory, ComponentFactory
 from deep_generative_models.layers.conditional_layer import ConditionalLayer
+from deep_generative_models.layers.mini_batch_averaging import MiniBatchAveraging
 from deep_generative_models.layers.single_output_layer import SingleOutputLayerFactory
 from deep_generative_models.layers.view import View
 from deep_generative_models.metadata import Metadata
@@ -28,7 +29,7 @@ class DiscriminatorFactory(MultiComponentFactory):
             return []
 
     def optional_arguments(self) -> List[str]:
-        return ["hidden_layers"]
+        return ["hidden_layers", "mini_batch_averaging"]
 
     def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         # create input layer
@@ -45,6 +46,10 @@ class DiscriminatorFactory(MultiComponentFactory):
         if "conditional" in architecture.arguments:
             # wrap the input layer with a conditional layer
             input_layer = ConditionalLayer(input_layer, metadata, **architecture.arguments.conditional)
+
+        # mini-batch averaging
+        if arguments.get("mini_batch_averaging", False):
+            input_layer = MiniBatchAveraging(input_layer)
 
         # create the hidden layers factory
         hidden_layers_factory = self.create_other("HiddenLayers", architecture, metadata,
