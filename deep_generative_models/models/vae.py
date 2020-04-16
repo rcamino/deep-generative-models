@@ -15,13 +15,13 @@ from deep_generative_models.models.autoencoder import AutoEncoder
 class VAE(Module):
     autoencoder: AutoEncoder
 
-    def __init__(self, autoencoder: AutoEncoder, split_size: int, code_size: int) -> None:
+    def __init__(self, autoencoder: AutoEncoder, code_size: int) -> None:
         super(VAE, self).__init__()
 
         self.autoencoder = autoencoder
 
-        self.mu_layer = Linear(split_size, code_size)
-        self.log_var_layer = Linear(split_size, code_size)
+        self.mu_layer = Linear(code_size, code_size)
+        self.log_var_layer = Linear(code_size, code_size)
 
     def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Dict[str, Tensor]:
         outputs = self.encode(inputs, condition=condition)
@@ -55,11 +55,11 @@ class VAEFactory(MultiComponentFactory):
         self.factory_name = factory_name
 
     def mandatory_architecture_arguments(self) -> List[str]:
-        return ["split_size", "code_size"]
+        return ["code_size"]
 
     def mandatory_arguments(self) -> List[str]:
         return ["encoder", "decoder"]
 
     def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         autoencoder = self.create_other(self.factory_name, architecture, metadata, arguments)
-        return VAE(autoencoder, architecture.arguments.split_size, architecture.arguments.code_size)
+        return VAE(autoencoder, architecture.arguments.code_size)
