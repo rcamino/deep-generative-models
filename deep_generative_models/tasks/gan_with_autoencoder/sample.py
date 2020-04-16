@@ -23,4 +23,4 @@ class SampleGANWithAutoEncoder(Sample):
         architecture.autoencoder.eval()
         architecture.generator.eval()
         code = architecture.generator(noise, condition=condition)
-        return architecture.autoencoder.decode(code)
+        return architecture.autoencoder.decode(code, condition=condition)
