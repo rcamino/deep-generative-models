@@ -29,7 +29,7 @@ class Sample(Task, ArchitectureConfigurationValidator):
         ]
 
     def optional_arguments(self) -> List[str]:
-        return ["seed", "strategy"]
+        return super(Sample, self).optional_arguments() + ["seed", "strategy"]
 
     def run(self, configuration: Configuration) -> None:
         seed_all(configuration.get("seed"))

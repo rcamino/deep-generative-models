@@ -26,7 +26,7 @@ class Encode(Task, ArchitectureConfigurationValidator):
         ]
 
     def optional_arguments(self) -> List[str]:
-        return ["seed", "labels"]
+        return super(Encode, self).optional_arguments() + ["seed", "labels"]
 
     def mandatory_architecture_components(self) -> List[str]:
         return ["autoencoder"]

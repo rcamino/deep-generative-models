@@ -60,7 +60,7 @@ class Train(Task, ArchitectureConfigurationValidator):
         ]
 
     def optional_arguments(self) -> List[str]:
-        return ["seed"]
+        return super(Train, self).optional_arguments() + ["seed"]
 
     @staticmethod
     def iterate_datasets(configuration: Configuration, datasets: Datasets):

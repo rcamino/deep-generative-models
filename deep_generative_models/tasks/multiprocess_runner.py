@@ -82,7 +82,7 @@ class MultiProcessTaskRunner(Task):
         return ["workers", "inputs", "output"]
 
     def optional_arguments(self) -> List[str]:
-        return ["log_every"]
+        return super(MultiProcessTaskRunner, self).optional_arguments() + ["log_every"]
 
     def run(self, configuration: Configuration) -> None:
         read_queue = Queue()

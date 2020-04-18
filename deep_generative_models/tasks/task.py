@@ -2,7 +2,7 @@ import logging
 import time
 
 from logging import Logger
-from typing import Optional
+from typing import Optional, List
 
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.arguments import ArgumentValidator
@@ -14,6 +14,9 @@ class Task(ArgumentValidator):
     def __init__(self, logger: Optional[Logger] = None):
         self._logger = logger
 
+    def optional_arguments(self) -> List[str]:
+        return ["logging"]
+
     @property
     def logger(self) -> Logger:
         if self._logger is None:
@@ -21,8 +24,7 @@ class Task(ArgumentValidator):
         return self._logger
 
     def timed_run(self, configuration: Configuration) -> None:
-        if self._logger is None:
-            logging.basicConfig(**configuration.get("logging", default={}, transform_default=False))
+        logging.basicConfig(**configuration.get("logging", default={}, transform_default=False))
 
         self.logger.info("Starting task...")
 
