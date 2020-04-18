@@ -46,13 +46,13 @@ class SimpleMultiProcessTaskWorker(MultiProcessTaskWorker):
 
     @classmethod
     def output_fields(cls) -> List[str]:
-        return ["has_error", "error"]
+        return ["has_error", "error", "worker"]
 
     def run(self, configuration: Configuration) -> None:
         from deep_generative_models.tasks.runner import TaskRunner  # import here to avoid circular dependency
         task_runner = TaskRunner()
 
-        output = {"has_error": False}
+        output = {"has_error": False, "worker": self.worker_number}
 
         try:
             task_runner.run(configuration)
