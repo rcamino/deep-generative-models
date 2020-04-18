@@ -1,6 +1,7 @@
 import argparse
 import csv
 import time
+import torch
 
 from multiprocessing import Process, Queue, log_to_stderr
 
@@ -46,7 +47,7 @@ class SimpleMultiProcessTaskWorker(MultiProcessTaskWorker):
 
     @classmethod
     def output_fields(cls) -> List[str]:
-        return ["has_error", "error", "worker"]
+        return ["has_error", "error", "gpu_device", "worker"]
 
     def run(self, configuration: Configuration) -> None:
         from deep_generative_models.tasks.runner import TaskRunner  # import here to avoid circular dependency
@@ -55,7 +56,12 @@ class SimpleMultiProcessTaskWorker(MultiProcessTaskWorker):
         output = {"has_error": False, "worker": self.worker_number}
 
         try:
-            task_runner.run(configuration)
+            if "gpu_device" in self.worker_configuration:
+                output["gpu_device"] = self.worker_configuration.gpu_device
+                with torch.cuda.device(self.worker_configuration.gpu_device):
+                    task_runner.run(configuration)
+            else:
+                task_runner.run(configuration)
         except Exception as e:
             output["has_error"] = True
             output["error"] = repr(e)
