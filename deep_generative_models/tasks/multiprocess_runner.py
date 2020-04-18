@@ -47,12 +47,13 @@ class SimpleMultiProcessTaskWorker(MultiProcessTaskWorker):
 
     @classmethod
     def output_fields(cls) -> List[str]:
-        return ["has_error", "error", "gpu_device", "worker"]
+        return ["has_error", "error", "gpu_device", "worker", "time"]
 
     def run(self, configuration: Configuration) -> None:
         from deep_generative_models.tasks.runner import TaskRunner  # import here to avoid circular dependency
         task_runner = TaskRunner()
 
+        start_time = time.time()
         output = {"has_error": False, "worker": self.worker_number}
 
         try:
@@ -66,6 +67,7 @@ class SimpleMultiProcessTaskWorker(MultiProcessTaskWorker):
             output["has_error"] = True
             output["error"] = repr(e)
 
+        output["time"] = time.time() - start_time
         self.send_output(output)
 
 
