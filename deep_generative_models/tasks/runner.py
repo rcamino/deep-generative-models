@@ -9,6 +9,7 @@ from deep_generative_models.tasks.gan.sample import SampleGAN
 from deep_generative_models.tasks.gan.train import TrainGAN
 from deep_generative_models.tasks.gan_with_autoencoder.sample import SampleGANWithAutoEncoder
 from deep_generative_models.tasks.medgan.train import TrainMedGAN
+from deep_generative_models.tasks.multiprocess_runner import MultiProcessTaskRunner, SimpleMultiProcessTaskWorker
 from deep_generative_models.tasks.serial_runner import SerialTaskRunner
 from deep_generative_models.tasks.task import Task
 from deep_generative_models.tasks.vae.sample import SampleVAE
@@ -35,7 +36,8 @@ task_by_name = {
     "EncodeWithVAE": Encode(),
 
     # others
-    "SerialTaskRunner": SerialTaskRunner()
+    "SerialTaskRunner": SerialTaskRunner(),
+    "MultiProcessTaskRunner": MultiProcessTaskRunner(SimpleMultiProcessTaskWorker)
 }
 
 
