@@ -25,9 +25,24 @@ class Task(ArgumentValidator):
             logging.basicConfig(**configuration.get("logging", default={}, transform_default=False))
 
         self.logger.info("Starting task...")
+
         start_time = time.time()
+
         self.run(configuration)
-        self.logger.info("Task ended in {:02f}s.".format(time.time() - start_time))
+
+        elapsed_time = time.time() - start_time
+        elapsed_time_unit = "seconds"
+        if elapsed_time > 60:
+            elapsed_time /= 60
+            elapsed_time_unit = "minutes"
+        if elapsed_time > 60:
+            elapsed_time /= 60
+            elapsed_time_unit = "hours"
+        if elapsed_time > 24:
+            elapsed_time /= 24
+            elapsed_time_unit = "days"
+
+        self.logger.info("Task ended in {:02f} {}.".format(elapsed_time, elapsed_time_unit))
 
     def run(self, configuration: Configuration) -> None:
         raise NotImplementedError
