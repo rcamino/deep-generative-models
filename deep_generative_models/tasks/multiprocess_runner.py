@@ -92,9 +92,9 @@ class MultiProcessTaskRunner(Task):
         inputs_queue = Queue()
         outputs_queue = Queue()
 
-        # queue all the inputs
-        for inputs in configuration.inputs:
-            inputs_queue.put(inputs.to_dict())
+        # queue all the inputs unwrapped
+        for inputs in configuration.get("inputs", unwrap=True):
+            inputs_queue.put(inputs)
 
         # outputs worker: we will write in the output file using only one process and a queue
         output_path = create_parent_directories_if_needed(configuration.output)

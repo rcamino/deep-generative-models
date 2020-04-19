@@ -40,9 +40,13 @@ class Configuration(Dictionary[Any]):
         for name, value in wrapped.items():
             self[name] = self._wrap_recursively(value)
 
-    def get(self, name: str, default: Optional[Any] = None, transform_default: bool = True) -> Any:
+    def get(self, name: str, default: Optional[Any] = None, transform_default: bool = True,
+            unwrap: bool = False) -> Any:
         if name in self:
-            return self[name]
+            if unwrap:
+                return self._unwrap_recursively(self[name])
+            else:
+                return self[name]
         elif transform_default:
             return self._wrap_recursively(default)
         else:
@@ -54,9 +58,6 @@ class Configuration(Dictionary[Any]):
             if name in self:
                 defined[name] = self[name]
         return defined
-
-    def to_dict(self) -> dict:
-        return self._unwrap_recursively(self)
 
 
 def load_configuration(path: str) -> Configuration:
