@@ -19,6 +19,20 @@ class Configuration(Dictionary[Any]):
         else:
             raise Exception("Unexpected configuration value type '{}'.".format(str(type(value))))
 
+    @classmethod
+    def _unwrap_recursively(cls, value: Any) -> Any:
+        if value is None or type(value) in [str, int, float, bool]:
+            return value
+        if type(value) == Configuration:
+            unwrapped = {}
+            for key, child_value in value.items():
+                unwrapped[key] = cls._unwrap_recursively(child_value)
+            return unwrapped
+        if type(value) == list:
+            return [cls._unwrap_recursively(child_value) for child_value in value]
+        else:
+            raise Exception("Unexpected configuration value type '{}'.".format(str(type(value))))
+
     def __init__(self, wrapped: Optional[Dict[str, Any]] = None) -> None:
         # don't send the wrapped values yet
         super(Configuration, self).__init__()
@@ -40,6 +54,9 @@ class Configuration(Dictionary[Any]):
             if name in self:
                 defined[name] = self[name]
         return defined
+
+    def to_dict(self) -> dict:
+        return self._unwrap_recursively(self)
 
 
 def load_configuration(path: str) -> Configuration:
