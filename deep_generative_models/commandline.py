@@ -22,7 +22,7 @@ def parse_dict(s: str, separator: str = ",", key_value_separator: str = ":", val
 
 def create_parent_directories_if_needed(file_path: str) -> str:
     directory_path = os.path.dirname(file_path)
-    if not os.path.exists(directory_path):
+    if directory_path != "" and not os.path.exists(directory_path):
         try:
             os.makedirs(directory_path)
         except OSError as e:
