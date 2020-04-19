@@ -3,10 +3,10 @@ import csv
 import time
 import torch
 
+from logging import Logger
 from multiprocessing import Process, Queue, log_to_stderr
-
 from queue import Empty
-from typing import Type, List
+from typing import Type, List, Any
 
 from deep_generative_models.commandline import create_parent_directories_if_needed
 from deep_generative_models.configuration import Configuration, load_configuration
@@ -17,46 +17,50 @@ EVENT_TYPE_EXIT = "exit"
 EVENT_TYPE_WRITE = "write"
 
 
-logger = log_to_stderr()
+multiprocessing_logger = log_to_stderr()
 
 
-class MultiProcessTaskWorker(Task):
-    write_queue: Queue
+class MultiProcessTaskWorker:
+    outputs_queue: Queue
     worker_number: int
     worker_configuration: Configuration
+    logger: Logger
 
     @classmethod
     def output_fields(cls) -> List[str]:
         raise NotImplementedError
 
-    def __init__(self, write_queue: Queue, worker_number: int, worker_configuration: Configuration) -> None:
-        super(MultiProcessTaskWorker, self).__init__(logger)
-
-        self.write_queue = write_queue
+    def __init__(self, outputs_queue: Queue, worker_number: int, worker_configuration: Configuration) -> None:
+        self.outputs_queue = outputs_queue
         self.worker_number = worker_number
         self.worker_configuration = worker_configuration
 
-    def send_output(self, output: dict) -> None:
-        self.write_queue.put({"event_type": EVENT_TYPE_WRITE, "row": output})
+        self.logger = multiprocessing_logger
 
-    def run(self, configuration: Configuration) -> None:
+    def send_output(self, output: dict) -> None:
+        self.outputs_queue.put({"event_type": EVENT_TYPE_WRITE, "row": output})
+
+    def process(self, inputs: Any) -> None:
         raise NotImplementedError
 
 
-class SimpleMultiProcessTaskWorker(MultiProcessTaskWorker):
+class TaskRunnerWorker(MultiProcessTaskWorker):
 
     @classmethod
     def output_fields(cls) -> List[str]:
         return ["has_error", "error", "gpu_device", "worker", "time"]
 
-    def run(self, configuration: Configuration) -> None:
+    def process(self, inputs: Any) -> None:
         from deep_generative_models.tasks.runner import TaskRunner  # import here to avoid circular dependency
-        task_runner = TaskRunner()
+        task_runner = TaskRunner(logger=self.logger)
 
         start_time = time.time()
         output = {"has_error": False, "worker": self.worker_number}
 
         try:
+            assert type(inputs) == str, "Inputs must be configuration paths."
+            configuration = load_configuration(inputs)
+
             if "gpu_device" in self.worker_configuration:
                 output["gpu_device"] = self.worker_configuration.gpu_device
                 with torch.cuda.device(self.worker_configuration.gpu_device):
@@ -85,23 +89,23 @@ class MultiProcessTaskRunner(Task):
         return super(MultiProcessTaskRunner, self).optional_arguments() + ["log_every"]
 
     def run(self, configuration: Configuration) -> None:
-        read_queue = Queue()
-        write_queue = Queue()
+        inputs_queue = Queue()
+        outputs_queue = Queue()
 
-        # queue all the task configurations
-        for task_configuration_path in configuration.inputs:
-            read_queue.put(task_configuration_path)
+        # queue all the inputs
+        for inputs in configuration.inputs:
+            inputs_queue.put(inputs)
 
-        # write worker: we will write in the output file using only one process and a queue
+        # outputs worker: we will write in the output file using only one process and a queue
         output_path = create_parent_directories_if_needed(configuration.output)
         output_fields = self.task_worker_class.output_fields()
-        write_process = Process(target=write_worker, args=(write_queue, output_path, output_fields))
-        write_process.start()
+        output_process = Process(target=write_worker, args=(outputs_queue, output_path, output_fields))
+        output_process.start()
 
         # additional process to log the remaining tasks
         count_process = Process(
             target=count_worker,
-            args=(read_queue, configuration.get("log_every", 5)))
+            args=(inputs_queue, configuration.get("log_every", 5)))
         count_process.start()
         # we don't need to join this one
 
@@ -117,67 +121,67 @@ class MultiProcessTaskRunner(Task):
         for worker_number, worker_configuration in enumerate(worker_configurations):
             worker_process = Process(
                 target=task_worker_wrapper,
-                args=(self.task_worker_class, worker_number, worker_configuration, read_queue, write_queue))
+                args=(self.task_worker_class, worker_number, worker_configuration, inputs_queue, outputs_queue))
             worker_process.start()
             worker_processes.append(worker_process)
 
         # wait for all the workers to finish
-        logger.info("Waiting for the workers...")
+        multiprocessing_logger.info("Waiting for the workers...")
         for worker_process in worker_processes:
             worker_process.join()
-        logger.info("Workers finished.")
+        multiprocessing_logger.info("Workers finished.")
 
         # the workers stopped queuing rows
         # add to stop event for the writing worker
-        write_queue.put({"event_type": EVENT_TYPE_EXIT})
+        outputs_queue.put({"event_type": EVENT_TYPE_EXIT})
 
         # wait until the writing worker actually stops
-        write_process.join()
+        output_process.join()
 
 
 def task_worker_wrapper(task_worker_class: Type[MultiProcessTaskWorker],
                         worker_number: int,
                         worker_configuration: Configuration,
-                        read_queue: Queue,
-                        write_queue: Queue
+                        inputs_queue: Queue,
+                        outputs_queue: Queue
                         ) -> None:
-    logger.info("Worker {:d} started...".format(worker_number))
+    multiprocessing_logger.info("Worker {:d} started...".format(worker_number))
 
     # create the task worker
-    task_worker = task_worker_class(write_queue, worker_number, worker_configuration)
+    task_worker = task_worker_class(outputs_queue, worker_number, worker_configuration)
 
-    # while there are more tasks in the queue
+    # while there are more inputs in the queue
     while True:
-        # get the next task if possible
+        # get the next input if possible
         try:
-            task_configuration_path = read_queue.get(block=True, timeout=1)
-            logger.debug("Next task on worker {:d}".format(worker_number))
+            inputs = inputs_queue.get(block=True, timeout=1)
+            multiprocessing_logger.debug("Next inputs for worker {:d}".format(worker_number))
 
-        # no more tasks in the queue
+        # no more inputs in the queue
         except Empty:
-            logger.info("No more tasks for worker {:d}.".format(worker_number))
+            multiprocessing_logger.info("No more inputs for worker {:d}.".format(worker_number))
             break
 
-        # run the next task
-        task_worker.run(load_configuration(task_configuration_path))
+        # process the next input
+        task_worker.process(inputs)
 
-    logger.info("Worker {:d} finished.".format(worker_number))
+    multiprocessing_logger.info("Worker {:d} finished.".format(worker_number))
 
 
-def count_worker(queue: Queue, log_every: int = 5):
-    size = queue.qsize()
+def count_worker(inputs_queue: Queue, log_every: int = 5):
+    size = inputs_queue.qsize()
     last_size = size
-    logger.info("{:d} remaining...".format(size))
+    multiprocessing_logger.info("{:d} inputs remaining...".format(size))
     while size > 0:
         time.sleep(log_every)
-        size = queue.qsize()
+        size = inputs_queue.qsize()
         processed = last_size - size
-        logger.info("{:d} processed, {:d} remaining...".format(processed, size))
+        multiprocessing_logger.info("{:d} inputs processed, {:d} inputs remaining...".format(processed, size))
         last_size = size
 
 
-def write_worker(queue: Queue, file_path: str, field_names: List[str]):
-    logger.info("Writing started...")
+def write_worker(outputs_queue: Queue, file_path: str, field_names: List[str]):
+    multiprocessing_logger.info("Output started...")
 
     f = open(file_path, "w")
 
@@ -186,7 +190,7 @@ def write_worker(queue: Queue, file_path: str, field_names: List[str]):
 
     while True:
         # wait until there is a new event
-        event = queue.get(block=True)
+        event = outputs_queue.get(block=True)
 
         # write event
         if event["event_type"] == EVENT_TYPE_WRITE:
@@ -201,7 +205,7 @@ def write_worker(queue: Queue, file_path: str, field_names: List[str]):
 
     f.close()
 
-    logger.info("Writing finished.")
+    multiprocessing_logger.info("Output finished.")
 
 
 if __name__ == '__main__':
@@ -209,4 +213,4 @@ if __name__ == '__main__':
     options_parser.add_argument("configuration", type=str, help="Configuration json file.")
     options = options_parser.parse_args()
 
-    MultiProcessTaskRunner(SimpleMultiProcessTaskWorker).timed_run(load_configuration(options.configuration))
+    MultiProcessTaskRunner(TaskRunnerWorker).timed_run(load_configuration(options.configuration))
