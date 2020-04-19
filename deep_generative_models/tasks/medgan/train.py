@@ -13,7 +13,7 @@ class TrainMedGAN(TrainGANWithAutoencoder):
 
     def sample_fake(self, architecture: Architecture, size: int, condition: Optional[Tensor] = None) -> Tensor:
         fake_code = super(TrainMedGAN, self).sample_fake(architecture, size, condition=condition)
-        return architecture.autoencoder.decode(fake_code)
+        return architecture.autoencoder.decode(fake_code, condition=condition)
 
 
 if __name__ == '__main__':
