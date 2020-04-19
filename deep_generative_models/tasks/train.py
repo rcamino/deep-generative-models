@@ -52,10 +52,9 @@ class Train(Task, ArchitectureConfigurationValidator):
             "data",
             "metadata",
             "architecture",
-            "checkpoint",
+            "checkpoints",
             "logs",
             "batch_size",
-            "max_checkpoint_delay",
             "epochs"
         ]
 
@@ -80,19 +79,33 @@ class Train(Task, ArchitectureConfigurationValidator):
         architecture = create_architecture(metadata, architecture_configuration)
         architecture.to_gpu_if_available()
 
-        create_parent_directories_if_needed(configuration.checkpoint)
+        create_parent_directories_if_needed(configuration.checkpoints.output)
         checkpoints = Checkpoints()
 
-        if checkpoints.exists(configuration.checkpoint):
-            checkpoint = checkpoints.load(configuration.checkpoint)
-            checkpoints.load_states(checkpoint["architecture"], architecture)
-        else:
+        # no input checkpoint by default
+        checkpoint = None
+
+        # continue from an output checkpoint (has priority over input checkpoint)
+        if configuration.checkpoints.get("continue_from_output", default=False) \
+                and checkpoints.exists(configuration.checkpoints.output):
+            checkpoint = checkpoints.load(configuration.checkpoints.output)
+        # continue from an input checkpoint
+        elif "input" in configuration.checkpoints:
+            checkpoint = checkpoints.load(configuration.checkpoints.input)
+            if configuration.checkpoints.get("ignore_input_epochs", default=False):
+                checkpoint["epoch"] = 0
+
+        # if there is no starting checkpoint then initialize
+        if checkpoint is None:
             architecture.initialize()
 
             checkpoint = {
                 "architecture": checkpoints.extract_states(architecture),
                 "epoch": 0
             }
+        # if there is a starting checkpoint then load it
+        else:
+            checkpoints.load_states(checkpoint["architecture"], architecture)
 
         log_path = create_parent_directories_if_needed(configuration.logs)
         logger = TrainLogger(self.logger, log_path, checkpoint["epoch"] > 0)
@@ -111,10 +124,10 @@ class Train(Task, ArchitectureConfigurationValidator):
             checkpoint["epoch"] = epoch
 
             # save checkpoint
-            checkpoints.delayed_save(checkpoint, configuration.checkpoint, configuration.max_checkpoint_delay)
+            checkpoints.delayed_save(checkpoint, configuration.checkpoints.output, configuration.checkpoints.max_delay)
 
         # force save of last checkpoint
-        checkpoints.save(checkpoint, configuration.checkpoint)
+        checkpoints.save(checkpoint, configuration.checkpoints.output)
 
         # finish
         logger.close()
