@@ -48,7 +48,7 @@ class TaskRunnerWorker(MultiProcessTaskWorker):
 
     @classmethod
     def output_fields(cls) -> List[str]:
-        return ["has_error", "error", "gpu_device", "worker", "time"]
+        return ["path", "has_error", "error", "gpu_device", "worker", "time"]
 
     def process(self, inputs: Any) -> None:
         from deep_generative_models.tasks.runner import TaskRunner  # import here to avoid circular dependency
@@ -59,6 +59,7 @@ class TaskRunnerWorker(MultiProcessTaskWorker):
 
         try:
             assert type(inputs) == str, "Inputs must be configuration paths."
+            output["path"] = inputs
             configuration = load_configuration(inputs)
 
             if "gpu_device" in self.worker_configuration:
