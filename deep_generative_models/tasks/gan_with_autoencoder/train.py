@@ -62,9 +62,16 @@ class TrainGANWithAutoencoder(TrainGAN):
                 break
 
         # loss aggregation
-        losses = {"autoencoder_train_mean_loss": np.mean(losses_by_batch["autoencoder"]).item(),
-                  "generator_train_mean_loss": np.mean(losses_by_batch["generator"]).item(),
-                  "discriminator_train_mean_loss": np.mean(losses_by_batch["discriminator"]).item()}
+        losses = {}
+
+        if configuration.autoencoder_steps > 0:
+            losses["autoencoder_train_mean_loss"] = np.mean(losses_by_batch["autoencoder"]).item()
+
+        if configuration.discriminator_steps > 0:
+            losses["discriminator_train_mean_loss"] = np.mean(losses_by_batch["discriminator"]).item()
+
+        if configuration.generator_steps > 0:
+            losses["generator_train_mean_loss"] = np.mean(losses_by_batch["generator"]).item()
 
         # validation
         architecture.autoencoder.eval()
