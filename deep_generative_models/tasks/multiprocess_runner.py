@@ -172,12 +172,20 @@ def task_worker_wrapper(task_worker_class: Type[MultiProcessTaskWorker],
 def count_worker(inputs_queue: Queue, log_every: int = 5):
     size = inputs_queue.qsize()
     last_size = size
-    multiprocessing_logger.info("{:d} inputs remaining...".format(size))
+    multiprocessing_logger.info("{:d} inputs in queue...".format(size))
     while size > 0:
+        # wait for next check
         time.sleep(log_every)
+
+        # compute how many inputs were processed from last time
         size = inputs_queue.qsize()
         processed = last_size - size
-        multiprocessing_logger.info("{:d} inputs processed, {:d} inputs remaining...".format(processed, size))
+
+        # log only if there are changes
+        if processed > 0:
+            multiprocessing_logger.info("{:d} inputs removed from the queue, {:d} inputs still in the queue..."
+                                        .format(processed, size))
+
         last_size = size
 
 
