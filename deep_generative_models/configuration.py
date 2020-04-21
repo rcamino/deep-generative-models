@@ -37,8 +37,9 @@ class Configuration(Dictionary[Any]):
         # don't send the wrapped values yet
         super(Configuration, self).__init__()
         # wrap and add recursively now that the dictionary is initialized
-        for name, value in wrapped.items():
-            self[name] = self._wrap_recursively(value)
+        if wrapped is not None:
+            for name, value in wrapped.items():
+                self[name] = self._wrap_recursively(value)
 
     def get(self, name: str, default: Optional[Any] = None, transform_default: bool = True,
             unwrap: bool = False) -> Any:
