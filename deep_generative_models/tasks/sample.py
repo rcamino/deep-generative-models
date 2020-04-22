@@ -9,11 +9,12 @@ from deep_generative_models.checkpoints import Checkpoints
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.architecture_factory import create_architecture
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu, to_gpu_if_available
-from deep_generative_models.metadata import load_metadata, Metadata, VariableMetadata
+from deep_generative_models.metadata import load_metadata, Metadata
 from deep_generative_models.rng import seed_all
 from deep_generative_models.tasks.task import Task
 
 from torch import Tensor
+from torch.nn.functional import one_hot
 
 
 class Sample(Task, ArchitectureConfigurationValidator):
@@ -45,7 +46,7 @@ class Sample(Task, ArchitectureConfigurationValidator):
         checkpoint = checkpoints.load(configuration.checkpoint)
         checkpoints.load_states(checkpoint["architecture"], architecture)
 
-        samples = np.zeros((configuration.sample_size, metadata.get_num_features()), dtype=np.float32)
+        samples = []
 
         # create the strategy if defined
         if "strategy" in configuration:
@@ -72,7 +73,7 @@ class Sample(Task, ArchitectureConfigurationValidator):
             # do not calculate gradients
             with torch.no_grad():
                 # sample from the model (depending on the strategy)
-                batch_samples = strategy.generate_sample(configuration, metadata, architecture, self)
+                batch_samples = strategy.generate_discrete_sample(configuration, metadata, architecture, self)
 
             # transform back the samples
             batch_samples = to_cpu_if_was_in_gpu(batch_samples)
@@ -83,12 +84,37 @@ class Sample(Task, ArchitectureConfigurationValidator):
                 # do not go further than the desired number of samples
                 end = min(start + len(batch_samples), configuration.sample_size)
                 # limit the samples taken from the batch based on what is missing
-                samples[start:end, :] = batch_samples[:min(len(batch_samples), end - start), :]
+                batch_samples = batch_samples[:min(len(batch_samples), end - start), :]
+                # if it is the first batch
+                if len(samples) == 0:
+                    samples = batch_samples
+                # if its not the first batch we have to concatenate
+                else:
+                    samples = np.concatenate((samples, batch_samples), axis=0)
                 # move to next batch
                 start = end
 
         # save the samples
         np.save(configuration.output, samples)
+
+    def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                                 condition: Optional[Tensor] = None) -> Tensor:
+        sample = self.generate_sample(configuration, metadata, architecture, condition=condition)
+        for variable_metadata in metadata.get_by_independent_variable():
+            index = variable_metadata.get_feature_index()
+            size = variable_metadata.get_size()
+            old_value = sample[:, index:index + size]
+            # discrete binary
+            if variable_metadata.is_binary():
+                new_value = (old_value.view(-1) > .5).view(-1, 1)
+            # discrete categorical
+            elif variable_metadata.is_categorical():
+                new_value = one_hot(old_value.argmax(dim=1), num_classes=size)
+            # leave numerical variables the untouched
+            else:
+                new_value = old_value
+            sample[:, index:index + size] = new_value
+        return sample
 
     def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                         condition: Optional[Tensor] = None) -> Tensor:
@@ -97,16 +123,16 @@ class Sample(Task, ArchitectureConfigurationValidator):
 
 class SampleStrategy:
 
-    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                        sampler: Sample) -> Tensor:
+    def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                                 sampler: Sample) -> Tensor:
         raise NotImplementedError
 
 
 class DefaultSampleStrategy(SampleStrategy):
 
-    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                        sampler: Sample) -> Tensor:
-        return sampler.generate_sample(configuration, metadata, architecture)
+    def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                                 sampler: Sample) -> Tensor:
+        return sampler.generate_discrete_sample(configuration, metadata, architecture)
 
 
 class RejectionSampling(SampleStrategy):
@@ -122,19 +148,20 @@ class RejectionSampling(SampleStrategy):
         self.iterations = 0
         self.real_sample_size = 0
 
-    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                        sampler: Sample) -> Tensor:
+    def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                                 sampler: Sample) -> Tensor:
         # generate the samples
-        samples = sampler.generate_sample(configuration, metadata, architecture)
+        samples = sampler.generate_discrete_sample(configuration, metadata, architecture)
 
         # for each desired variable value
+        removed_dimensions = 0
         for variable, keep_value in self.keep_values.items():
             # check that the variable is either categorical or binary
             variable_metadata = metadata.get_independent_variable_by_name(variable)
             if not (variable_metadata.is_categorical() or variable_metadata.is_binary()):
                 raise Exception("Cannot reject variable '{}' because it has an invalid type.".format(variable))
             # separate the variable
-            index = variable_metadata.get_feature_index()
+            index = variable_metadata.get_feature_index() - removed_dimensions
             value = samples[:, index:index + variable_metadata.get_size()]
             # for categorical variables we need to transform one-hot encoding into label encoding
             if variable_metadata.is_categorical():
@@ -143,6 +170,11 @@ class RejectionSampling(SampleStrategy):
             value = value.view(-1)
             # keep only the samples with the desired value for that variable
             samples = samples[value == keep_value, :]
+            # remove the variable
+            left = samples[:, :index]
+            right = samples[:, index + variable_metadata.get_size():]
+            samples = torch.cat((left, right), dim=1)
+            removed_dimensions += variable_metadata.get_size()
 
         # recalculate after filtering
         real_batch_size = len(samples)
@@ -169,10 +201,10 @@ class ConditionalSampling(SampleStrategy):
     def __init__(self, condition: int):
         self.condition = condition
 
-    def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                        sampler: Sample) -> Tensor:
+    def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+                                 sampler: Sample) -> Tensor:
         condition = to_gpu_if_available(torch.ones(configuration.batch_size, dtype=torch.float) * self.condition)
-        return sampler.generate_sample(configuration, metadata, architecture, condition=condition)
+        return sampler.generate_discrete_sample(configuration, metadata, architecture, condition=condition)
 
 
 strategy_class_by_name = {
