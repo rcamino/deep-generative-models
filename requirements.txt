@@ -1,2 +1,5 @@
+imblearn
 numpy
+sklearn
 torch
+xgboost
