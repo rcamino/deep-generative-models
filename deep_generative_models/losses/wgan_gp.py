@@ -1,5 +1,3 @@
-from typing import Optional
-
 from torch import Tensor, rand, ones_like
 from torch.autograd import grad
 
@@ -16,9 +14,9 @@ class WGANCriticLossWithGradientPenalty(WGANCriticLoss):
         self.weight = weight
 
     def forward(self, architecture: Architecture, real_features: Tensor, fake_features: Tensor,
-                condition: Optional[Tensor] = None) -> Tensor:
+                **additional_inputs: Tensor) -> Tensor:
         loss = super(WGANCriticLossWithGradientPenalty, self).forward(
-            architecture, real_features, fake_features, condition=condition)
+            architecture, real_features, fake_features, **additional_inputs)
 
         # calculate gradient penalty
         alpha = rand(len(real_features), 1)
@@ -29,7 +27,7 @@ class WGANCriticLossWithGradientPenalty(WGANCriticLoss):
         interpolates.requires_grad_()
 
         # we do not interpolate the conditions because they are the same for fake and real features
-        discriminator_interpolates = architecture.discriminator(interpolates, condition=condition)
+        discriminator_interpolates = architecture.discriminator(interpolates, **additional_inputs)
 
         gradients = grad(outputs=discriminator_interpolates,
                          inputs=interpolates,

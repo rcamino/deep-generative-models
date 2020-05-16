@@ -1,6 +1,6 @@
 import torch
 
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 import numpy as np
 
@@ -98,8 +98,8 @@ class Sample(Task, ArchitectureConfigurationValidator):
         np.save(configuration.output, samples)
 
     def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                 condition: Optional[Tensor] = None) -> Tensor:
-        sample = self.generate_sample(configuration, metadata, architecture, condition=condition)
+                                 **additional_inputs: Tensor) -> Tensor:
+        sample = self.generate_sample(configuration, metadata, architecture, **additional_inputs)
         for variable_metadata in metadata.get_by_independent_variable():
             index = variable_metadata.get_feature_index()
             size = variable_metadata.get_size()
@@ -117,7 +117,7 @@ class Sample(Task, ArchitectureConfigurationValidator):
         return sample
 
     def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                        condition: Optional[Tensor] = None) -> Tensor:
+                        **additional_inputs: Tensor) -> Tensor:
         raise NotImplementedError
 
 

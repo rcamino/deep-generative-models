@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, List
 
 from torch import Tensor
 
@@ -16,9 +16,12 @@ class SingleInputLayer(InputLayer):
         super(SingleInputLayer, self).__init__()
         self.output_size = input_size
 
-    def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Tensor:
-        if condition is not None:
-            raise Exception("An unexpected condition was received.")
+    def forward(self, inputs: Tensor, **additional_inputs: Tensor) -> Tensor:
+        # this is a "leaf" input layer (no child input layers)
+        # so no additional inputs should remain
+        for additional_inputs_name, additional_inputs_value in additional_inputs.items():
+            if additional_inputs_value is not None:  # sometimes it makes things easier if I pass None
+                raise Exception("Unexpected additional inputs received: {}.".format(additional_inputs_name))
         return inputs
 
     def get_output_size(self) -> int:

@@ -2,7 +2,7 @@ import argparse
 
 import numpy as np
 
-from typing import Dict, List, Iterator, Optional
+from typing import Dict, List, Iterator
 
 from torch import Tensor, FloatTensor
 
@@ -140,10 +140,10 @@ class TrainGAN(Train):
         # return the loss
         return to_cpu_if_was_in_gpu(loss).item()
 
-    def sample_fake(self, architecture: Architecture, size: int, condition: Optional[Tensor] = None) -> Tensor:
+    def sample_fake(self, architecture: Architecture, size: int, **additional_inputs: Tensor) -> Tensor:
         # for now the noise comes from a normal distribution but could be other distribution
         noise = to_gpu_if_available(FloatTensor(size, architecture.arguments.noise_size).normal_())
-        return architecture.generator(noise, condition=condition)
+        return architecture.generator(noise, **additional_inputs)
 
 
 if __name__ == '__main__':

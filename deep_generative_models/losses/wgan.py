@@ -1,5 +1,3 @@
-from typing import Optional
-
 from torch import Tensor
 from torch.nn import Module
 
@@ -13,13 +11,13 @@ def critic_loss_function(predictions: Tensor) -> Tensor:
 class WGANCriticLoss(Module):
 
     def forward(self, architecture: Architecture, real_features: Tensor, fake_features: Tensor,
-                condition: Optional[Tensor] = None) -> Tensor:
+                **additional_inputs: Tensor) -> Tensor:
         # real loss
-        real_predictions = architecture.discriminator(real_features, condition=condition)
+        real_predictions = architecture.discriminator(real_features, **additional_inputs)
         real_loss = - critic_loss_function(real_predictions)
 
         # fake loss
-        fake_predictions = architecture.discriminator(fake_features, condition=condition)
+        fake_predictions = architecture.discriminator(fake_features, **additional_inputs)
         fake_loss = critic_loss_function(fake_predictions)
 
         # total loss
@@ -28,6 +26,6 @@ class WGANCriticLoss(Module):
 
 class WGANGeneratorLoss(Module):
 
-    def forward(self, architecture: Architecture, fake_features: Tensor, condition: Optional[Tensor] = None) -> Tensor:
-        fake_predictions = architecture.discriminator(fake_features, condition=condition)
+    def forward(self, architecture: Architecture, fake_features: Tensor, **additional_inputs: Tensor) -> Tensor:
+        fake_predictions = architecture.discriminator(fake_features, **additional_inputs)
         return - critic_loss_function(fake_predictions)

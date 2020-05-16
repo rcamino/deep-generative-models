@@ -1,7 +1,5 @@
 import torch
 
-from typing import Optional
-
 from torch import Tensor
 from torch.nn import Embedding, Identity, Module
 
@@ -33,12 +31,15 @@ class ConditionalLayer(InputLayer):
         else:
             raise Exception("Invalid dependent variable type for conditional layer.")
 
-    def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Tensor:
-        if condition is None:
+    def forward(self, inputs: Tensor, **additional_inputs: Tensor) -> Tensor:
+        if "condition" not in additional_inputs:
             raise Exception("Expected condition not received.")
 
+        # consume the condition additional inputs
+        condition = additional_inputs.pop("condition")
+
         return torch.cat((
-            self.input_layer(inputs),
+            self.input_layer(inputs, **additional_inputs),
             self.layer(condition.view(-1, 1))
         ), dim=1)
 

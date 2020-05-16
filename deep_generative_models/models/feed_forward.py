@@ -24,7 +24,7 @@ class FeedForward(Module):
 
         self.output_layer = output_layer_factory.create(self.hidden_layers.get_output_size())
 
-    def forward(self, inputs: Tensor, condition: Optional[Tensor] = None) -> Tensor:
-        transformed_inputs = self.input_layer(inputs, condition=condition)
+    def forward(self, inputs: Tensor, **additional_inputs: Tensor) -> Tensor:
+        transformed_inputs = self.input_layer(inputs, **additional_inputs)
         hidden = self.hidden_layers(transformed_inputs)
         return self.output_layer(hidden)

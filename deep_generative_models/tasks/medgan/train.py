@@ -1,7 +1,5 @@
 import argparse
 
-from typing import Optional
-
 from torch import Tensor
 
 from deep_generative_models.architecture import Architecture
@@ -11,9 +9,9 @@ from deep_generative_models.tasks.gan_with_autoencoder.train import TrainGANWith
 
 class TrainMedGAN(TrainGANWithAutoencoder):
 
-    def sample_fake(self, architecture: Architecture, size: int, condition: Optional[Tensor] = None) -> Tensor:
-        fake_code = super(TrainMedGAN, self).sample_fake(architecture, size, condition=condition)
-        return architecture.autoencoder.decode(fake_code, condition=condition)
+    def sample_fake(self, architecture: Architecture, size: int, **additional_inputs: Tensor) -> Tensor:
+        fake_code = super(TrainMedGAN, self).sample_fake(architecture, size, **additional_inputs)
+        return architecture.autoencoder.decode(fake_code, **additional_inputs)
 
 
 if __name__ == '__main__':
