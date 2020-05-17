@@ -5,9 +5,11 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.tasks.arae.train import TrainARAE
 from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
 from deep_generative_models.tasks.encode import Encode
+from deep_generative_models.tasks.gain.train import TrainGAIN
 from deep_generative_models.tasks.gan.sample import SampleGAN
 from deep_generative_models.tasks.gan.train import TrainGAN
 from deep_generative_models.tasks.gan_with_autoencoder.sample import SampleGANWithAutoEncoder
+from deep_generative_models.tasks.generate_missing_mask import GenerateMissingMask
 from deep_generative_models.tasks.medgan.train import TrainMedGAN
 from deep_generative_models.tasks.multiprocess_runner import MultiProcessTaskRunner, TaskRunnerWorker
 from deep_generative_models.tasks.serial_runner import SerialTaskRunner
@@ -23,6 +25,7 @@ task_by_name = {
     "TrainGAN": TrainGAN(),
     "TrainMedGAN": TrainMedGAN(),
     "TrainVAE": TrainAutoEncoder(),
+    "TrainGAIN": TrainGAIN(),
 
     # sample
     "SampleARAE": SampleGANWithAutoEncoder(),
@@ -35,7 +38,10 @@ task_by_name = {
     "EncodeWithDeNoisingAutoEncoder": Encode(),
     "EncodeWithVAE": Encode(),
 
-    # others
+    # imputation
+    "GenerateMissingMask": GenerateMissingMask(),
+
+    # runners
     "SerialTaskRunner": SerialTaskRunner(),
     "MultiProcessTaskRunner": MultiProcessTaskRunner(TaskRunnerWorker)
 }

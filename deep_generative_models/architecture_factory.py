@@ -15,6 +15,7 @@ from deep_generative_models.layers.multi_output_layer import PartialMultiOutputL
 from deep_generative_models.layers.single_input_layer import SingleInputLayerFactory
 from deep_generative_models.layers.single_output_layer import PartialSingleOutputLayerFactory
 from deep_generative_models.losses.autoencoder import AutoEncoderLossFactory
+from deep_generative_models.losses.gain import GAINDiscriminatorLoss, GAINGeneratorLossFactory
 from deep_generative_models.losses.gan import GANGeneratorLoss, GANDiscriminatorLoss
 from deep_generative_models.losses.multi_reconstruction import MultiReconstructionLossFactory
 from deep_generative_models.losses.vae import VAELossFactory
@@ -29,6 +30,8 @@ from deep_generative_models.models.decoder import MultiOutputDecoderFactory
 from deep_generative_models.models.denoising_autoencoder import DeNoisingAutoencoderFactory
 from deep_generative_models.models.discriminator import DiscriminatorFactory
 from deep_generative_models.models.encoder import SingleInputEncoderFactory, MultiInputEncoderFactory
+from deep_generative_models.models.gain_discriminator import SingleInputGAINDiscriminatorFactory, MultiInputGAINDiscriminatorFactory
+from deep_generative_models.models.gain_generator import MultiVariableGAINGeneratorFactory, SingleVariableGAINGeneratorFactory
 from deep_generative_models.models.generator import SingleOutputGeneratorFactory, MultiOutputGeneratorFactory
 from deep_generative_models.optimizers.optimizer_factory import OptimizerFactory
 from deep_generative_models.models.vae import VAEFactory
@@ -55,6 +58,7 @@ factory_by_name = {
     "WGANGeneratorLoss": ComponentFactoryFromClass(WGANGeneratorLoss),
     "WGANCriticLoss": ComponentFactoryFromClass(WGANCriticLoss),
     "WGANCriticLossWithGradientPenalty": ComponentFactoryFromClass(WGANCriticLossWithGradientPenalty, ["weight"]),
+    "GAINDiscriminatorLoss": ComponentFactoryFromClass(GAINDiscriminatorLoss),
 
     # PyTorch losses (could add more)
     "BCE": ComponentFactoryFromClass(BCELoss, ["weight", "reduction"]),
@@ -75,6 +79,7 @@ factory_by_name["MultiOutputLayer"] = PartialMultiOutputLayerFactory(factory_by_
 # my losses that create other components
 factory_by_name["AutoEncoderLoss"] = AutoEncoderLossFactory(factory_by_name)
 factory_by_name["VAELoss"] = VAELossFactory(factory_by_name)
+factory_by_name["GAINGeneratorLoss"] = GAINGeneratorLossFactory(factory_by_name)
 
 # my optimizers that create other components
 factory_by_name["WGANOptimizer"] = WGANOptimizerFactory(factory_by_name)
@@ -97,6 +102,10 @@ factory_by_name["MultiVariableVAE"] = VAEFactory(factory_by_name, "MultiVariable
 factory_by_name["CodeGenerator"] = SingleOutputGeneratorFactory(factory_by_name, code=True)
 factory_by_name["CodeDiscriminator"] = DiscriminatorFactory(factory_by_name, critic=False, code=True)
 factory_by_name["CodeCritic"] = DiscriminatorFactory(factory_by_name, critic=True, code=True)
+factory_by_name["SingleVariableGAINGenerator"] = SingleVariableGAINGeneratorFactory(factory_by_name)
+factory_by_name["MultiVariableGAINGenerator"] = MultiVariableGAINGeneratorFactory(factory_by_name)
+factory_by_name["SingleInputGAINDiscriminator"] = SingleInputGAINDiscriminatorFactory(factory_by_name)
+factory_by_name["MultiInputGAINDiscriminator"] = MultiInputGAINDiscriminatorFactory(factory_by_name)
 
 
 def create_architecture(metadata: Metadata, configuration: Configuration) -> Architecture:
