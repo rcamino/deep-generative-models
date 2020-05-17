@@ -9,7 +9,7 @@ from deep_generative_models.tasks.gain.train import TrainGAIN
 from deep_generative_models.tasks.gan.sample import SampleGAN
 from deep_generative_models.tasks.gan.train import TrainGAN
 from deep_generative_models.tasks.gan_with_autoencoder.sample import SampleGANWithAutoEncoder
-from deep_generative_models.tasks.generate_missing_mask import GenerateMissingMask
+from deep_generative_models.imputation.generate_missing_mask_task import GenerateMissingMask
 from deep_generative_models.tasks.medgan.train import TrainMedGAN
 from deep_generative_models.tasks.multiprocess_runner import MultiProcessTaskRunner, TaskRunnerWorker
 from deep_generative_models.tasks.serial_runner import SerialTaskRunner
