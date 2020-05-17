@@ -116,12 +116,11 @@ class TrainGAIN(Train):
                                            where_one=noise,
                                            where_zero=batch["features"])
         generated = architecture.generator(noisy_features, missing_mask=batch["missing_mask"])
-        # replace the noisy features by the generated
-        # but keep the original non missing features
+        # replace the missing features by the generated
         imputed = compose_with_mask(mask=batch["missing_mask"],
                                     differentiable=True,  # now there are no NaNs and this should be used
                                     where_one=generated,
-                                    where_zero=noisy_features)
+                                    where_zero=batch["features"])
         imputed = imputed.detach()  # do not propagate to the generator
         # generate hint
         hint = generate_hint(batch["missing_mask"], configuration.hint_probability, metadata)
@@ -144,7 +143,7 @@ class TrainGAIN(Train):
     def train_generator_steps(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                               batch_iterator: Iterator[Batch]) -> List[float]:
         losses = []
-        for _ in range(configuration.discriminator_steps):
+        for _ in range(configuration.generator_steps):
             batch = next(batch_iterator)
             loss = self.train_generator_step(configuration, metadata, architecture, batch)
             losses.append(loss)
@@ -163,12 +162,11 @@ class TrainGAIN(Train):
                                            where_one=noise,
                                            where_zero=batch["features"])
         generated = architecture.generator(noisy_features, missing_mask=batch["missing_mask"])
-        # replace the noisy features by the generated
-        # but keep the original non missing features
+        # replace the missing features by the generated
         imputed = compose_with_mask(mask=batch["missing_mask"],
                                     differentiable=True,  # now there are no NaNs and this should be used
                                     where_one=generated,
-                                    where_zero=noisy_features)
+                                    where_zero=batch["features"])
         # generate hint
         hint = generate_hint(batch["missing_mask"], configuration.hint_probability, metadata)
 
@@ -192,17 +190,16 @@ class TrainGAIN(Train):
     @staticmethod
     def val_batch(architecture: Architecture, batch: Batch) -> float:
         noise = to_gpu_if_available(torch.ones_like(batch["features"]).normal_())
-        noisy_features = compose_with_mask(batch["missing_mask"],
+        noisy_features = compose_with_mask(mask=batch["missing_mask"],
                                            differentiable=False,  # maybe there are NaNs in the dataset
                                            where_one=noise,
                                            where_zero=batch["features"])
         generated = architecture.generator(noisy_features, missing_mask=batch["missing_mask"])
-        # replace the noisy features by the generated
-        # but keep the original non missing features
+        # replace the missing features by the generated
         imputed = compose_with_mask(mask=batch["missing_mask"],
                                     differentiable=False,  # back propagation not needed here
                                     where_one=generated,
-                                    where_zero=noisy_features)
+                                    where_zero=batch["features"])
 
         return architecture.val_loss(imputed, batch["features"])
 
