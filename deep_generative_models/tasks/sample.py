@@ -10,11 +10,11 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.architecture_factory import create_architecture
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu, to_gpu_if_available
 from deep_generative_models.metadata import load_metadata, Metadata
+from deep_generative_models.post_processing import post_process_discrete
 from deep_generative_models.rng import seed_all
 from deep_generative_models.tasks.task import Task
 
 from torch import Tensor
-from torch.nn.functional import one_hot
 
 
 class Sample(Task, ArchitectureConfigurationValidator):
@@ -100,21 +100,7 @@ class Sample(Task, ArchitectureConfigurationValidator):
     def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                                  **additional_inputs: Tensor) -> Tensor:
         sample = self.generate_sample(configuration, metadata, architecture, **additional_inputs)
-        for variable_metadata in metadata.get_by_independent_variable():
-            index = variable_metadata.get_feature_index()
-            size = variable_metadata.get_size()
-            old_value = sample[:, index:index + size]
-            # discrete binary
-            if variable_metadata.is_binary():
-                new_value = (old_value.view(-1) > .5).view(-1, 1)
-            # discrete categorical
-            elif variable_metadata.is_categorical():
-                new_value = one_hot(old_value.argmax(dim=1), num_classes=size)
-            # leave numerical variables the untouched
-            else:
-                new_value = old_value
-            sample[:, index:index + size] = new_value
-        return sample
+        return post_process_discrete(sample, metadata)
 
     def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                         **additional_inputs: Tensor) -> Tensor:

@@ -12,6 +12,7 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 from deep_generative_models.imputation.masks import compose_with_mask, generate_missing_mask_for, inverse_mask
 from deep_generative_models.metadata import Metadata
+from deep_generative_models.post_processing import post_process_discrete
 from deep_generative_models.tasks.train import Train, Datasets, Batch
 
 
@@ -88,7 +89,7 @@ class TrainGAIN(Train):
         val_losses_by_batch = []
 
         for batch in self.iterate_datasets(configuration, val_datasets):
-            val_losses_by_batch.append(self.val_batch(architecture, batch))
+            val_losses_by_batch.append(self.val_batch(metadata, architecture, batch))
 
         losses["val_mean_loss"] = np.mean(val_losses_by_batch).item()
 
@@ -188,7 +189,7 @@ class TrainGAIN(Train):
         return to_cpu_if_was_in_gpu(loss).item()
 
     @staticmethod
-    def val_batch(architecture: Architecture, batch: Batch) -> float:
+    def val_batch(metadata: Metadata, architecture: Architecture, batch: Batch) -> float:
         noise = to_gpu_if_available(torch.ones_like(batch["features"]).normal_())
         noisy_features = compose_with_mask(mask=batch["missing_mask"],
                                            differentiable=False,  # maybe there are NaNs in the dataset
@@ -200,6 +201,9 @@ class TrainGAIN(Train):
                                     differentiable=False,  # back propagation not needed here
                                     where_one=generated,
                                     where_zero=batch["features"])
+
+        # make categorical and binary variables discrete (in case it is not handled in the architecture)
+        imputed = post_process_discrete(imputed, metadata)
 
         return architecture.val_loss(imputed, batch["features"])
 
