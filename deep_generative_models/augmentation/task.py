@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.metrics import precision_recall_curve, f1_score, auc
 from imblearn.pipeline import Pipeline
 
-from augmentation.model import AugmentationTaskModelFactory
+from deep_generative_models.augmentation import AugmentationTaskModelFactory
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.tasks.multiprocess_runner import MultiProcessTaskWorker
 from deep_generative_models.tasks.task import Task

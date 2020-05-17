@@ -2,7 +2,7 @@ import argparse
 
 from typing import List, Any
 
-from augmentation.task import AugmentationTask
+from deep_generative_models.augmentation.task import AugmentationTask
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.tasks.multiprocess_runner import MultiProcessTaskWorker, MultiProcessTaskRunner
 

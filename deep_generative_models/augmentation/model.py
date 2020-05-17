@@ -7,8 +7,8 @@ from imblearn.pipeline import Pipeline
 from imblearn.over_sampling import ADASYN, BorderlineSMOTE, KMeansSMOTE, RandomOverSampler, SMOTE, SVMSMOTE
 from imblearn.under_sampling import RandomUnderSampler
 
-from augmentation.from_sample import OverSamplerFromSample
-from augmentation.wrapped_smote_nc import WrappedSMOTENC
+from deep_generative_models.augmentation.from_sample import OverSamplerFromSample
+from deep_generative_models.augmentation.wrapped_smote_nc import WrappedSMOTENC
 from deep_generative_models.arguments import ArgumentValidator
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import load_metadata
