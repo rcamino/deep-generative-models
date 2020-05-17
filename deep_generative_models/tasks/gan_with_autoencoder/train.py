@@ -76,13 +76,12 @@ class TrainGANWithAutoencoder(TrainGAN):
         # validation
         architecture.autoencoder.eval()
 
-        if "val_features" in datasets:
-            autoencoder_val_losses_by_batch = []
+        autoencoder_val_losses_by_batch = []
 
-            for batch in self.iterate_datasets(configuration, val_datasets):
-                autoencoder_val_losses_by_batch.append(self.autoencoder_train_task.val_batch(architecture, batch))
+        for batch in self.iterate_datasets(configuration, val_datasets):
+            autoencoder_val_losses_by_batch.append(self.autoencoder_train_task.val_batch(architecture, batch))
 
-            losses["autoencoder_val_mean_loss"] = np.mean(autoencoder_val_losses_by_batch).item()
+        losses["autoencoder_val_mean_loss"] = np.mean(autoencoder_val_losses_by_batch).item()
 
         return losses
 

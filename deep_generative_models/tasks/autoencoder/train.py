@@ -33,22 +33,24 @@ class TrainAutoEncoder(Train):
             train_datasets = Datasets({"features": datasets.train_features})
             val_datasets = Datasets({"features": datasets.val_features})
 
+        # train by batch
         train_loss_by_batch = []
 
         for batch in self.iterate_datasets(configuration, train_datasets):
             train_loss_by_batch.append(self.train_batch(architecture, batch))
 
+        # loss aggregation
         losses = {"train_reconstruction_mean_loss": np.mean(train_loss_by_batch).item()}
 
-        if "val_features" in datasets:
-            architecture.autoencoder.eval()
+        # validation
+        architecture.autoencoder.eval()
 
-            val_loss_by_batch = []
+        val_loss_by_batch = []
 
-            for batch in self.iterate_datasets(configuration, val_datasets):
-                val_loss_by_batch.append(self.val_batch(architecture, batch))
+        for batch in self.iterate_datasets(configuration, val_datasets):
+            val_loss_by_batch.append(self.val_batch(architecture, batch))
 
-            losses["val_reconstruction_mean_loss"] = np.mean(val_loss_by_batch).item()
+        losses["val_reconstruction_mean_loss"] = np.mean(val_loss_by_batch).item()
 
         return losses
 
