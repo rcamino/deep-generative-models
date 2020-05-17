@@ -1,5 +1,7 @@
 import argparse
 
+from typing import List
+
 from torch.nn import Module
 
 from deep_generative_models.architecture import Architecture
@@ -20,6 +22,13 @@ def compute_parameter_size(architecture: Architecture) -> int:
 
 
 class ComputeParameterSize(Task):
+
+    def mandatory_arguments(self) -> List[str]:
+        return [
+            "name",
+            "metadata",
+            "architecture",
+        ]
 
     def run(self, configuration: Configuration) -> None:
         metadata = load_metadata(configuration.metadata)
