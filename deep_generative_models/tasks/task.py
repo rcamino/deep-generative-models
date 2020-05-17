@@ -34,13 +34,16 @@ class Task(ArgumentValidator):
 
         elapsed_time = time.time() - start_time
         elapsed_time_unit = "seconds"
-        if elapsed_time > 60:
+
+        if elapsed_time_unit == "seconds" and elapsed_time > 60:
             elapsed_time /= 60
             elapsed_time_unit = "minutes"
-        if elapsed_time > 60:
+
+        if elapsed_time_unit == "minutes" and elapsed_time > 60:
             elapsed_time /= 60
             elapsed_time_unit = "hours"
-        if elapsed_time > 24:
+
+        if elapsed_time_unit == "hours" and elapsed_time > 24:
             elapsed_time /= 24
             elapsed_time_unit = "days"
 
