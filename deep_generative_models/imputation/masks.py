@@ -42,9 +42,9 @@ def compose_with_mask(mask: Tensor, where_one: Optional[Tensor] = None, where_ze
             composed += fill_where_mask_is_one(where_one, inverse_mask(mask), 0.0)
 
         # to fill the result where the mask is zero
-        if where_one is not None:
+        if where_zero is not None:
             # check shape
-            assert where_one.shape == mask.shape
+            assert where_zero.shape == mask.shape
             # put zeros in the source where the mask is one (because we want the values where the mask is zero)
             # and add the to the result
             composed += fill_where_mask_is_one(where_zero, mask, 0.0)
