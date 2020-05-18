@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from torch import Tensor, empty_like
+from torch import Tensor
 from torch.nn import Module
 
 from deep_generative_models.architecture import Architecture
@@ -11,16 +11,14 @@ from deep_generative_models.models.autoencoder import AutoEncoder
 
 
 class DeNoisingAutoencoder(Module):
+    noise_layer: Module
     autoencoder: AutoEncoder
-    noise_mean: float
-    noise_std: float
 
-    def __init__(self, autoencoder: AutoEncoder, noise_mean: float = 0, noise_std: float = 1) -> None:
+    def __init__(self, noise_layer: Module, autoencoder: AutoEncoder) -> None:
         super(DeNoisingAutoencoder, self).__init__()
 
+        self.noise_layer = noise_layer
         self.autoencoder = autoencoder
-        self.noise_mean = noise_mean
-        self.noise_std = noise_std
 
     def forward(self, inputs: Tensor, **additional_inputs: Tensor) -> Dict[str, Tensor]:
         outputs = self.encode(inputs, **additional_inputs)
@@ -28,13 +26,10 @@ class DeNoisingAutoencoder(Module):
         return outputs
 
     def encode(self, inputs: Tensor, **additional_inputs: Tensor) -> Dict[str, Tensor]:
-        noisy = self.add_noise(inputs)
+        noisy = self.noise_layer(inputs)
         outputs = self.autoencoder.encode(noisy, **additional_inputs)
         outputs["noisy"] = noisy
         return outputs
-
-    def add_noise(self, inputs: Tensor) -> Tensor:
-        return empty_like(inputs).normal_(self.noise_mean, self.noise_std) + inputs
 
     def decode(self, code: Tensor, **additional_inputs: Tensor) -> Tensor:
         return self.autoencoder.decode(code, **additional_inputs)
@@ -47,9 +42,27 @@ class DeNoisingAutoencoderFactory(MultiComponentFactory):
         super(DeNoisingAutoencoderFactory, self).__init__(factory_by_name)
         self.factory_name = factory_name
 
+    def mandatory_arguments(self) -> List[str]:
+        return ["encoder", "decoder"]
+
     def optional_arguments(self) -> List[str]:
-        return ["noise_mean", "noise_std"]
+        return ["noise_layer"]
 
     def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
-        autoencoder = self.create_other(self.factory_name, metadata, arguments, )
-        return DeNoisingAutoencoder(autoencoder, **arguments.get_all_defined(self.optional_arguments()))
+        # separate arguments
+        noise_layer_arguments = None
+        autoencoder_arguments = Configuration()
+        for argument_name, argument_value in arguments.items():
+            if argument_name == "noise_layer":
+                noise_layer_arguments = argument_value
+            else:
+                autoencoder_arguments[argument_name] = argument_value
+
+        noise_layer = self.create_other(noise_layer_arguments.factory,
+                                        architecture,
+                                        metadata,
+                                        noise_layer_arguments.get("arguments", {}))
+
+        autoencoder = self.create_other(self.factory_name, architecture, metadata, autoencoder_arguments)
+
+        return DeNoisingAutoencoder(noise_layer, autoencoder)
