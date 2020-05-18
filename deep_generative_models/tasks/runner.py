@@ -2,6 +2,7 @@ import argparse
 
 from deep_generative_models.arguments import InvalidArgument, MissingArgument
 from deep_generative_models.configuration import Configuration, load_configuration
+from deep_generative_models.imputation.basic_imputation_task import BasicImputation
 from deep_generative_models.tasks.arae.train import TrainARAE
 from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
 from deep_generative_models.tasks.encode import Encode
@@ -40,6 +41,7 @@ task_by_name = {
 
     # imputation
     "GenerateMissingMask": GenerateMissingMask(),
+    "BasicImputation": BasicImputation(),
 
     # runners
     "SerialTaskRunner": SerialTaskRunner(),
