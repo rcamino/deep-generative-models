@@ -1,4 +1,4 @@
-from torch.nn import LeakyReLU, ReLU, Sigmoid, Tanh, BCELoss, CrossEntropyLoss, MSELoss
+from torch.nn import LeakyReLU, ReLU, Sigmoid, Tanh, BCELoss, CrossEntropyLoss, MSELoss, Dropout
 
 from torch.optim import Adam, SGD
 
@@ -10,6 +10,7 @@ from deep_generative_models.component_factory import ComponentFactoryFromClass, 
 from deep_generative_models.arguments import MissingArgument, InvalidArgument
 from deep_generative_models.layers.additive_normal_noise import AdditiveNormalNoise
 from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
+from deep_generative_models.layers.multi_input_dropout import MultiInputDropoutFactory
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
 from deep_generative_models.layers.multi_output_layer import PartialMultiOutputLayerFactory
@@ -42,6 +43,9 @@ factory_by_name = {
     # my layers
     "SingleInputLayer": SingleInputLayerFactory(),
     "AdditiveNormalNoise": ComponentFactoryFromClass(AdditiveNormalNoise),
+
+    # PyTorch layers (could add more)
+    "Dropout": ComponentFactoryFromClass(Dropout, ["p"]),
 
     # my activations
     "GumbelSoftmaxSampling": GumbelSoftmaxSamplingFactory(),
@@ -77,6 +81,7 @@ factory_by_name["HiddenLayers"] = PartialHiddenLayersFactory(factory_by_name)
 factory_by_name["MultiInputLayer"] = MultiInputLayerFactory(factory_by_name)
 factory_by_name["SingleOutputLayer"] = PartialSingleOutputLayerFactory(factory_by_name)
 factory_by_name["MultiOutputLayer"] = PartialMultiOutputLayerFactory(factory_by_name)
+factory_by_name["MultiInputDropout"] = MultiInputDropoutFactory(factory_by_name)
 
 # my losses that create other components
 factory_by_name["AutoEncoderLoss"] = AutoEncoderLossFactory(factory_by_name)
