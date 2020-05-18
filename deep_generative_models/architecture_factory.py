@@ -113,6 +113,8 @@ factory_by_name["SingleVariableGAINGenerator"] = SingleVariableGAINGeneratorFact
 factory_by_name["MultiVariableGAINGenerator"] = MultiVariableGAINGeneratorFactory(factory_by_name)
 factory_by_name["SingleInputGAINDiscriminator"] = SingleInputGAINDiscriminatorFactory(factory_by_name)
 factory_by_name["MultiInputGAINDiscriminator"] = MultiInputGAINDiscriminatorFactory(factory_by_name)
+factory_by_name["SingleVariableMIDA"] = DeNoisingAutoencoderFactory(factory_by_name, "SingleVariableAutoEncoder")
+factory_by_name["MultiVariableMIDA"] = DeNoisingAutoencoderFactory(factory_by_name, "MultiVariableAutoEncoder")
 
 
 def create_architecture(metadata: Metadata, configuration: Configuration) -> Architecture:
