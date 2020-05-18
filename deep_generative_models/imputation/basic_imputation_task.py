@@ -3,12 +3,14 @@ import torch
 
 import numpy as np
 
+from csv import DictWriter
 from typing import List
 
 from torch.nn.functional import one_hot
 
 from deep_generative_models.configuration import Configuration, load_configuration
-from deep_generative_models.imputation.masks import generate_missing_mask_for, compose_with_mask
+from deep_generative_models.imputation.masks import compose_with_mask
+from deep_generative_models.losses.rmse import RMSE
 from deep_generative_models.metadata import load_metadata
 from deep_generative_models.tasks.task import Task
 
@@ -20,11 +22,12 @@ class BasicImputation(Task):
             "metadata",
             "inputs",
             "missing_mask",
-            "outputs",
         ]
 
     def optional_arguments(self) -> List[str]:
-        return super(BasicImputation, self).optional_arguments() + ["output_statistics"]
+        return super(BasicImputation, self).optional_arguments() + ["output_imputation",
+                                                                    "output_statistics",
+                                                                    "output_reconstruction_loss"]
 
     def run(self, configuration: Configuration) -> None:
         metadata = load_metadata(configuration.metadata)
@@ -59,17 +62,52 @@ class BasicImputation(Task):
             # fill the variable
             filling_values[index:index + size] = filling_value
 
-        # only save the filling values
-        if configuration.get("output_statistics", False):
-            np.save(configuration.outputs, filling_values.numpy())
         # fill where the missing mask is one
-        else:
-            output = compose_with_mask(missing_mask,
-                                       where_one=filling_values.repeat(len(inputs), 1),
-                                       where_zero=inputs,
-                                       differentiable=False)
+        imputed = compose_with_mask(missing_mask,
+                                    where_one=filling_values.repeat(len(inputs), 1),
+                                    where_zero=inputs,
+                                    differentiable=False)
 
-            np.save(configuration.outputs, output.numpy())
+        # save the imputation
+        if "output_imputation" in configuration:
+            np.save(configuration.output_imputation, imputed.numpy())
+
+        # save the filling values
+        if "output_statistics" in configuration:
+            np.save(configuration.output_statistics, filling_values.numpy())
+
+        # save the reconstruction loss
+        if "output_reconstruction_loss" in configuration:
+            reconstruction_loss_function = RMSE()
+            reconstruction_loss = reconstruction_loss_function(imputed, inputs).item()
+
+            # this uses one row on a csv file
+            file_mode = "a" if configuration.output_reconstruction_loss.get("append", False) else "w"
+            with open(configuration.output_reconstruction_loss.path, file_mode) as reconstruction_loss_file:
+                file_writer = DictWriter(reconstruction_loss_file, [
+                    "inputs",
+                    "metadata",
+                    "missing_mask",
+                    "output_imputation",
+                    "output_statistics",
+                    "reconstruction_loss"
+                ])
+
+                # write the csv header if it is the first time
+                if not configuration.output_reconstruction_loss.get("append", False):
+                    file_writer.writeheader()
+
+                row = {
+                    "inputs": configuration.inputs,
+                    "metadata": configuration.metadata,
+                    "missing_mask": configuration.missing_mask,
+                    "output_imputation": configuration.get("output_imputation", ""),
+                    "output_statistics": configuration.get("output_statistics", ""),
+                    "reconstruction_loss": reconstruction_loss,
+                }
+
+                self.logger.info(row)
+                file_writer.writerow(row)
 
 
 if __name__ == '__main__':
