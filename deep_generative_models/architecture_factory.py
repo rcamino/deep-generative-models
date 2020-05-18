@@ -20,6 +20,7 @@ from deep_generative_models.losses.autoencoder import AutoEncoderLossFactory
 from deep_generative_models.losses.gain import GAINDiscriminatorLoss, GAINGeneratorLossFactory
 from deep_generative_models.losses.gan import GANGeneratorLoss, GANDiscriminatorLoss
 from deep_generative_models.losses.multi_reconstruction import MultiReconstructionLossFactory
+from deep_generative_models.losses.rmse import RMSE
 from deep_generative_models.losses.vae import VAELossFactory
 from deep_generative_models.losses.wgan import WGANGeneratorLoss, WGANCriticLoss
 from deep_generative_models.losses.wgan_gp import WGANCriticLossWithGradientPenalty
@@ -65,6 +66,7 @@ factory_by_name = {
     "WGANCriticLoss": ComponentFactoryFromClass(WGANCriticLoss),
     "WGANCriticLossWithGradientPenalty": ComponentFactoryFromClass(WGANCriticLossWithGradientPenalty, ["weight"]),
     "GAINDiscriminatorLoss": ComponentFactoryFromClass(GAINDiscriminatorLoss),
+    "RMSE": ComponentFactoryFromClass(RMSE),
 
     # PyTorch losses (could add more)
     "BCE": ComponentFactoryFromClass(BCELoss, ["weight", "reduction"]),
