@@ -6,6 +6,7 @@ from torch.nn import Module, BCELoss
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.component_factory import MultiComponentFactory
 from deep_generative_models.configuration import Configuration
+from deep_generative_models.losses.masked_reconstruction_loss import MaskedReconstructionLoss
 from deep_generative_models.metadata import Metadata
 
 
@@ -33,7 +34,7 @@ class GAINGeneratorLoss(Module):
 
         assert reconstruction_loss.reduction == "sum", "The reconstruction loss should have reduction='sum'."
 
-        self.reconstruction_loss = reconstruction_loss
+        self.reconstruction_loss = MaskedReconstructionLoss(reconstruction_loss)
         self.reconstruction_loss_weight = reconstruction_loss_weight
 
         self.bce_loss = BCELoss()
@@ -47,10 +48,8 @@ class GAINGeneratorLoss(Module):
         # so we optimize for the inverse mask
         adversarial_loss = self.bce_loss(predictions, non_missing_mask)
 
-        # reconstruction of the non-missing values (averaged by the number of non-missing values)
-        reconstruction_loss = self.reconstruction_loss(non_missing_mask * generated,
-                                                       non_missing_mask * features,
-                                                       ) / non_missing_mask.sum()
+        # reconstruction of the non-missing values
+        reconstruction_loss = self.reconstruction_loss(generated, features, non_missing_mask)
 
         # return the complete loss
         return adversarial_loss + self.reconstruction_loss_weight * reconstruction_loss
