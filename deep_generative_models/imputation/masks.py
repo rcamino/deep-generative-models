@@ -60,7 +60,7 @@ def generate_missing_mask_for(source: Tensor, missing_probability: float, metada
         # generate one value per sample:
         # values equal to one indicate that the variable is missing in the sample
         # values equal to zero indicate that the variable is not missing (present) in the sample
-        variable_mask = (torch.zeros(len(source), 1).uniform_(0.0, 1.0) > missing_probability).float()
+        variable_mask = (torch.zeros(len(source), 1).uniform_(0.0, 1.0) < missing_probability).float()
 
         # repeat across all the features if the variable has more than one feature (e.g. one-hot-encoded)
         if variable_metadata.get_size() > 1:
