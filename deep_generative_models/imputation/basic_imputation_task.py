@@ -10,6 +10,7 @@ from typing import List
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.imputation.masks import compose_with_mask
 from deep_generative_models.losses.rmse import RMSE
+from deep_generative_models.post_processing import load_scale_transform
 from deep_generative_models.tasks.task import Task
 
 
@@ -38,10 +39,9 @@ class BasicImputation(Task):
 
         # scale back if requested
         if "scaler" in configuration:
-            with open(configuration.scaler, "rb") as scaler_file:
-                scaler = pickle.load(scaler_file)
-                inputs = torch.from_numpy(scaler.inverse_transform(inputs.numpy()))
-                imputed = torch.from_numpy(scaler.inverse_transform(imputed.numpy()))
+            scale_transform = load_scale_transform(configuration.scaler)
+            inputs = torch.from_numpy(scale_transform.inverse_transform(inputs.numpy()))
+            imputed = torch.from_numpy(scale_transform.inverse_transform(imputed.numpy()))
 
         # if imputation should be saved
         if "outputs" in configuration:

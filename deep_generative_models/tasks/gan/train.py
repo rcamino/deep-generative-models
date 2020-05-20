@@ -10,6 +10,7 @@ from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import Metadata
+from deep_generative_models.post_processing import PostProcessing
 from deep_generative_models.tasks.train import Train, Datasets, Batch
 
 
@@ -32,7 +33,7 @@ class TrainGAN(Train):
         ]
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    datasets: Datasets) -> Dict[str, float]:
+                    datasets: Datasets, post_processing: PostProcessing) -> Dict[str, float]:
         # train
         architecture.generator.train()
         architecture.discriminator.train()

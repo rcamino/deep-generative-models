@@ -11,7 +11,7 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu
 from deep_generative_models.imputation.masks import compose_with_mask
 from deep_generative_models.metadata import Metadata
-from deep_generative_models.post_processing import post_process_discrete
+from deep_generative_models.post_processing import PostProcessing
 from deep_generative_models.tasks.train import Train, Datasets, Batch
 
 
@@ -26,7 +26,7 @@ class TrainMIDA(Train):
         ]
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    datasets: Datasets) -> Dict[str, float]:
+                    datasets: Datasets, post_processing: PostProcessing) -> Dict[str, float]:
         architecture.autoencoder.train()
 
         # prepare data
@@ -49,7 +49,8 @@ class TrainMIDA(Train):
         val_loss_by_batch = []
 
         for batch in self.iterate_datasets(configuration, val_datasets):
-            val_loss_by_batch.append(self.val_batch(metadata, architecture, basic_imputation_statistics, batch))
+            val_loss_by_batch.append(
+                self.val_batch(metadata, architecture, basic_imputation_statistics, batch, post_processing))
 
         losses["val_reconstruction_mean_loss"] = np.mean(val_loss_by_batch).item()
 
@@ -80,14 +81,17 @@ class TrainMIDA(Train):
         return loss.item()
 
     def val_batch(self, metadata: Metadata, architecture: Architecture, basic_imputation_statistics: Tensor,
-                  batch: Batch) -> float:
+                  batch: Batch, post_processing: PostProcessing) -> float:
         initially_imputed = self.initial_imputation(batch["features"],
                                                     batch["missing_mask"],
                                                     basic_imputation_statistics)
 
         outputs = architecture.autoencoder(initially_imputed)
-        reconstructed = post_process_discrete(outputs["reconstructed"], metadata)
-        loss = architecture.val_reconstruction_loss(reconstructed, batch["features"])  # compare with ground-truth
+
+        # scale transform might be applied to imputation and ground truth to compute the proper validation loss
+        loss = architecture.val_reconstruction_loss(post_processing.transform(outputs["reconstructed"]),
+                                                    post_processing.transform(batch["features"]))
+
         loss = to_cpu_if_was_in_gpu(loss)
         return loss.item()
 

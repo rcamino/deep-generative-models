@@ -8,6 +8,7 @@ from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import Metadata
+from deep_generative_models.post_processing import PostProcessing
 from deep_generative_models.tasks.train import Train, Datasets, Batch
 
 
@@ -17,11 +18,12 @@ class TrainAutoEncoder(Train):
         return [
             "autoencoder",
             "autoencoder_optimizer",
-            "reconstruction_loss"
+            "reconstruction_loss",
+            "val_reconstruction_loss",
         ]
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    datasets: Datasets) -> Dict[str, float]:
+                    datasets: Datasets, post_processing: PostProcessing) -> Dict[str, float]:
         architecture.autoencoder.train()
 
         # conditional
@@ -48,7 +50,7 @@ class TrainAutoEncoder(Train):
         val_loss_by_batch = []
 
         for batch in self.iterate_datasets(configuration, val_datasets):
-            val_loss_by_batch.append(self.val_batch(architecture, batch))
+            val_loss_by_batch.append(self.val_batch(architecture, batch, post_processing))
 
         losses["val_reconstruction_mean_loss"] = np.mean(val_loss_by_batch).item()
 
@@ -69,9 +71,13 @@ class TrainAutoEncoder(Train):
         return loss.item()
 
     @staticmethod
-    def val_batch(architecture: Architecture, batch: Batch) -> float:
+    def val_batch(architecture: Architecture, batch: Batch, post_processing: PostProcessing) -> float:
         outputs = architecture.autoencoder(batch["features"], condition=batch.get("labels"))
-        loss = architecture.reconstruction_loss(outputs, batch["features"])
+
+        # scale transform might be applied to imputation and ground truth to compute the proper validation loss
+        loss = architecture.val_reconstruction_loss(post_processing.transform(outputs["reconstructed"]),
+                                                    post_processing.transform(batch["features"]))
+
         loss = to_cpu_if_was_in_gpu(loss)
         return loss.item()
 

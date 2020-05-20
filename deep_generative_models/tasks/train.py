@@ -14,6 +14,7 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.dictionary import Dictionary
 from deep_generative_models.architecture_factory import create_architecture
 from deep_generative_models.gpu import to_gpu_if_available
+from deep_generative_models.post_processing import load_scale_transform, PostProcessing
 from deep_generative_models.rng import seed_all
 from deep_generative_models.tasks.train_logger import TrainLogger
 from deep_generative_models.metadata import load_metadata, Metadata
@@ -59,7 +60,7 @@ class Train(Task, ArchitectureConfigurationValidator):
         ]
 
     def optional_arguments(self) -> List[str]:
-        return super(Train, self).optional_arguments() + ["seed"]
+        return super(Train, self).optional_arguments() + ["seed", "scale_transform"]
 
     @staticmethod
     def iterate_datasets(configuration: Configuration, datasets: Datasets):
@@ -73,6 +74,13 @@ class Train(Task, ArchitectureConfigurationValidator):
             datasets[dataset_name] = to_gpu_if_available(torch.from_numpy(np.load(dataset_path)).float())
 
         metadata = load_metadata(configuration.metadata)
+
+        if "scale_transform" in configuration:
+            scale_transform = load_scale_transform(configuration.scale_transform)
+        else:
+            scale_transform = None
+
+        post_processing = PostProcessing(metadata, scale_transform)
 
         architecture_configuration = load_configuration(configuration.architecture)
         self.validate_architecture_configuration(architecture_configuration)
@@ -114,7 +122,7 @@ class Train(Task, ArchitectureConfigurationValidator):
             # train discriminator and generator
             logger.start_timer()
 
-            metrics = self.train_epoch(configuration, metadata, architecture, datasets)
+            metrics = self.train_epoch(configuration, metadata, architecture, datasets, post_processing)
 
             for metric_name, metric_value in metrics.items():
                 logger.log(epoch, configuration.epochs, metric_name, metric_value)
@@ -133,5 +141,5 @@ class Train(Task, ArchitectureConfigurationValidator):
         logger.close()
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    datasets: Datasets) -> Dict[str, float]:
+                    datasets: Datasets, post_processing: PostProcessing) -> Dict[str, float]:
         raise NotImplementedError

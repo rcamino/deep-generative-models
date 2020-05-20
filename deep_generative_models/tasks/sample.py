@@ -10,7 +10,7 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.architecture_factory import create_architecture
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu, to_gpu_if_available
 from deep_generative_models.metadata import load_metadata, Metadata
-from deep_generative_models.post_processing import post_process_discrete
+from deep_generative_models.post_processing import load_scale_transform, PostProcessing
 from deep_generative_models.rng import seed_all
 from deep_generative_models.tasks.task import Task
 
@@ -30,12 +30,19 @@ class Sample(Task, ArchitectureConfigurationValidator):
         ]
 
     def optional_arguments(self) -> List[str]:
-        return super(Sample, self).optional_arguments() + ["seed", "strategy"]
+        return super(Sample, self).optional_arguments() + ["seed", "strategy", "scale_transform"]
 
     def run(self, configuration: Configuration) -> None:
         seed_all(configuration.get("seed"))
 
         metadata = load_metadata(configuration.metadata)
+
+        if "scale_transform" in configuration:
+            scale_transform = load_scale_transform(configuration.scale_transform)
+        else:
+            scale_transform = None
+
+        post_processing = PostProcessing(metadata, scale_transform)
 
         architecture_configuration = load_configuration(configuration.architecture)
         self.validate_architecture_configuration(architecture_configuration)
@@ -67,13 +74,24 @@ class Sample(Task, ArchitectureConfigurationValidator):
         else:
             strategy = DefaultSampleStrategy()
 
+        # this is only to pass less parameters back and forth
+        sampler = Sampler(self, configuration, metadata, architecture, post_processing)
+
         # while more samples are needed
         start = 0
         while start < configuration.sample_size:
             # do not calculate gradients
             with torch.no_grad():
-                # sample from the model (depending on the strategy)
-                batch_samples = strategy.generate_discrete_sample(configuration, metadata, architecture, self)
+                # sample:
+                # the task delegates to the strategy and passes the sampler object to avoid passing even more parameters
+                #   the strategy may prepare additional sampling arguments (e.g. condition)
+                #   the strategy delegates to the sampler object
+                #     the sampler object delegates back to the task adding parameters that it was keeping
+                #       the task child class does the actual sampling depending on the model
+                #     the sampler object applies post-processing
+                #   the strategy may apply filtering to the samples (e.g. rejection)
+                # the task finally gets the sample
+                batch_samples = strategy.generate_sample(sampler, configuration, metadata)
 
             # transform back the samples
             batch_samples = to_cpu_if_was_in_gpu(batch_samples)
@@ -97,28 +115,46 @@ class Sample(Task, ArchitectureConfigurationValidator):
         # save the samples
         np.save(configuration.output, samples)
 
-    def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                 **additional_inputs: Tensor) -> Tensor:
-        sample = self.generate_sample(configuration, metadata, architecture, **additional_inputs)
-        return post_process_discrete(sample, metadata)
-
     def generate_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
                         **additional_inputs: Tensor) -> Tensor:
         raise NotImplementedError
 
 
+class Sampler:
+    sample_task: Sample
+    configuration: Configuration
+    metadata: Metadata
+    architecture: Architecture
+    post_processing: PostProcessing
+
+    def __init__(self, sample_task: Sample, configuration: Configuration, metadata: Metadata,
+                 architecture: Architecture, post_processing: PostProcessing) -> None:
+        self.sample_task = sample_task
+        self.configuration = configuration
+        self.metadata = metadata
+        self.architecture = architecture
+        self.post_processing = post_processing
+
+    def generate_sample(self, **additional_inputs: Tensor) -> Tensor:
+        # delegate the initial part to the task implementation (that depends on the model)
+        sample = self.sample_task.generate_sample(self.configuration,
+                                                  self.metadata,
+                                                  self.architecture,
+                                                  **additional_inputs)
+        # apply post-processing
+        return self.post_processing.transform(sample)
+
+
 class SampleStrategy:
 
-    def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                 sampler: Sample) -> Tensor:
+    def generate_sample(self, sampler: Sampler, configuration: Configuration, metadata: Metadata) -> Tensor:
         raise NotImplementedError
 
 
 class DefaultSampleStrategy(SampleStrategy):
 
-    def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                 sampler: Sample) -> Tensor:
-        return sampler.generate_discrete_sample(configuration, metadata, architecture)
+    def generate_sample(self, sampler: Sampler, configuration: Configuration, metadata: Metadata) -> Tensor:
+        return sampler.generate_sample()
 
 
 class RejectionSampling(SampleStrategy):
@@ -134,10 +170,9 @@ class RejectionSampling(SampleStrategy):
         self.iterations = 0
         self.real_sample_size = 0
 
-    def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                 sampler: Sample) -> Tensor:
+    def generate_sample(self, sampler: Sampler, configuration: Configuration, metadata: Metadata) -> Tensor:
         # generate the samples
-        samples = sampler.generate_discrete_sample(configuration, metadata, architecture)
+        samples = sampler.generate_sample()
 
         # for each desired variable value
         removed_dimensions = 0
@@ -187,10 +222,9 @@ class ConditionalSampling(SampleStrategy):
     def __init__(self, condition: int):
         self.condition = condition
 
-    def generate_discrete_sample(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                 sampler: Sample) -> Tensor:
+    def generate_sample(self, sampler: Sampler, configuration: Configuration, metadata: Metadata) -> Tensor:
         condition = to_gpu_if_available(torch.ones(configuration.batch_size, dtype=torch.float) * self.condition)
-        return sampler.generate_discrete_sample(configuration, metadata, architecture, condition=condition)
+        return sampler.generate_sample(condition=condition)
 
 
 strategy_class_by_name = {

@@ -6,6 +6,7 @@ from typing import Dict, Iterator, List, Optional
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.metadata import Metadata
+from deep_generative_models.post_processing import PostProcessing
 from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
 from deep_generative_models.tasks.gan.train import TrainGAN
 from deep_generative_models.tasks.train import Datasets, Batch
@@ -27,7 +28,7 @@ class TrainGANWithAutoencoder(TrainGAN):
                + self.autoencoder_train_task.mandatory_architecture_components()
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    datasets: Datasets) -> Dict[str, float]:
+                    datasets: Datasets, post_processing: PostProcessing) -> Dict[str, float]:
         # train
         architecture.autoencoder.train()
         architecture.generator.train()
@@ -79,7 +80,8 @@ class TrainGANWithAutoencoder(TrainGAN):
         autoencoder_val_losses_by_batch = []
 
         for batch in self.iterate_datasets(configuration, val_datasets):
-            autoencoder_val_losses_by_batch.append(self.autoencoder_train_task.val_batch(architecture, batch))
+            autoencoder_val_losses_by_batch.append(
+                self.autoencoder_train_task.val_batch(architecture, batch, post_processing))
 
         losses["autoencoder_val_mean_loss"] = np.mean(autoencoder_val_losses_by_batch).item()
 
