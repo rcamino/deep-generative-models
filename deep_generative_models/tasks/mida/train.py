@@ -9,8 +9,7 @@ from torch import Tensor
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu
-from deep_generative_models.imputation.masks import compose_with_mask, inverse_mask
-from deep_generative_models.losses.masked_reconstruction_loss import MaskedReconstructionLoss
+from deep_generative_models.imputation.masks import compose_with_mask
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.post_processing import post_process_discrete
 from deep_generative_models.tasks.train import Train, Datasets, Batch
