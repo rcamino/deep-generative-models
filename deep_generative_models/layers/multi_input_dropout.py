@@ -22,14 +22,20 @@ class MultiInputDropout(Module):
         self.drop_probability = drop_probability
 
     def forward(self, inputs: Tensor) -> Tensor:
-        # create a missing mask using the drop probability
-        drop_mask = generate_missing_mask_for(inputs, self.drop_probability, self.metadata)
+        # dropout only during training
+        if self.training:
+            # create a missing mask using the drop probability
+            drop_mask = generate_missing_mask_for(inputs, self.drop_probability, self.metadata)
 
-        # put zeros where the drop mask is one and leave the inputs where the drop mask is zero
-        return compose_with_mask(mask=drop_mask,
-                                 where_one=torch.zeros_like(inputs),
-                                 where_zero=inputs,
-                                 differentiable=True)
+            # put zeros where the drop mask is one and leave the inputs where the drop mask is zero
+            return compose_with_mask(mask=drop_mask,
+                                     where_one=torch.zeros_like(inputs),
+                                     where_zero=inputs,
+                                     differentiable=True)
+
+        # don't touch the inputs during evaluation
+        else:
+            return inputs
 
 
 class MultiInputDropoutFactory(MultiComponentFactory):
