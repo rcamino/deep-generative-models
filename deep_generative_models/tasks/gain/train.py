@@ -205,7 +205,8 @@ class TrainGAIN(Train):
         # make categorical and binary variables discrete (in case it is not handled in the architecture)
         imputed = post_process_discrete(imputed, metadata)
 
-        return architecture.val_loss(imputed, batch["features"])
+        loss = architecture.val_loss(imputed, batch["features"])
+        return to_cpu_if_was_in_gpu(loss).item()
 
 
 if __name__ == '__main__':
