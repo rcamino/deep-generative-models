@@ -52,15 +52,14 @@ def compose_with_mask(mask: Tensor, where_one: Optional[Tensor] = None, where_ze
         return composed
 
 
-def generate_missing_mask_for(source: Tensor, missing_probability: float, metadata: Metadata) -> Tensor:
+def generate_mask_for(source: Tensor, probability: float, metadata: Metadata) -> Tensor:
     variable_masks = []
 
     # for each variable
     for variable_metadata in metadata.get_by_independent_variable():
-        # generate one value per sample:
-        # values equal to one indicate that the variable is missing in the sample
-        # values equal to zero indicate that the variable is not missing (present) in the sample
-        variable_mask = (torch.zeros(len(source), 1).uniform_(0.0, 1.0) < missing_probability).float()
+        # ones are generated with the indicated probability
+        # zeros are generated with the complement of the indicated probability
+        variable_mask = (torch.zeros(len(source), 1).uniform_(0.0, 1.0) < probability).float()
 
         # repeat across all the features if the variable has more than one feature (e.g. one-hot-encoded)
         if variable_metadata.get_size() > 1:

@@ -10,22 +10,21 @@ from typing import Dict, List, Iterator
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
-from deep_generative_models.imputation.masks import compose_with_mask, generate_missing_mask_for, inverse_mask
+from deep_generative_models.imputation.masks import compose_with_mask, generate_mask_for, inverse_mask
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.post_processing import PostProcessing
 from deep_generative_models.tasks.train import Train, Datasets, Batch
 
 
 def generate_hint(missing_mask: Tensor, hint_probability: float, metadata: Metadata) -> Tensor:
-    # parts of the mask will be missing with probability (1 - hint)
-    # e.g. if the hint probability is 0.9 then each position of the missing mask
-    # will be left untouched (hinted) with probability 0.9
-    # will be turned into a zero with probability 0.1
     # the GAIN paper goes on and on about using a more complex hint mechanism
     # but then in the online code example they use this technique
     # see: https://github.com/jsyoon0823/GAIN/issues/2
-    hint_mask = generate_missing_mask_for(missing_mask, 1.0 - hint_probability, metadata)
-    hint_mask = to_gpu_if_available(hint_mask)
+
+    # create a mask with "hint probability" of having ones
+    hint_mask = to_gpu_if_available(generate_mask_for(missing_mask, hint_probability, metadata))
+    # leave the mask untouched where there are hints (hint_mask=1)
+    # but put zeros where there are no hints (hint_mask=0)
     return missing_mask * hint_mask
 
 
@@ -89,7 +88,7 @@ class TrainGAIN(Train):
         val_losses_by_batch = []
 
         for batch in self.iterate_datasets(configuration, val_datasets):
-            val_losses_by_batch.append(self.val_batch(metadata, architecture, batch, post_processing))
+            val_losses_by_batch.append(self.val_batch(architecture, batch, post_processing))
 
         losses["val_mean_loss"] = np.mean(val_losses_by_batch).item()
 
@@ -189,8 +188,7 @@ class TrainGAIN(Train):
         return to_cpu_if_was_in_gpu(loss).item()
 
     @staticmethod
-    def val_batch(metadata: Metadata, architecture: Architecture, batch: Batch,
-                  post_processing: PostProcessing) -> float:
+    def val_batch(architecture: Architecture, batch: Batch,  post_processing: PostProcessing) -> float:
         noise = to_gpu_if_available(torch.ones_like(batch["features"]).normal_())
         noisy_features = compose_with_mask(mask=batch["missing_mask"],
                                            differentiable=False,  # maybe there are NaNs in the dataset

@@ -7,7 +7,7 @@ import numpy as np
 from typing import List
 
 from deep_generative_models.configuration import Configuration, load_configuration
-from deep_generative_models.imputation.masks import generate_missing_mask_for
+from deep_generative_models.imputation.masks import generate_mask_for
 from deep_generative_models.metadata import load_metadata
 from deep_generative_models.rng import seed_all
 from deep_generative_models.tasks.task import Task
@@ -30,7 +30,7 @@ class GenerateMissingMask(Task):
         seed_all(configuration.get("seed"))
         metadata = load_metadata(configuration.metadata)
         inputs = torch.from_numpy(np.load(configuration.inputs))
-        missing_mask = generate_missing_mask_for(inputs, configuration.missing_probability, metadata)
+        missing_mask = generate_mask_for(inputs, configuration.missing_probability, metadata)
         np.save(configuration.outputs, missing_mask.numpy())
 
 

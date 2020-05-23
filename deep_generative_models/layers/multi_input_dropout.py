@@ -8,7 +8,7 @@ from torch.nn import Module
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.component_factory import MultiComponentFactory
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.imputation.masks import compose_with_mask, generate_missing_mask_for
+from deep_generative_models.imputation.masks import compose_with_mask, generate_mask_for
 from deep_generative_models.metadata import Metadata
 
 
@@ -25,7 +25,7 @@ class MultiInputDropout(Module):
         # dropout only during training
         if self.training:
             # create a missing mask using the drop probability
-            drop_mask = generate_missing_mask_for(inputs, self.drop_probability, self.metadata)
+            drop_mask = generate_mask_for(inputs, self.drop_probability, self.metadata)
 
             # put zeros where the drop mask is one and leave the inputs where the drop mask is zero
             return compose_with_mask(mask=drop_mask,
