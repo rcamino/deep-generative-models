@@ -1,5 +1,5 @@
 import argparse
-import pickle
+import os
 import torch
 
 import numpy as np
@@ -54,7 +54,7 @@ class BasicImputation(Task):
             reconstruction_loss = reconstruction_loss_function(imputed, inputs).item()
 
             # this uses one row on a csv file
-            file_mode = "a" if configuration.logs.get("append", False) else "w"
+            file_mode = "a" if os.path.exists(configuration.logs.path) else "w"
             with open(configuration.logs.path, file_mode) as reconstruction_loss_file:
                 file_writer = DictWriter(reconstruction_loss_file, [
                     "inputs",
@@ -64,7 +64,7 @@ class BasicImputation(Task):
                 ])
 
                 # write the csv header if it is the first time
-                if not configuration.logs.get("append", False):
+                if file_mode == "w":
                     file_writer.writeheader()
 
                 row = {
