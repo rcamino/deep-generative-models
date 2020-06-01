@@ -49,10 +49,6 @@ class BasicImputation(Task):
 
         # if reconstruction loss should be logged
         if "logs" in configuration:
-            # calculate reconstruction loss
-            reconstruction_loss_function = RMSE()
-            reconstruction_loss = reconstruction_loss_function(imputed, inputs).item()
-
             # this uses one row on a csv file
             file_mode = "a" if os.path.exists(configuration.logs.path) else "w"
             with open(configuration.logs.path, file_mode) as reconstruction_loss_file:
@@ -60,7 +56,8 @@ class BasicImputation(Task):
                     "inputs",
                     "missing_mask",
                     "means_and_modes",
-                    "reconstruction_loss"
+                    "rmse_mean",
+                    "rmse_sum"
                 ])
 
                 # write the csv header if it is the first time
@@ -71,7 +68,8 @@ class BasicImputation(Task):
                     "inputs": configuration.inputs,
                     "missing_mask": configuration.missing_mask,
                     "means_and_modes": configuration.means_and_modes,
-                    "reconstruction_loss": reconstruction_loss,
+                    "rmse_mean": RMSE(reduction="mean")(imputed, inputs).item(),
+                    "rmse_sum": RMSE(reduction="sum")(imputed, inputs).item(),
                 }
 
                 self.logger.info(row)
