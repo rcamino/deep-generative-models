@@ -66,7 +66,7 @@ factory_by_name = {
     "WGANCriticLoss": ComponentFactoryFromClass(WGANCriticLoss),
     "WGANCriticLossWithGradientPenalty": ComponentFactoryFromClass(WGANCriticLossWithGradientPenalty, ["weight"]),
     "GAINDiscriminatorLoss": ComponentFactoryFromClass(GAINDiscriminatorLoss),
-    "RMSE": ComponentFactoryFromClass(RMSE),
+    "RMSE": ComponentFactoryFromClass(RMSE, ["reduction"]),
 
     # PyTorch losses (could add more)
     "BCE": ComponentFactoryFromClass(BCELoss, ["weight", "reduction"]),
