@@ -60,7 +60,9 @@ class Train(Task, ArchitectureConfigurationValidator):
         ]
 
     def optional_arguments(self) -> List[str]:
-        return super(Train, self).optional_arguments() + ["seed", "scale_transform"]
+        return super(Train, self).optional_arguments() + ["seed",
+                                                          "scale_transform",
+                                                          "keep_checkpoint_by_metric"]
 
     @staticmethod
     def iterate_datasets(configuration: Configuration, datasets: Datasets):
@@ -102,6 +104,10 @@ class Train(Task, ArchitectureConfigurationValidator):
             checkpoint = checkpoints.load(configuration.checkpoints.input)
             if configuration.checkpoints.get("ignore_input_epochs", default=False):
                 checkpoint["epoch"] = 0
+            if configuration.checkpoints.get("use_best_input", default=False):
+                checkpoint["architecture"] = checkpoint.pop("best_architecture")
+                checkpoint.pop("best_epoch")
+                checkpoint.pop("best_metric")
 
         # if there is no starting checkpoint then initialize
         if checkpoint is None:
@@ -127,9 +133,20 @@ class Train(Task, ArchitectureConfigurationValidator):
             for metric_name, metric_value in metrics.items():
                 logger.log(epoch, configuration.epochs, metric_name, metric_value)
 
-            # update checkpoint
+            # update the checkpoint
             checkpoint["architecture"] = checkpoints.extract_states(architecture)
             checkpoint["epoch"] = epoch
+
+            # if the best architecture parameters should be kept
+            if "keep_checkpoint_by_metric" in configuration:
+                # get the metric used to compare checkpoints
+                checkpoint_metric = metrics[configuration.keep_checkpoint_by_metric]
+
+                # check if this is the best checkpoint (or the first)
+                if "best_metric" not in checkpoint or checkpoint_metric < checkpoint["best_metric"]:
+                    checkpoint["best_architecture"] = checkpoint["architecture"]
+                    checkpoint["best_epoch"] = epoch
+                    checkpoint["best_metric"] = checkpoint_metric
 
             # save checkpoint
             checkpoints.delayed_save(checkpoint, configuration.checkpoints.output, configuration.checkpoints.max_delay)

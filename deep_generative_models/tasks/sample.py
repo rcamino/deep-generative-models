@@ -51,7 +51,10 @@ class Sample(Task, ArchitectureConfigurationValidator):
 
         checkpoints = Checkpoints()
         checkpoint = checkpoints.load(configuration.checkpoint)
-        checkpoints.load_states(checkpoint["architecture"], architecture)
+        if "best_architecture" in checkpoint:
+            checkpoints.load_states(checkpoint["best_architecture"], architecture)
+        else:
+            checkpoints.load_states(checkpoint["architecture"], architecture)
 
         samples = []
 

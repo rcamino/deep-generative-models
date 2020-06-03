@@ -14,11 +14,9 @@ Checkpoint = Dict[str, Any]
 
 class Checkpoints(object):
     last_flush_time: Optional[float]
-    kept_checkpoint: Optional[Checkpoint]
 
     def __init__(self) -> None:
         self.last_flush_time = None
-        self.kept_checkpoint = None
 
     @staticmethod
     def exists(path: str) -> bool:
@@ -41,7 +39,12 @@ class Checkpoints(object):
             targets[name] = source.state_dict()
         return targets
 
-    def delayed_save(self, checkpoint: Checkpoint, path: str, max_delay: int, keep: bool = False) -> None:
+    @staticmethod
+    def save(checkpoint: Checkpoint, path: str) -> None:
+        with DelayedKeyboardInterrupt():
+            torch.save(checkpoint, path)
+
+    def delayed_save(self, checkpoint: Checkpoint, path: str, max_delay: int) -> None:
         now = time.time()
 
         # if this is the first save the time from last save is zero
@@ -56,20 +59,5 @@ class Checkpoints(object):
         # if too much time passed from last save
         if seconds_without_save > max_delay:
             # save this one
-            self.save(checkpoint, path, ignore_kept=True)
+            self.save(checkpoint, path)
             self.last_flush_time = now
-            self.kept_checkpoint = None
-
-        # if not too much time passed but should be kept
-        elif keep:
-            self.kept_checkpoint = checkpoint
-
-    def save(self, checkpoint: Checkpoint, path: str, ignore_kept: bool = True) -> None:
-        with DelayedKeyboardInterrupt():
-            # if kept should be ignored this one is used
-            if ignore_kept:
-                torch.save(checkpoint, path)
-
-            # if there is one kept and should be used
-            elif self.kept_checkpoint is not None:
-                torch.save(self.kept_checkpoint, path)
