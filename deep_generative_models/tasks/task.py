@@ -1,6 +1,5 @@
 import logging
 import time
-import torch
 
 from logging import Logger
 from typing import Optional, List
@@ -28,11 +27,6 @@ class Task(ArgumentValidator):
         logging.basicConfig(**configuration.get("logging", default={}, transform_default=False))
 
         self.logger.info("Starting task...")
-
-        if torch.cuda.is_available():
-            self.logger.info("Using GPU.")
-        else:
-            self.logger.info("Using CPU.")
 
         start_time = time.time()
 
