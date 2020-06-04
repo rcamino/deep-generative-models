@@ -11,12 +11,14 @@ from deep_generative_models.configuration import Configuration
 from deep_generative_models.component_factory import ComponentFactoryFromClass
 from deep_generative_models.layers.additive_normal_noise import AdditiveNormalNoise
 from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
+from deep_generative_models.layers.mean_and_modes import MeanAndModesImputation, MeanAndModesImputationFactory
 from deep_generative_models.layers.multi_input_dropout import MultiInputDropoutFactory
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
 from deep_generative_models.layers.multi_output_layer import PartialMultiOutputLayerFactory
 from deep_generative_models.layers.single_input_layer import SingleInputLayerFactory
 from deep_generative_models.layers.single_output_layer import PartialSingleOutputLayerFactory
+from deep_generative_models.layers.zero import ZeroImputation
 from deep_generative_models.losses.autoencoder import AutoEncoderLossFactory
 from deep_generative_models.losses.gain import GAINDiscriminatorLoss, GAINGeneratorLossFactory
 from deep_generative_models.losses.gan import GANGeneratorLoss, GANDiscriminatorLoss
@@ -45,6 +47,8 @@ factory_by_name = {
     # my layers
     "SingleInputLayer": SingleInputLayerFactory(),
     "AdditiveNormalNoise": ComponentFactoryFromClass(AdditiveNormalNoise),
+    "ZeroImputation": ComponentFactoryFromClass(ZeroImputation, ["differentiable"]),
+    "MeanAndModesImputation": MeanAndModesImputationFactory(),
 
     # PyTorch layers (could add more)
     "Dropout": ComponentFactoryFromClass(Dropout, ["p"]),
