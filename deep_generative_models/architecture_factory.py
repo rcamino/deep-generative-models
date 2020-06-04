@@ -1,3 +1,5 @@
+from typing import Any
+
 from torch.nn import LeakyReLU, ReLU, Sigmoid, Tanh, BCELoss, CrossEntropyLoss, MSELoss, Dropout
 
 from torch.optim import Adam, SGD
@@ -6,8 +8,7 @@ from deep_generative_models.activations.gumbel_softmax_sampling import GumbelSof
 from deep_generative_models.activations.softmax_sampling import SoftmaxSampling
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
-from deep_generative_models.component_factory import ComponentFactoryFromClass, MissingArchitectureArgument
-from deep_generative_models.arguments import MissingArgument, InvalidArgument
+from deep_generative_models.component_factory import ComponentFactoryFromClass
 from deep_generative_models.layers.additive_normal_noise import AdditiveNormalNoise
 from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
 from deep_generative_models.layers.multi_input_dropout import MultiInputDropoutFactory
@@ -154,28 +155,8 @@ def create_architecture(metadata: Metadata, configuration: Configuration) -> Arc
         node = nodes_without_out_edges.pop()
         assert len(out_edges[node]) == 0
 
-        # prepare the component
-        component_configuration = configuration.components[node]
-        if "factory" not in component_configuration:
-            raise Exception("Missing factory name while creating component '{}'".format(node))
-        factory = factory_by_name[component_configuration.factory]
-        arguments = component_configuration.get("arguments", {})
-
-        # validate the component
-        try:
-            factory.validate_architecture_arguments(configuration.arguments)
-        except MissingArchitectureArgument as e:
-            raise Exception("Missing architecture argument '{}' while creating component '{}'".format(e.name, node))
-
-        try:
-            factory.validate_arguments(arguments)
-        except MissingArgument as e:
-            raise Exception("Missing argument '{}' while creating component '{}'".format(e.name, node))
-        except InvalidArgument as e:
-            raise Exception("Invalid argument '{}' while creating component '{}'".format(e.name, node))
-
         # create the component
-        architecture[node] = factory.create(architecture, metadata, arguments)
+        architecture[node] = create_component(architecture, metadata, configuration.components[node])
 
         # while the node has other nodes pointing at him
         while len(in_edges[node]) > 0:
@@ -193,3 +174,13 @@ def create_architecture(metadata: Metadata, configuration: Configuration) -> Arc
         out_edges.pop(node)
 
     return architecture
+
+
+def create_component(architecture: Architecture, metadata: Metadata, configuration: Configuration) -> Any:
+    if "factory" not in configuration:
+        raise Exception("Missing factory name while creating component.")
+
+    factory = factory_by_name[configuration.factory]
+    arguments = configuration.get("arguments", {})
+
+    return factory.validate_and_create(architecture, metadata, arguments)

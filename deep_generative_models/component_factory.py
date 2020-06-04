@@ -1,9 +1,9 @@
 from typing import Dict, Any, Type, List
 
 from deep_generative_models.architecture import Architecture
+from deep_generative_models.arguments import MissingArgument, InvalidArgument
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.arguments import ArgumentValidator
-from deep_generative_models.arguments import ArgumentError, MissingArgument, InvalidArgument
 from deep_generative_models.metadata import Metadata
 
 
@@ -15,10 +15,23 @@ class ComponentFactory(ArgumentValidator):
     def mandatory_architecture_arguments(self) -> List[str]:
         return []
 
-    def validate_architecture_arguments(self, architecture_arguments: Configuration) -> None:
+    def validate_and_create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
+        # validate the architecture arguments
         for mandatory_architecture_argument in self.mandatory_architecture_arguments():
-            if mandatory_architecture_argument not in architecture_arguments:
-                raise MissingArchitectureArgument(mandatory_architecture_argument)
+            if mandatory_architecture_argument not in architecture.arguments:
+                raise Exception("Missing architecture argument '{}' while creating component.".format(
+                    mandatory_architecture_argument))
+
+        # validate the component arguments
+        try:
+            self.validate_arguments(arguments)
+        except MissingArgument as e:
+            raise Exception("Missing argument '{}' while creating component".format(e.name))
+        except InvalidArgument as e:
+            raise Exception("Invalid argument '{}' while creating component.".format(e.name))
+
+        # create the component
+        return self.create(architecture, metadata, arguments)
 
     def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         raise NotImplementedError
@@ -32,22 +45,7 @@ class MultiComponentFactory(ComponentFactory):
 
     def create_other(self, other_name: str, architecture: Architecture, metadata: Metadata,
                      other_arguments: Configuration) -> Any:
-        other_factory = self.factory_by_name[other_name]
-
-        try:
-            other_factory.validate_architecture_arguments(architecture.arguments)
-        except MissingArchitectureArgument as e:
-            raise Exception(
-                "Missing architecture argument '{}' while creating other component '{}'".format(e.name, other_name))
-
-        try:
-            other_factory.validate_arguments(other_arguments)
-        except MissingArgument as e:
-            raise Exception("Missing argument '{}' while creating other component '{}'".format(e.name, other_name))
-        except InvalidArgument as e:
-            raise Exception("Invalid argument '{}' while creating other component '{}'".format(e.name, other_name))
-
-        return other_factory.create(architecture, metadata, other_arguments)
+        return self.factory_by_name[other_name].validate_and_create(architecture, metadata, other_arguments)
 
     def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         raise NotImplementedError
@@ -66,7 +64,3 @@ class ComponentFactoryFromClass(ComponentFactory):
 
     def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         return self.wrapped_class(**arguments.get_all_defined(self.optional_class_arguments))
-
-
-class MissingArchitectureArgument(ArgumentError):
-    pass
