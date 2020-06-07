@@ -16,6 +16,7 @@ from deep_generative_models.layers.multi_input_dropout import MultiInputDropoutF
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
 from deep_generative_models.layers.multi_output_layer import PartialMultiOutputLayerFactory
+from deep_generative_models.layers.normal_noise_imputation_layer import NormalNoiseImputation
 from deep_generative_models.layers.single_input_layer import SingleInputLayerFactory
 from deep_generative_models.layers.single_output_layer import PartialSingleOutputLayerFactory
 from deep_generative_models.layers.zero_imputation_layer import ZeroImputation
@@ -48,6 +49,7 @@ factory_by_name = {
     "SingleInputLayer": SingleInputLayerFactory(),
     "AdditiveNormalNoise": ComponentFactoryFromClass(AdditiveNormalNoise),
     "ZeroImputation": ComponentFactoryFromClass(ZeroImputation, ["differentiable"]),
+    "NormalNoiseImputation": ComponentFactoryFromClass(NormalNoiseImputation, ["noise_mean", "noise_std", "differentiable"]),
     "MeanAndModesImputation": MeanAndModesImputationFactory(),
 
     # PyTorch layers (could add more)
