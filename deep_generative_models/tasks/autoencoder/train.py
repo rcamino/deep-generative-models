@@ -60,7 +60,7 @@ class TrainAutoEncoder(Train):
 
         for batch in self.iterate_datasets(configuration, val_datasets):
             batch = pre_processing.transform(batch)
-            val_loss_by_batch.append(self.val_batch(architecture, batch))
+            val_loss_by_batch.append(self.val_batch(architecture, batch, post_processing))
 
         losses["val_reconstruction_mean_loss"] = np.mean(val_loss_by_batch).item()
 
