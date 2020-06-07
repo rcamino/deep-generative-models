@@ -5,8 +5,10 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.imputation.basic_imputation_task import BasicImputation
 from deep_generative_models.imputation.compute_mean_and_modes_task import ComputeMeansAndModes
 from deep_generative_models.tasks.arae.train import TrainARAE
+from deep_generative_models.tasks.autoencoder.impute import ImputeWithAutoEncoder
 from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
 from deep_generative_models.tasks.encode import Encode
+from deep_generative_models.tasks.gain.impute import ImputeWithGAIN
 from deep_generative_models.tasks.gain.train import TrainGAIN
 from deep_generative_models.tasks.gan.sample import SampleGAN
 from deep_generative_models.tasks.gan.train import TrainGAN
@@ -46,6 +48,8 @@ task_by_name = {
     "GenerateMissingMask": GenerateMissingMask(),
     "ComputeMeansAndModes": ComputeMeansAndModes(),
     "BasicImputation": BasicImputation(),
+    "ImputeWithMIDA": ImputeWithAutoEncoder(),
+    "ImputeWithGAIN": ImputeWithGAIN(),
 
     # runners
     "SerialTaskRunner": SerialTaskRunner(),

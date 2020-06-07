@@ -2,15 +2,13 @@ from torch import Tensor
 
 from typing import Optional, Dict
 
-from sklearn.preprocessing import MinMaxScaler
-
 from deep_generative_models.layers.imputation_layer import ImputationLayer
 
 
 class PreProcessing:
     imputation: Optional[ImputationLayer]
 
-    def __init__(self, imputation: Optional[MinMaxScaler] = None) -> None:
+    def __init__(self, imputation: Optional[ImputationLayer] = None) -> None:
         self.imputation = imputation
 
     def transform(self, batch: Dict[str, Tensor]) -> Dict[str, Tensor]:
