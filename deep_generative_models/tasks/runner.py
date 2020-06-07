@@ -40,6 +40,7 @@ task_by_name = {
     "EncodeWithAutoEncoder": Encode(),
     "EncodeWithDeNoisingAutoEncoder": Encode(),
     "EncodeWithVAE": Encode(),
+    "EncodeWithMIDA": Encode(),
 
     # imputation
     "GenerateMissingMask": GenerateMissingMask(),
