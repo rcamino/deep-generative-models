@@ -11,7 +11,7 @@ from deep_generative_models.configuration import Configuration
 from deep_generative_models.component_factory import ComponentFactoryFromClass
 from deep_generative_models.layers.additive_normal_noise import AdditiveNormalNoise
 from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
-from deep_generative_models.layers.mean_and_modes_imputation_layer import MeanAndModesImputation, MeanAndModesImputationFactory
+from deep_generative_models.layers.mean_and_modes_imputation_layer import MeanAndModesImputationFactory
 from deep_generative_models.layers.multi_input_dropout import MultiInputDropoutFactory
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
@@ -26,6 +26,8 @@ from deep_generative_models.losses.gan import GANGeneratorLoss, GANDiscriminator
 from deep_generative_models.losses.multi_reconstruction import MultiReconstructionLossFactory
 from deep_generative_models.losses.rmse import RMSE
 from deep_generative_models.losses.vae import VAELossFactory
+from deep_generative_models.losses.validation_imputation_loss import ValidationImputationLossFactory
+from deep_generative_models.losses.validation_reconstruction_loss import ValidationReconstructionLossFactory
 from deep_generative_models.losses.wgan import WGANGeneratorLoss, WGANCriticLoss
 from deep_generative_models.losses.wgan_gp import WGANCriticLossWithGradientPenalty
 
@@ -96,6 +98,8 @@ factory_by_name["MultiInputDropout"] = MultiInputDropoutFactory(factory_by_name)
 factory_by_name["AutoEncoderLoss"] = AutoEncoderLossFactory(factory_by_name)
 factory_by_name["VAELoss"] = VAELossFactory(factory_by_name)
 factory_by_name["GAINGeneratorLoss"] = GAINGeneratorLossFactory(factory_by_name)
+factory_by_name["ValidationReconstructionLoss"] = ValidationReconstructionLossFactory(factory_by_name)
+factory_by_name["ValidationImputationLoss"] = ValidationImputationLossFactory(factory_by_name)
 
 # my optimizers that create other components
 factory_by_name["WGANOptimizer"] = WGANOptimizerFactory(factory_by_name)

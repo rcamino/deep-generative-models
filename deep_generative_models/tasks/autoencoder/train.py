@@ -20,7 +20,7 @@ class TrainAutoEncoder(Train):
             "autoencoder",
             "autoencoder_optimizer",
             "reconstruction_loss",
-            "val_reconstruction_loss",
+            "val_loss",
         ]
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
@@ -83,13 +83,8 @@ class TrainAutoEncoder(Train):
     @staticmethod
     def val_batch(architecture: Architecture, batch: Batch, post_processing: PostProcessing) -> float:
         outputs = architecture.autoencoder(batch["features"], condition=batch.get("labels"))
-
-        # scale transform might be applied to imputation and ground truth to compute the proper validation loss
-        loss = architecture.val_reconstruction_loss(post_processing.transform(outputs["reconstructed"]),
-                                                    post_processing.transform(batch["features"]))
-
-        loss = to_cpu_if_was_in_gpu(loss)
-        return loss.item()
+        loss = architecture.val_loss(post_processing, outputs["reconstructed"], batch["features"])
+        return to_cpu_if_was_in_gpu(loss).item()
 
 
 if __name__ == '__main__':

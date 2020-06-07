@@ -189,18 +189,8 @@ class TrainGAIN(Train):
 
     @staticmethod
     def val_batch(architecture: Architecture, batch: Batch,  post_processing: PostProcessing) -> float:
-        # generate a batch of fake features with the same size as the real feature batch
         generated = architecture.generator(batch["features"], missing_mask=batch["missing_mask"])
-        # replace the missing features by the generated
-        imputed = compose_with_mask(mask=batch["missing_mask"],
-                                    differentiable=False,  # back propagation not needed here
-                                    where_one=generated,
-                                    where_zero=batch["raw_features"])
-
-        # scale transform might be applied to imputation and ground truth to compute the proper validation loss
-        loss = architecture.val_loss(post_processing.transform(imputed),
-                                     post_processing.transform(batch["raw_features"]))
-
+        loss = architecture.val_loss(post_processing, generated, batch["features"])
         return to_cpu_if_was_in_gpu(loss).item()
 
 
