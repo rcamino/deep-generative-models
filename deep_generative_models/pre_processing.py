@@ -1,9 +1,10 @@
-from typing import Optional
+from torch import Tensor
+
+from typing import Optional, Dict
 
 from sklearn.preprocessing import MinMaxScaler
 
 from deep_generative_models.layers.imputation_layer import ImputationLayer
-from deep_generative_models.tasks.train import Batch
 
 
 class PreProcessing:
@@ -12,7 +13,7 @@ class PreProcessing:
     def __init__(self, imputation: Optional[MinMaxScaler] = None) -> None:
         self.imputation = imputation
 
-    def transform(self, batch: Batch) -> Batch:
+    def transform(self, batch: Dict[str, Tensor]) -> Dict[str, Tensor]:
         if self.imputation is not None:
             assert "missing_mask" in batch
             batch["raw_features"] = batch["features"]
