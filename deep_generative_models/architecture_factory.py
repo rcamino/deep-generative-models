@@ -47,7 +47,7 @@ from deep_generative_models.optimizers.wgan_optimizer import WGANOptimizerFactor
 factory_by_name = {
     # my layers
     "SingleInputLayer": SingleInputLayerFactory(),
-    "AdditiveNormalNoise": ComponentFactoryFromClass(AdditiveNormalNoise),
+    "AdditiveNormalNoise": ComponentFactoryFromClass(AdditiveNormalNoise, ["noise_mean", "noise_std"]),
     "ZeroImputation": ComponentFactoryFromClass(ZeroImputation, ["differentiable"]),
     "NormalNoiseImputation": ComponentFactoryFromClass(NormalNoiseImputation, ["noise_mean", "noise_std", "differentiable"]),
     "MeanAndModesImputation": MeanAndModesImputationFactory(),
