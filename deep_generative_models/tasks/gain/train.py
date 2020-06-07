@@ -13,6 +13,7 @@ from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 from deep_generative_models.imputation.masks import compose_with_mask, generate_mask_for, inverse_mask
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.post_processing import PostProcessing
+from deep_generative_models.pre_processing import PreProcessing
 from deep_generative_models.tasks.train import Train, Datasets, Batch
 
 
@@ -47,7 +48,8 @@ class TrainGAIN(Train):
         ]
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    datasets: Datasets, post_processing: PostProcessing) -> Dict[str, float]:
+                    datasets: Datasets, pre_processing: PreProcessing, post_processing: PostProcessing
+                    ) -> Dict[str, float]:
         # train
         architecture.generator.train()
         architecture.discriminator.train()
@@ -56,8 +58,14 @@ class TrainGAIN(Train):
         losses_by_batch = {"generator": [], "discriminator": []}
 
         # prepare datasets
-        train_datasets = Datasets({"features": datasets.train_features, "missing_mask": datasets.train_missing_mask})
-        val_datasets = Datasets({"features": datasets.val_features, "missing_mask": datasets.val_missing_mask})
+        train_datasets = Datasets({"features": datasets.train_features})
+        val_datasets = Datasets({"features": datasets.val_features})
+
+        # missing mask
+        if "train_missing_mask" in datasets:
+            train_datasets["missing_mask"] = datasets.train_missing_mask
+        if "val_missing_mask" in datasets:
+            val_datasets["missing_mask"] = datasets.val_missing_mask
 
         # an epoch will stop at any point if there are no more batches
         # it does not matter if there are models with remaining steps
@@ -66,10 +74,12 @@ class TrainGAIN(Train):
         while True:
             try:
                 losses_by_batch["discriminator"].extend(
-                    self.train_discriminator_steps(configuration, metadata, architecture, data_iterator))
+                    self.train_discriminator_steps(configuration, metadata, architecture, data_iterator, pre_processing)
+                )
 
                 losses_by_batch["generator"].extend(
-                    self.train_generator_steps(configuration, metadata, architecture, data_iterator))
+                    self.train_generator_steps(configuration, metadata, architecture, data_iterator, pre_processing)
+                )
             except StopIteration:
                 break
 
@@ -95,10 +105,10 @@ class TrainGAIN(Train):
         return losses
 
     def train_discriminator_steps(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                  batch_iterator: Iterator[Batch]) -> List[float]:
+                                  batch_iterator: Iterator[Batch], pre_processing: PreProcessing) -> List[float]:
         losses = []
         for _ in range(configuration.discriminator_steps):
-            batch = next(batch_iterator)
+            batch = pre_processing.transform(next(batch_iterator))
             loss = self.train_discriminator_step(configuration, metadata, architecture, batch)
             losses.append(loss)
         return losses
@@ -110,17 +120,12 @@ class TrainGAIN(Train):
         architecture.discriminator_optimizer.zero_grad()
 
         # generate a batch of fake features with the same size as the real feature batch
-        noise = to_gpu_if_available(torch.ones_like(batch["features"]).normal_())
-        noisy_features = compose_with_mask(batch["missing_mask"],
-                                           differentiable=False,  # maybe there are NaNs in the dataset
-                                           where_one=noise,
-                                           where_zero=batch["features"])
-        generated = architecture.generator(noisy_features, missing_mask=batch["missing_mask"])
+        generated = architecture.generator(batch["features"], missing_mask=batch["missing_mask"])
         # replace the missing features by the generated
         imputed = compose_with_mask(mask=batch["missing_mask"],
                                     differentiable=True,  # now there are no NaNs and this should be used
                                     where_one=generated,
-                                    where_zero=batch["features"])
+                                    where_zero=batch["raw_features"])
         imputed = imputed.detach()  # do not propagate to the generator
         # generate hint
         hint = generate_hint(batch["missing_mask"], configuration.hint_probability, metadata)
@@ -141,10 +146,10 @@ class TrainGAIN(Train):
         return to_cpu_if_was_in_gpu(loss).item()
 
     def train_generator_steps(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                              batch_iterator: Iterator[Batch]) -> List[float]:
+                              batch_iterator: Iterator[Batch], pre_processing: PreProcessing) -> List[float]:
         losses = []
         for _ in range(configuration.generator_steps):
-            batch = next(batch_iterator)
+            batch = pre_processing.transform(next(batch_iterator))
             loss = self.train_generator_step(configuration, metadata, architecture, batch)
             losses.append(loss)
         return losses
@@ -156,23 +161,18 @@ class TrainGAIN(Train):
         architecture.generator_optimizer.zero_grad()
 
         # generate a batch of fake features with the same size as the real feature batch
-        noise = to_gpu_if_available(torch.ones_like(batch["features"]).normal_())
-        noisy_features = compose_with_mask(batch["missing_mask"],
-                                           differentiable=False,  # maybe there are NaNs in the dataset
-                                           where_one=noise,
-                                           where_zero=batch["features"])
-        generated = architecture.generator(noisy_features, missing_mask=batch["missing_mask"])
+        generated = architecture.generator(batch["features"], missing_mask=batch["missing_mask"])
         # replace the missing features by the generated
         imputed = compose_with_mask(mask=batch["missing_mask"],
                                     differentiable=True,  # now there are no NaNs and this should be used
                                     where_one=generated,
-                                    where_zero=batch["features"])
+                                    where_zero=batch["raw_features"])
         # generate hint
         hint = generate_hint(batch["missing_mask"], configuration.hint_probability, metadata)
 
         # calculate loss
         loss = architecture.generator_loss(architecture=architecture,
-                                           features=batch["features"],
+                                           features=batch["raw_features"],
                                            generated=generated,
                                            imputed=imputed,
                                            hint=hint,
@@ -189,21 +189,17 @@ class TrainGAIN(Train):
 
     @staticmethod
     def val_batch(architecture: Architecture, batch: Batch,  post_processing: PostProcessing) -> float:
-        noise = to_gpu_if_available(torch.ones_like(batch["features"]).normal_())
-        noisy_features = compose_with_mask(mask=batch["missing_mask"],
-                                           differentiable=False,  # maybe there are NaNs in the dataset
-                                           where_one=noise,
-                                           where_zero=batch["features"])
-        generated = architecture.generator(noisy_features, missing_mask=batch["missing_mask"])
+        # generate a batch of fake features with the same size as the real feature batch
+        generated = architecture.generator(batch["features"], missing_mask=batch["missing_mask"])
         # replace the missing features by the generated
         imputed = compose_with_mask(mask=batch["missing_mask"],
                                     differentiable=False,  # back propagation not needed here
                                     where_one=generated,
-                                    where_zero=batch["features"])
+                                    where_zero=batch["raw_features"])
 
         # scale transform might be applied to imputation and ground truth to compute the proper validation loss
         loss = architecture.val_loss(post_processing.transform(imputed),
-                                     post_processing.transform(batch["features"]))
+                                     post_processing.transform(batch["raw_features"]))
 
         return to_cpu_if_was_in_gpu(loss).item()
 

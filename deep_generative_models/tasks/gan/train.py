@@ -11,6 +11,7 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.gpu import to_gpu_if_available, to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.post_processing import PostProcessing
+from deep_generative_models.pre_processing import PreProcessing
 from deep_generative_models.tasks.train import Train, Datasets, Batch
 
 
@@ -33,7 +34,8 @@ class TrainGAN(Train):
         ]
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    datasets: Datasets, post_processing: PostProcessing) -> Dict[str, float]:
+                    datasets: Datasets, pre_processing: PreProcessing, post_processing: PostProcessing
+                    ) -> Dict[str, float]:
         # train
         architecture.generator.train()
         architecture.discriminator.train()
@@ -41,12 +43,16 @@ class TrainGAN(Train):
         # prepare to accumulate losses per batch
         losses_by_batch = {"generator": [], "discriminator": []}
 
+        # basic data
+        train_datasets = Datasets({"features": datasets.train_features})
+
         # conditional
         if "conditional" in architecture.arguments:
-            train_datasets = Datasets({"features": datasets.train_features, "labels": datasets.train_labels})
-        # non-conditional
-        else:
-            train_datasets = Datasets({"features": datasets.train_features})
+            train_datasets["labels"] = datasets.train_labels
+
+        # missing mask
+        if "train_missing_mask" in datasets:
+            train_datasets["missing_mask"] = datasets.train_missing_mask
 
         # an epoch will stop at any point if there are no more batches
         # it does not matter if there are models with remaining steps
@@ -55,9 +61,12 @@ class TrainGAN(Train):
         while True:
             try:
                 losses_by_batch["discriminator"].extend(
-                    self.train_discriminator_steps(configuration, metadata, architecture, data_iterator))
+                    self.train_discriminator_steps(configuration, metadata, architecture, data_iterator, pre_processing)
+                )
 
-                losses_by_batch["generator"].extend(self.train_generator_steps(configuration, metadata, architecture))
+                losses_by_batch["generator"].extend(
+                    self.train_generator_steps(configuration, metadata, architecture)
+                )
             except StopIteration:
                 break
 
@@ -73,10 +82,10 @@ class TrainGAN(Train):
         return losses
 
     def train_discriminator_steps(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                                  batch_iterator: Iterator[Batch]) -> List[float]:
+                                  batch_iterator: Iterator[Batch], pre_processing: PreProcessing) -> List[float]:
         losses = []
         for _ in range(configuration.discriminator_steps):
-            batch = next(batch_iterator)
+            batch = pre_processing.transform(next(batch_iterator))
             loss = self.train_discriminator_step(configuration, metadata, architecture, batch)
             losses.append(loss)
         return losses
@@ -91,7 +100,9 @@ class TrainGAN(Train):
         fake_features = fake_features.detach()  # do not propagate to the generator
 
         # calculate loss
-        loss = architecture.discriminator_loss(architecture, batch["features"], fake_features,
+        loss = architecture.discriminator_loss(architecture,
+                                               batch["features"],
+                                               fake_features,
                                                condition=batch.get("labels"))
 
         # calculate gradients

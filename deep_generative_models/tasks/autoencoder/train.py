@@ -9,6 +9,7 @@ from deep_generative_models.configuration import Configuration, load_configurati
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import Metadata
 from deep_generative_models.post_processing import PostProcessing
+from deep_generative_models.pre_processing import PreProcessing
 from deep_generative_models.tasks.train import Train, Datasets, Batch
 
 
@@ -23,22 +24,30 @@ class TrainAutoEncoder(Train):
         ]
 
     def train_epoch(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
-                    datasets: Datasets, post_processing: PostProcessing) -> Dict[str, float]:
+                    datasets: Datasets, pre_processing: PreProcessing, post_processing: PostProcessing
+                    ) -> Dict[str, float]:
         architecture.autoencoder.train()
+
+        # basic data
+        train_datasets = Datasets({"features": datasets.train_features})
+        val_datasets = Datasets({"features": datasets.val_features})
 
         # conditional
         if "conditional" in architecture.arguments:
-            train_datasets = Datasets({"features": datasets.train_features, "labels": datasets.train_labels})
-            val_datasets = Datasets({"features": datasets.val_features, "labels": datasets.val_labels})
-        # non-conditional
-        else:
-            train_datasets = Datasets({"features": datasets.train_features})
-            val_datasets = Datasets({"features": datasets.val_features})
+            train_datasets["labels"] = datasets.train_labels
+            val_datasets["labels"] = datasets.val_labels
+
+        # missing mask
+        if "train_missing_mask" in datasets:
+            train_datasets["missing_mask"] = datasets.train_missing_mask
+        if "val_missing_mask" in datasets:
+            val_datasets["missing_mask"] = datasets.val_missing_mask
 
         # train by batch
         train_loss_by_batch = []
 
         for batch in self.iterate_datasets(configuration, train_datasets):
+            batch = pre_processing.transform(batch)
             train_loss_by_batch.append(self.train_batch(architecture, batch))
 
         # loss aggregation
@@ -50,7 +59,8 @@ class TrainAutoEncoder(Train):
         val_loss_by_batch = []
 
         for batch in self.iterate_datasets(configuration, val_datasets):
-            val_loss_by_batch.append(self.val_batch(architecture, batch, post_processing))
+            batch = pre_processing.transform(batch)
+            val_loss_by_batch.append(self.val_batch(architecture, batch))
 
         losses["val_reconstruction_mean_loss"] = np.mean(val_loss_by_batch).item()
 
