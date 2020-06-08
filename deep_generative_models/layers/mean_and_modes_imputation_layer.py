@@ -35,8 +35,11 @@ class MeanAndModesImputation(ImputationLayer):
 
 class MeanAndModesImputationFactory(ComponentFactory):
 
-    def optional_arguments(self) -> List[str]:
+    def mandatory_arguments(self) -> List[str]:
         return ["path"]
+
+    def optional_arguments(self) -> List[str]:
+        return ["differentiable"]
 
     def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
         return MeanAndModesImputation(to_gpu_if_available(torch.from_numpy(np.load(arguments.path)).float()),
