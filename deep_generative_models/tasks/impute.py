@@ -12,7 +12,7 @@ from deep_generative_models.checkpoints import Checkpoints
 from deep_generative_models.configuration import load_configuration, Configuration
 from deep_generative_models.gpu import to_cpu_if_was_in_gpu, to_gpu_if_available
 from deep_generative_models.imputation.masks import compose_with_mask
-from deep_generative_models.metadata import load_metadata
+from deep_generative_models.metadata import load_metadata, Metadata
 from deep_generative_models.post_processing import load_scale_transform, PostProcessing
 from deep_generative_models.pre_processing import PreProcessing
 from deep_generative_models.rng import seed_all
@@ -73,8 +73,7 @@ class Impute(Task, ArchitectureConfigurationValidator):
         batch = pre_processing.transform({"features": features, "missing_mask": missing_mask})
 
         # generate the model outputs
-        with torch.no_grad():
-            output = self.impute(architecture, batch)
+        output = self.impute(configuration, metadata, architecture, batch)
 
         # imputation
         output = compose_with_mask(mask=missing_mask, differentiable=False, where_one=output, where_zero=features)
@@ -87,5 +86,6 @@ class Impute(Task, ArchitectureConfigurationValidator):
         output = output.numpy()
         np.save(configuration.output, output)
 
-    def impute(self, architecture: Architecture, batch: Dict[str, Tensor]) -> Tensor:
+    def impute(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+               batch: Dict[str, Tensor]) -> Tensor:
         raise NotImplementedError

@@ -10,6 +10,7 @@ from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
 from deep_generative_models.tasks.encode import Encode
 from deep_generative_models.tasks.gain.impute import ImputeWithGAIN
 from deep_generative_models.tasks.gain.train import TrainGAIN
+from deep_generative_models.tasks.gan.iterative_imputation import GANIterativeImputation
 from deep_generative_models.tasks.gan.sample import SampleGAN
 from deep_generative_models.tasks.gan.train import TrainGAN
 from deep_generative_models.tasks.gan_with_autoencoder.sample import SampleGANWithAutoEncoder
@@ -50,6 +51,7 @@ task_by_name = {
     "BasicImputation": BasicImputation(),
     "ImputeWithMIDA": ImputeWithAutoEncoder(),
     "ImputeWithGAIN": ImputeWithGAIN(),
+    "GANIterativeImputation": GANIterativeImputation(),
 
     # runners
     "SerialTaskRunner": SerialTaskRunner(),

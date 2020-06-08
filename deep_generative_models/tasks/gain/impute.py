@@ -5,7 +5,8 @@ from typing import List, Dict
 from torch import Tensor
 
 from deep_generative_models.architecture import Architecture
-from deep_generative_models.configuration import load_configuration
+from deep_generative_models.configuration import load_configuration, Configuration
+from deep_generative_models.metadata import Metadata
 from deep_generative_models.tasks.impute import Impute
 
 
@@ -14,7 +15,8 @@ class ImputeWithGAIN(Impute):
     def mandatory_architecture_components(self) -> List[str]:
         return ["generator"]
 
-    def impute(self, architecture: Architecture, batch: Dict[str, Tensor]) -> Tensor:
+    def impute(self, configuration: Configuration, metadata: Metadata, architecture: Architecture,
+               batch: Dict[str, Tensor]) -> Tensor:
         return architecture.generator(batch["features"], missing_mask=batch["missing_mask"])
 
 
