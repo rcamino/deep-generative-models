@@ -7,10 +7,12 @@ from deep_generative_models.layers.input_layer import InputLayer
 
 class GAINInputLayer(InputLayer):
     input_layer: InputLayer
+    mask_size: int
 
-    def __init__(self, input_layer: InputLayer) -> None:
+    def __init__(self, input_layer: InputLayer, mask_size: int) -> None:
         super(GAINInputLayer, self).__init__()
         self.input_layer = input_layer
+        self.mask_size = mask_size
 
     def forward(self, inputs: Tensor, **additional_inputs: Tensor) -> Tensor:
         if "missing_mask" not in additional_inputs:
@@ -28,4 +30,4 @@ class GAINInputLayer(InputLayer):
         ), dim=1)
 
     def get_output_size(self) -> int:
-        return self.input_layer.get_output_size() * 2
+        return self.input_layer.get_output_size() + self.mask_size

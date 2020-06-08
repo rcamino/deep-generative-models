@@ -21,7 +21,7 @@ class GAINDiscriminatorFactory(MultiComponentFactory):
         # create the input layer
         input_layer = self.create_input_layer(architecture, metadata, arguments)
         # wrap the input layer with the special gain input layer (to receive the mask)
-        input_layer = GAINInputLayer(input_layer)
+        input_layer = GAINInputLayer(input_layer, metadata.get_num_features())
 
         # create the hidden layers factory
         hidden_layers_factory = self.create_other("HiddenLayers", architecture, metadata,
