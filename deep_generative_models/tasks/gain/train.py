@@ -190,7 +190,7 @@ class TrainGAIN(Train):
     @staticmethod
     def val_batch(architecture: Architecture, batch: Batch,  post_processing: PostProcessing) -> float:
         generated = architecture.generator(batch["features"], missing_mask=batch["missing_mask"])
-        loss = architecture.val_loss(post_processing, generated, batch["features"])
+        loss = architecture.val_loss(post_processing, generated, batch)
         return to_cpu_if_was_in_gpu(loss).item()
 
 

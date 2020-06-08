@@ -83,7 +83,7 @@ class TrainAutoEncoder(Train):
     @staticmethod
     def val_batch(architecture: Architecture, batch: Batch, post_processing: PostProcessing) -> float:
         outputs = architecture.autoencoder(batch["features"], condition=batch.get("labels"))
-        loss = architecture.val_loss(post_processing, outputs["reconstructed"], batch["features"])
+        loss = architecture.val_loss(post_processing, outputs["reconstructed"], batch)
         return to_cpu_if_was_in_gpu(loss).item()
 
 
