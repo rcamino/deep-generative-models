@@ -98,6 +98,7 @@ class TrainGAIN(Train):
         val_losses_by_batch = []
 
         for batch in self.iterate_datasets(configuration, val_datasets):
+            batch = pre_processing.transform(batch)
             val_losses_by_batch.append(self.val_batch(architecture, batch, post_processing))
 
         losses["val_mean_loss"] = np.mean(val_losses_by_batch).item()
