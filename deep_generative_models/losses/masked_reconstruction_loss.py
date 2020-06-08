@@ -14,6 +14,7 @@ class MaskedReconstructionLoss(Module):
 
     def __init__(self, reconstruction_loss: Module) -> None:
         super(MaskedReconstructionLoss, self).__init__()
+        assert reconstruction_loss.reduction == "sum", "The reconstruction loss should have reduction='sum'."
         self.reconstruction_loss = reconstruction_loss
 
     def forward(self, inputs: Tensor, target: Tensor, mask: Tensor) -> Tensor:

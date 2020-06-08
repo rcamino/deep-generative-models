@@ -32,8 +32,6 @@ class GAINGeneratorLoss(Module):
     def __init__(self, reconstruction_loss: Module, reconstruction_loss_weight: float = 1) -> None:
         super(GAINGeneratorLoss, self).__init__()
 
-        assert reconstruction_loss.reduction == "sum", "The reconstruction loss should have reduction='sum'."
-
         self.reconstruction_loss = MaskedReconstructionLoss(reconstruction_loss)
         self.reconstruction_loss_weight = reconstruction_loss_weight
 
