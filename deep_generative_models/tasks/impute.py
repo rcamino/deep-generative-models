@@ -27,7 +27,7 @@ class Impute(Task, ArchitectureConfigurationValidator):
             "missing_mask",
             "metadata",
             "architecture",
-            "checkpoints",
+            "checkpoint",
             "imputation",
             "output"
         ]
