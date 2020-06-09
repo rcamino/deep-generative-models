@@ -8,6 +8,7 @@ from sklearn.preprocessing import MinMaxScaler
 from torch import Tensor
 from torch.nn.functional import one_hot
 
+from deep_generative_models.gpu import to_cpu_if_was_in_gpu
 from deep_generative_models.metadata import Metadata
 
 
@@ -30,7 +31,9 @@ class PostProcessing:
     def continuous_transform(self, sample: Tensor) -> Tensor:
         if self.scale_transform is not None:
             # TODO: I don't like going back and forth from numpy and torch
-            return torch.from_numpy(self.scale_transform.inverse_transform(sample.detach().numpy()))
+            numpy_sample = to_cpu_if_was_in_gpu(sample.detach()).numpy()
+            unscaled = self.scale_transform.inverse_transform(numpy_sample)
+            return torch.from_numpy(unscaled)
         else:
             return sample
 
