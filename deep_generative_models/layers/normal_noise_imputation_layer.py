@@ -6,13 +6,13 @@ from deep_generative_models.imputation.masks import compose_with_mask
 from deep_generative_models.layers.imputation_layer import ImputationLayer
 
 
-class NormalNoiseImputation(ImputationLayer):
+class NormalNoiseImputationLayer(ImputationLayer):
     noise_mean: float
     noise_std: float
     differentiable: bool
 
     def __init__(self, noise_mean: float = 0, noise_std: float = 1, differentiable: bool = True) -> None:
-        super(NormalNoiseImputation, self).__init__()
+        super(NormalNoiseImputationLayer, self).__init__()
         self.noise_mean = noise_mean
         self.noise_std = noise_std
         self.differentiable = differentiable

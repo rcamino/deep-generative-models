@@ -2,8 +2,10 @@ import argparse
 
 from deep_generative_models.arguments import InvalidArgument, MissingArgument
 from deep_generative_models.configuration import Configuration, load_configuration
-from deep_generative_models.imputation.basic_imputation_task import BasicImputation
 from deep_generative_models.imputation.compute_mean_and_modes_task import ComputeMeansAndModes
+from deep_generative_models.imputation.means_and_modes_imputation_task import MeansAndModesImputation
+from deep_generative_models.imputation.noise_imputation_task import NormalNoiseImputation
+from deep_generative_models.imputation.zero_imputation_task import ZeroImputation
 from deep_generative_models.tasks.arae.train import TrainARAE
 from deep_generative_models.tasks.autoencoder.impute import ImputeWithAutoEncoder
 from deep_generative_models.tasks.autoencoder.train import TrainAutoEncoder
@@ -48,7 +50,9 @@ task_by_name = {
     # imputation
     "GenerateMissingMask": GenerateMissingMask(),
     "ComputeMeansAndModes": ComputeMeansAndModes(),
-    "BasicImputation": BasicImputation(),
+    "MeansAndModesImputation": MeansAndModesImputation(),
+    "NormalNoiseImputation": NormalNoiseImputation(),
+    "ZeroImputation": ZeroImputation(),
     "ImputeWithMIDA": ImputeWithAutoEncoder(),
     "ImputeWithGAIN": ImputeWithGAIN(),
     "GANIterativeImputation": GANIterativeImputation(),

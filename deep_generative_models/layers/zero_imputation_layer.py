@@ -6,11 +6,11 @@ from deep_generative_models.imputation.masks import compose_with_mask
 from deep_generative_models.layers.imputation_layer import ImputationLayer
 
 
-class ZeroImputation(ImputationLayer):
+class ZeroImputationLayer(ImputationLayer):
     differentiable: bool
 
     def __init__(self, differentiable: bool = True) -> None:
-        super(ZeroImputation, self).__init__()
+        super(ZeroImputationLayer, self).__init__()
         self.differentiable = differentiable
 
     def forward(self, inputs: Tensor, missing_mask: Tensor) -> Tensor:

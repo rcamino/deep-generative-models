@@ -11,15 +11,15 @@ from deep_generative_models.configuration import Configuration
 from deep_generative_models.component_factory import ComponentFactoryFromClass
 from deep_generative_models.layers.additive_normal_noise import AdditiveNormalNoise
 from deep_generative_models.layers.hidden_layers import PartialHiddenLayersFactory
-from deep_generative_models.layers.mean_and_modes_imputation_layer import MeanAndModesImputationFactory
+from deep_generative_models.layers.mean_and_modes_imputation_layer import MeanAndModesImputationLayerFactory
 from deep_generative_models.layers.multi_input_dropout import MultiInputDropoutFactory
 
 from deep_generative_models.layers.multi_input_layer import MultiInputLayerFactory
 from deep_generative_models.layers.multi_output_layer import PartialMultiOutputLayerFactory
-from deep_generative_models.layers.normal_noise_imputation_layer import NormalNoiseImputation
+from deep_generative_models.layers.normal_noise_imputation_layer import NormalNoiseImputationLayer
 from deep_generative_models.layers.single_input_layer import SingleInputLayerFactory
 from deep_generative_models.layers.single_output_layer import PartialSingleOutputLayerFactory
-from deep_generative_models.layers.zero_imputation_layer import ZeroImputation
+from deep_generative_models.layers.zero_imputation_layer import ZeroImputationLayer
 from deep_generative_models.losses.autoencoder import AutoEncoderLossFactory
 from deep_generative_models.losses.gain import GAINDiscriminatorLoss, GAINGeneratorLossFactory
 from deep_generative_models.losses.gan import GANGeneratorLoss, GANDiscriminatorLoss
@@ -50,9 +50,9 @@ factory_by_name = {
     # my layers
     "SingleInputLayer": SingleInputLayerFactory(),
     "AdditiveNormalNoise": ComponentFactoryFromClass(AdditiveNormalNoise, ["noise_mean", "noise_std"]),
-    "ZeroImputation": ComponentFactoryFromClass(ZeroImputation, ["differentiable"]),
-    "NormalNoiseImputation": ComponentFactoryFromClass(NormalNoiseImputation, ["noise_mean", "noise_std", "differentiable"]),
-    "MeanAndModesImputation": MeanAndModesImputationFactory(),
+    "ZeroImputation": ComponentFactoryFromClass(ZeroImputationLayer, ["differentiable"]),
+    "NormalNoiseImputation": ComponentFactoryFromClass(NormalNoiseImputationLayer, ["noise_mean", "noise_std", "differentiable"]),
+    "MeanAndModesImputation": MeanAndModesImputationLayerFactory(),
 
     # PyTorch layers (could add more)
     "Dropout": ComponentFactoryFromClass(Dropout, ["p"]),

@@ -1,4 +1,3 @@
-import argparse
 import os
 import torch
 
@@ -10,12 +9,11 @@ from typing import List
 from torch import Tensor
 from torch.nn import MSELoss
 
-from deep_generative_models.configuration import Configuration, load_configuration
-from deep_generative_models.imputation.masks import compose_with_mask
+from deep_generative_models.configuration import Configuration
 from deep_generative_models.losses.multi_reconstruction import MultiReconstructionLoss
 from deep_generative_models.losses.rmse import RMSE
-from deep_generative_models.metadata import load_metadata
-from deep_generative_models.post_processing import load_scale_transform
+from deep_generative_models.metadata import load_metadata, Metadata
+from deep_generative_models.post_processing import load_scale_transform, PostProcessing
 from deep_generative_models.tasks.task import Task
 
 
@@ -26,7 +24,6 @@ class BasicImputation(Task):
             "metadata",
             "inputs",
             "missing_mask",
-            "means_and_modes",
         ]
 
     def optional_arguments(self) -> List[str]:
@@ -37,21 +34,17 @@ class BasicImputation(Task):
 
         # the inputs are expected to be scaled
         scaled_inputs = torch.from_numpy(np.load(configuration.inputs))
-
         missing_mask = torch.from_numpy(np.load(configuration.missing_mask))
-        filling_values = torch.from_numpy(np.load(configuration.means_and_modes))
-
-        # fill where the missing mask is one (this is scaled too)
-        scaled_imputed = compose_with_mask(missing_mask,
-                                           where_one=filling_values.repeat(len(scaled_inputs), 1),
-                                           where_zero=scaled_inputs,
-                                           differentiable=False)
+        # the imputation will be scaled too
+        scaled_imputed = self.impute(configuration, metadata, scaled_inputs, missing_mask)
+        # post-process (without scaling back)
+        scaled_imputed = PostProcessing(metadata).transform(scaled_imputed)
 
         # scale back if requested
         if "scaler" in configuration:
-            scale_transform = load_scale_transform(configuration.scaler)
-            inputs = torch.from_numpy(scale_transform.inverse_transform(scaled_inputs.numpy()))
-            imputed = torch.from_numpy(scale_transform.inverse_transform(scaled_imputed.numpy()))
+            post_processing = PostProcessing(metadata, load_scale_transform(configuration.scaler))
+            inputs = post_processing.transform(scaled_inputs)
+            imputed = post_processing.transform(scaled_imputed)
             outputs = imputed
         # do not scale back
         else:
@@ -71,7 +64,6 @@ class BasicImputation(Task):
                 file_writer = DictWriter(reconstruction_loss_file, [
                     "inputs",
                     "missing_mask",
-                    "means_and_modes",
                     "scaled_mse",
                     "scaled_rmse",
                     "scaled_mr",
@@ -87,7 +79,6 @@ class BasicImputation(Task):
                 row = {
                     "inputs": configuration.inputs,
                     "missing_mask": configuration.missing_mask,
-                    "means_and_modes": configuration.means_and_modes,
                 }
 
                 # loss functions
@@ -109,10 +100,6 @@ class BasicImputation(Task):
                 self.logger.info(row)
                 file_writer.writerow(row)
 
-
-if __name__ == '__main__':
-    options_parser = argparse.ArgumentParser(description="Impute with the mean or mode.")
-    options_parser.add_argument("configuration", type=str, help="Configuration json file.")
-    options = options_parser.parse_args()
-
-    BasicImputation().timed_run(load_configuration(options.configuration))
+    def impute(self, configuration: Configuration, metadata: Metadata, scaled_inputs: Tensor, missing_mask: Tensor
+               ) -> Tensor:
+        raise NotImplementedError

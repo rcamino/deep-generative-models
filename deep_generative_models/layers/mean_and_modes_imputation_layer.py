@@ -15,12 +15,12 @@ from deep_generative_models.layers.imputation_layer import ImputationLayer
 from deep_generative_models.metadata import Metadata
 
 
-class MeanAndModesImputation(ImputationLayer):
+class MeanAndModesImputationLayer(ImputationLayer):
     means_and_modes: Tensor
     differentiable: bool
 
     def __init__(self, means_and_modes: Tensor, differentiable: bool = True) -> None:
-        super(MeanAndModesImputation, self).__init__()
+        super(MeanAndModesImputationLayer, self).__init__()
         self.means_and_modes = means_and_modes
         self.differentiable = differentiable
 
@@ -33,7 +33,7 @@ class MeanAndModesImputation(ImputationLayer):
                                  differentiable=self.differentiable)
 
 
-class MeanAndModesImputationFactory(ComponentFactory):
+class MeanAndModesImputationLayerFactory(ComponentFactory):
 
     def mandatory_arguments(self) -> List[str]:
         return ["path"]
@@ -42,5 +42,5 @@ class MeanAndModesImputationFactory(ComponentFactory):
         return ["differentiable"]
 
     def create(self, architecture: Architecture, metadata: Metadata, arguments: Configuration) -> Any:
-        return MeanAndModesImputation(to_gpu_if_available(torch.from_numpy(np.load(arguments.path)).float()),
-                                      **arguments.get_all_defined(["differentiable"]))
+        return MeanAndModesImputationLayer(to_gpu_if_available(torch.from_numpy(np.load(arguments.path)).float()),
+                                           **arguments.get_all_defined(["differentiable"]))
