@@ -1,5 +1,7 @@
 import argparse
 
+import torch
+
 from typing import List, Dict
 
 from torch import Tensor, FloatTensor
@@ -57,7 +59,6 @@ class GANIterativeImputation(Impute):
         logger = TrainLogger(self.logger, log_path, False)
 
         # initial generation
-        optimizer.zero_grad()
         logger.start_timer()
         generated = architecture.generator(noise, condition=batch.get("labels"))
 
@@ -71,23 +72,26 @@ class GANIterativeImputation(Impute):
             # this loss only makes sense if the ground truth is present
             # only used for debugging
             if configuration.get("log_missing_loss", False):
-                missing_loss = masked_loss_function(generated, batch["raw_features"], batch["missing_mask"])
-                logger.log(iteration, max_iterations, "missing_loss", to_cpu_if_was_in_gpu(missing_loss).item())
+                # this part should not affect the gradient calculation
+                with torch.no_grad():
+                    missing_loss = masked_loss_function(generated, batch["raw_features"], batch["missing_mask"])
+                    logger.log(iteration, max_iterations, "missing_loss", to_cpu_if_was_in_gpu(missing_loss).item())
 
-                loss = loss_function(generated, batch["raw_features"]) / batch_size
-                logger.log(iteration, max_iterations, "loss", to_cpu_if_was_in_gpu(loss).item())
+                    loss = loss_function(generated, batch["raw_features"]) / batch_size
+                    logger.log(iteration, max_iterations, "loss", to_cpu_if_was_in_gpu(loss).item())
 
             # if the generation is good enough we stop
             if to_cpu_if_was_in_gpu(non_missing_loss).item() < configuration.get("tolerance", 1e-5):
                 break
 
+            # clear previous gradients
+            optimizer.zero_grad()
             # compute the gradients
             non_missing_loss.backward()
             # update the noise
             optimizer.step()
 
             # generate next
-            optimizer.zero_grad()
             logger.start_timer()
             generated = architecture.generator(noise, condition=batch.get("labels"))
 
