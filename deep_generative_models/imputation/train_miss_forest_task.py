@@ -8,8 +8,9 @@ from typing import List
 
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.tree import ExtraTreeRegressor
 
+from deep_generative_models.commandline import create_parent_directories_if_needed
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.imputation.masks import compose_with_mask
 from deep_generative_models.tasks.task import Task
@@ -41,14 +42,14 @@ class TrainMissForest(Task):
 
         # create the model
         model = IterativeImputer(random_state=configuration.get("seed", 0),
-                                 estimator=RandomForestRegressor(),
+                                 estimator=ExtraTreeRegressor(n_jobs=-1),
                                  missing_values=np.nan)
 
         # go back to torch (annoying)
         model.fit(inputs.numpy())
 
         # save the model
-        with open(configuration.model, "wb") as model_file:
+        with open(create_parent_directories_if_needed(configuration.outputs), "wb") as model_file:
             pickle.dump(model, model_file)
 
 
