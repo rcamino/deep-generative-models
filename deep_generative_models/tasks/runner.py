@@ -4,7 +4,9 @@ from deep_generative_models.arguments import InvalidArgument, MissingArgument
 from deep_generative_models.configuration import Configuration, load_configuration
 from deep_generative_models.imputation.compute_mean_and_modes_task import ComputeMeansAndModes
 from deep_generative_models.imputation.means_and_modes_imputation_task import MeansAndModesImputation
+from deep_generative_models.imputation.miss_forest_imputation_task import MissForestImputation
 from deep_generative_models.imputation.noise_imputation_task import NormalNoiseImputation
+from deep_generative_models.imputation.train_miss_forest_task import TrainMissForest
 from deep_generative_models.imputation.zero_imputation_task import ZeroImputation
 from deep_generative_models.tasks.arae.train import TrainARAE
 from deep_generative_models.tasks.autoencoder.impute import ImputeWithAutoEncoder
@@ -53,6 +55,8 @@ task_by_name = {
     "MeansAndModesImputation": MeansAndModesImputation(),
     "NormalNoiseImputation": NormalNoiseImputation(),
     "ZeroImputation": ZeroImputation(),
+    "TrainMissForest": TrainMissForest(),
+    "MissForestImputation": MissForestImputation(),
     "ImputeWithMIDA": ImputeWithAutoEncoder(),
     "ImputeWithGAIN": ImputeWithGAIN(),
     "GANIterativeImputation": GANIterativeImputation(),
