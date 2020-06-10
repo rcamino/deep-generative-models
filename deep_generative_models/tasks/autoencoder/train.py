@@ -72,7 +72,7 @@ class TrainAutoEncoder(Train):
 
         outputs = architecture.autoencoder(batch["features"], condition=batch.get("labels"))
 
-        loss = architecture.reconstruction_loss(outputs, batch["features"])
+        loss = architecture.reconstruction_loss(outputs, batch)
         loss.backward()
 
         architecture.autoencoder_optimizer.step()
