@@ -8,6 +8,7 @@ from torch.nn import Module
 from deep_generative_models.architecture import Architecture
 from deep_generative_models.configuration import Configuration
 from deep_generative_models.component_factory import MultiComponentFactory
+from deep_generative_models.imputation.masks import inverse_mask
 from deep_generative_models.losses.masked_reconstruction_loss import MaskedReconstructionLoss
 from deep_generative_models.metadata import Metadata
 
@@ -28,12 +29,10 @@ class VAELoss(Module):
 
     def forward(self, outputs: Dict[str, Tensor], batch: Dict[str, Tensor]) -> Tensor:
         if self.masked:
-            reconstruction_loss = self.reconstruction_loss(outputs["reconstructed"],
-                                                           batch["features"],
-                                                           batch["missing_mask"])
+            reconstruction_loss = self.reconstruction_loss(outputs["reconstructed"], batch["features"],
+                                                           inverse_mask(batch["missing_mask"]))
         else:
-            reconstruction_loss = self.reconstruction_loss(outputs["reconstructed"],
-                                                           batch["features"])
+            reconstruction_loss = self.reconstruction_loss(outputs["reconstructed"], batch["features"])
 
         kld_loss = - 0.5 * torch.sum(1 + outputs["log_var"] - outputs["mu"].pow(2) - outputs["log_var"].exp())
 
