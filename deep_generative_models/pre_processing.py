@@ -12,8 +12,8 @@ class PreProcessing:
         self.imputation = imputation
 
     def transform(self, batch: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        if self.imputation is not None:
-            assert "missing_mask" in batch
+        if "missing_mask" in batch:
+            assert self.imputation is not None, "There are missing values but imputation not available."
             batch["raw_features"] = batch["features"]
             batch["features"] = self.imputation(batch["features"], batch["missing_mask"])
         return batch
