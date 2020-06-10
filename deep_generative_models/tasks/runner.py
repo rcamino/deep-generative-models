@@ -58,6 +58,7 @@ task_by_name = {
     "TrainMissForest": TrainMissForest(),
     "MissForestImputation": MissForestImputation(),
     "ImputeWithMIDA": ImputeWithAutoEncoder(),
+    "ImputeWithVAE": ImputeWithAutoEncoder(),
     "ImputeWithGAIN": ImputeWithGAIN(),
     "GANIterativeImputation": GANIterativeImputation(),
 
