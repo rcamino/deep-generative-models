@@ -34,7 +34,7 @@ class MissForestImputation(BasicImputation):
         imputed = model.transform(scaled_inputs)
 
         # go back to torch (annoying)
-        return torch.from_numpy(imputed)
+        return torch.from_numpy(imputed).float()
 
 
 if __name__ == '__main__':
