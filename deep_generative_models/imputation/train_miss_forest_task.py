@@ -42,7 +42,7 @@ class TrainMissForest(Task):
 
         # create the model
         model = IterativeImputer(random_state=configuration.get("seed", 0),
-                                 estimator=ExtraTreeRegressor(n_jobs=-1),
+                                 estimator=ExtraTreeRegressor(),
                                  missing_values=np.nan)
 
         # go back to torch (annoying)
