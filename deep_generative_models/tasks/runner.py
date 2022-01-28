@@ -43,7 +43,8 @@ task_by_name = {
     "SampleMedGAN": SampleGANWithAutoEncoder(),
     "SampleVAE": SampleVAE(),
 
-    # encode
+    # encode (and some silly aliases)
+    "Encode": Encode(),
     "EncodeWithAutoEncoder": Encode(),
     "EncodeWithDeNoisingAutoEncoder": Encode(),
     "EncodeWithVAE": Encode(),
