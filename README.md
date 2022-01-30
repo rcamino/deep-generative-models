@@ -55,7 +55,7 @@ pip install -r requirements.txt
 Make sure that the project main module (`deep_generative_models`) can be found by python.
 There are several ways to achieve this:
 
-- By executing the scripts from the project root directory.
+- By executing the scripts with the project root directory as the working directory (i.e. executing `cd` to the project root directory before executing the project scripts).
 - Adding the project root directory to the `PYTHONPATH` environment variable (see python [documentation](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH)).
 - Adding a `.pth` file to the site-packages directory of the virtual environment with the absolute path of the root directory (see python [documentation](https://docs.python.org/3/library/site.html)).
 
