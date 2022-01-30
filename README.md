@@ -354,18 +354,19 @@ The tasks and architectures depend heavily on the data and metadata.
 ### Example 1
 
 - Description: Train and sample from a single-variable GAN using the Default of Credit Card Clients dataset.
+It is called "single-variable" (in opposed to "multi-variable") because it does not take into account the types of each variable.
+The metadata is basically ignored.
+It would be the more "traditional" way of training GANs.
 - Task directory: `examples/tasks/default_of_credit_card_clients/single_variable_gan`.
 - Expected data directory: `examples/data/default_of_credit_card_clients`.
 - Architecture (`architecture.json`):
-  - It is called "single-variable" (in opposed to "multi-variable") because it does not take into account the types of each variable.
-  The metadata is basically ignored.
-  It would be the more "traditional" way of training GANs.
   - The generator and the discriminator have only one hidden layer of size 50.
   - The input noise for the generator is also of size 50.
-  - The generator and discriminator training steps use an Adam optimizer with learning rate 0.001.
+  - The discriminator has one training step per each generator training step.
+  - Both use an Adam optimizer and learning rate of 0.001
 - Tasks:
-  - `train.json`: the train task. 
-  - `sample.json`: the sample task (depends on the results of the train task).
+  - `train.json`: the train task with 10 epochs and batch size of 128.
+  - `sample.json`: the sample task using the default sampling method.
   - `train-then-sample.json`: it is just a serial task that runs the train and then the sample task.
 - Files that will be generated:
   - `checkpoint.pickle`: the trained models.
