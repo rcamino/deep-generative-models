@@ -157,11 +157,11 @@ def create_architecture(metadata: Metadata, configuration: Configuration) -> Arc
 
     # create components until the graph is empty (topological sort)
     while len(nodes) > 0:
-        # if there are no nodes without out edges there must be a loop
+        # if there are no nodes without edges there must be a loop
         if len(nodes_without_out_edges) == 0:
             raise Exception("Dependencies cannot be met for components: {}.".format(", ".join(nodes)))
 
-        # get any node without out edges
+        # get any node without edges
         node = nodes_without_out_edges.pop()
         assert len(out_edges[node]) == 0
 
