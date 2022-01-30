@@ -1,0 +1,9 @@
+{
+  "task": "SerialTaskRunner",
+  "arguments": {
+    "tasks": [
+      "examples/tasks/default_of_credit_card_clients/single_variable_gan/task-train.json",
+      "examples/tasks/default_of_credit_card_clients/single_variable_gan/task-sample.json"
+    ]
+  }
+}

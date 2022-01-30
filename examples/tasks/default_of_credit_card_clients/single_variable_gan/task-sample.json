@@ -1,0 +1,16 @@
+{
+  "task": "SampleGAN",
+  "arguments": {
+    "seed": 666,
+    "metadata": "examples/data/default_of_credit_card_clients/metadata.json",
+    "architecture": "examples/tasks/default_of_credit_card_clients/single_variable_gan/architecture.json",
+    "checkpoint": "examples/tasks/default_of_credit_card_clients/single_variable_gan/checkpoint.pickle",
+    "output": "examples/tasks/default_of_credit_card_clients/single_variable_gan/sample.npy",
+    "batch_size": 128,
+    "sample_size": 256,
+    "strategy": {
+      "factory": "default",
+      "arguments": {}
+    }
+  }
+}

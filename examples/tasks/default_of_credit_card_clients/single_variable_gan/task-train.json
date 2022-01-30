@@ -1,0 +1,21 @@
+{
+  "task": "TrainGAN",
+  "arguments": {
+    "seed": 666,
+    "data": {
+      "train_features": "examples/data/default_of_credit_card_clients/features.npy"
+    },
+    "metadata": "examples/data/default_of_credit_card_clients/metadata.json",
+    "architecture": "examples/tasks/default_of_credit_card_clients/single_variable_gan/architecture.json",
+    "checkpoints": {
+      "output": "examples/tasks/default_of_credit_card_clients/single_variable_gan/checkpoint.pickle",
+      "max_delay": 5,
+      "continue_from_output": false
+    },
+    "logs": "examples/tasks/default_of_credit_card_clients/single_variable_gan/train.csv",
+    "batch_size": 128,
+    "epochs": 10,
+    "discriminator_steps": 1,
+    "generator_steps": 1
+  }
+}

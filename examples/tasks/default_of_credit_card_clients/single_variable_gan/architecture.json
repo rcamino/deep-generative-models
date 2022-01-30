@@ -1,0 +1,57 @@
+{
+  "arguments": {
+    "noise_size": 50
+  },
+  "components": {
+    "generator": {
+      "factory": "SingleOutputGenerator",
+      "arguments": {
+        "hidden_layers": {
+          "sizes": [
+            50
+          ]
+        }
+      }
+    },
+    "discriminator": {
+      "factory": "Discriminator",
+      "arguments": {
+        "hidden_layers": {
+          "sizes": [
+            50
+          ]
+        }
+      }
+    },
+    "generator_loss": {
+      "factory": "GANGeneratorLoss",
+      "arguments": {
+        "smooth_positive_labels": true
+      }
+    },
+    "discriminator_loss": {
+      "factory": "GANDiscriminatorLoss",
+      "arguments": {
+        "smooth_positive_labels": true
+      }
+    },
+    "generator_optimizer": {
+      "factory": "Adam",
+      "arguments": {
+        "parameters": [
+          "generator"
+        ],
+        "lr": 0.001
+      }
+    },
+    "discriminator_optimizer": {
+      "factory": "Adam",
+      "arguments": {
+        "parameters": [
+          "discriminator"
+        ],
+        "lr": 0.001
+      }
+    }
+  }
+}
