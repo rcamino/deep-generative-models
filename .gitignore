@@ -127,3 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# PyCharm project
+.idea/
+
+# Example data
+examples/data
+
+# Outputs
+*.npy
+*.pickle
+*.csv
