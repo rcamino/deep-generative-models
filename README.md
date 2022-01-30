@@ -2,6 +2,45 @@
 
 The goal of this library is to automatize several tasks related to Deep Generative Models based on json configuration files.
 
+## Table of Contents
+
+* [Requirements](#requirements)
+* [Data](#data)
+* [Metadata](#metadata)
+* [Runner](#runner)
+* [Tasks](#tasks)
+  + [Base Tasks](#base-tasks)
+    - [Impute](#impute)
+    - [Sample](#sample)
+    - [Train](#train)
+  + [Runnable Tasks](#runnable-tasks)
+    - [Compute Means And Modes](#compute-means-and-modes)
+    - [Encode](#encode)
+    - [Generate Missing Mask](#generate-missing-mask)
+    - [Impute With MIDA](#impute-with-mida)
+    - [Means And Modes Imputation](#means-and-modes-imputation)
+    - [MissForest Imputation](#missforest-imputation)
+    - [Multi-Process Task Runner](#multi-process-task-runner)
+    - [Normal Noise Imputation](#normal-noise-imputation)
+    - [Sample ARAE](#sample-arae)
+    - [Sample GAN](#sample-gan)
+    - [Sample MedGAN](#sample-medgan)
+    - [Sample VAE](#sample-vae)
+    - [Serial Task Runner](#serial-task-runner)
+    - [Train ARAE](#train-arae)
+    - [Train AutoEncoder](#train-autoencoder)
+    - [Train DeNoising AutoEncoder](#train-denoising-autoencoder)
+    - [Train GAIN](#train-gain)
+    - [Train GAN](#train-gan)
+    - [Train MIDA](#train-mida)
+    - [Train MedGAN](#train-medgan)
+    - [Train MissForest](#train-missforest)
+    - [Train VAE](#train-vae)
+    - [Zero Imputation](#zero-imputation)
+* [Architecture](#architecture)
+* [Examples](#examples)
+  + [Example 1](#example-1)
+
 ## Requirements
 
 This code was developed with Python 3.
@@ -279,8 +318,6 @@ There are also factories for PyTorch elements (see the argument definition in th
 *IMPORTANT:* The following examples do not describe by any means the best combination of architecture or hyper-parameters to achieve good results.
 The goal of the examples is to illustrate how to use this library.
 
-### Data and Metadata
-
 Data is not included in the examples because of space limitations and because it does not belong to me.
 You can find example scripts to download the kind of data and metadata required for this project in [rcamino/dataset-pre-processing](https://github.com/rcamino/dataset-pre-processing).
 
@@ -306,8 +343,6 @@ python $DATASET_PRE_PROCESSING_ROOT/train_test_split.py --stratify --shuffle \
 
 You can find more information about the dataset in the [dataset repository](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) or in [my code repository](https://github.com/rcamino/dataset-pre-processing/tree/master/dataset_pre_processing/uci/default_of_credit_card_clients).
 
-### Tasks
-
 For simplicity, these tasks use paths relative to the project root.
 This means that unless you want to edit the tasks yourself, most of these tasks will expect that:
 
@@ -316,8 +351,9 @@ This means that unless you want to edit the tasks yourself, most of these tasks 
 
 The tasks and architectures depend heavily on the data and metadata. 
 
-### Train and sample from a single-variable GAN using the Default of Credit Card Clients dataset
+### Example 1
 
+- Description: Train and sample from a single-variable GAN using the Default of Credit Card Clients dataset.
 - Task directory: `examples/tasks/default_of_credit_card_clients/single_variable_gan`.
 - Expected data directory: `examples/data/default_of_credit_card_clients`.
 - Architecture (`architecture.json`):
